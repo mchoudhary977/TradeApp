@@ -1,4 +1,4 @@
-# Main App Start
+# Main TradeApp Start
 from flask import Flask, render_template, flash, redirect, url_for, request, jsonify
 from flask_cors import CORS
 import traceback
