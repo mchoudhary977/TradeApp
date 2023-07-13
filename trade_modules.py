@@ -72,6 +72,15 @@ def iciciUpdSessToken(icici_session_id):
     else:
         return{'status':'FAILURE', 'data':data['Error']}
 
+# Update only the ICICI session ID
+def icici_upd_sess_config(icici_session_id):
+    with open("config.json","r") as f:
+        json_data = json.load(f)
+    json_data["ICICI_API_SESSION"] = icici_session_id
+    with open("config.json", "w") as file:
+        json.dump(json_data, file, indent=4)
+    return {"status":"SUCCESS", "data":"Session Updated"}
+
 
 # Get Symbol Data From ICICI API
 def iciciGetSymDetail(exchange_code = "NSE",stock_code = "NIFTY",product_type = "Cash",interval = "30minute",
