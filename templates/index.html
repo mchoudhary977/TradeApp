@@ -1,0 +1,127 @@
+{% extends "base.html"%}
+{% block content %}
+  <!-- <div class="main container-fluid"> -->
+    <section id="index">
+      <br>
+      <h1 class="text-center">WatchList</h1>
+      <div class="container-fluid" id="service-container">
+        <div class="row" id="banner-row">
+          {% set result1 = resultDict['WatchList'] %}
+          <!--<i style="text-align: right;">{{ result1['Date'][0] }} {{ result1['Time'][0] }}</i> -->
+          <!-- <i style="text-align: right;">{{ result1['Date'][0] }} {{ result1['Time'][0] }}</i> -->
+          <i style="text-align: right;" id="candle_time">{{ result1['CandleTime'][0] }}</i>
+          <br>
+            {% for i in result1.index: %}
+            <!-- <div class="accordion accordion-flush" id="accordionFlushExample"> -->
+            <div class="accordion" id="accordionFlushExample">
+              <div class="accordion-item">
+                <!-- <h4 class="accordion-header"> -->
+                  <!-- <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne"> -->
+                  {% if result1['Close'][i] > result1['Open'][i] %}
+                  <button class="accordion-button collapsed" id="button{{i}}" style="background: #bcf5d9;" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{i|int+1}}" aria-expanded="false" aria-controls="flush-collapse{{i|int+1}}">
+                  {% else %}
+                  <button class="accordion-button collapsed" id="button{{i}}" style="background: #FADCD9;" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{i|int+1}}" aria-expanded="false" aria-controls="flush-collapse{{i|int+1}}">
+                  {% endif %}
+                      <div class="container">
+                        <div class="row">
+                          <div class="col" id="symbol{{i}}">
+                            <b>{{ result1['NS'][i] }}</b>
+                          </div>
+                        </div>
+                        <hr>
+                        <div class="row row-cols-2 row-cols-lg-4 g-2 g-lg-3">
+                          {% if result1['Close'][i] > result1['Open'][i] %}
+                          <div class="col" id="close{{i}}">
+                            <b style="color: #007500;">C-{{ result1['Close'][i] }}</b>
+                          </div>
+                          <div class="col" id="open{{i}}">
+                            <b style="color: #007500;">O-{{ result1['Open'][i] }}</b>
+                          </div>
+                          <div class="col" id="high{{i}}">
+                            <b style="color: #007500;">H-{{ result1['High'][i] }}</b>
+                          </div>
+                          <div class="col" id="low{{i}}">
+                            <b style="color: #007500;">L-{{ result1['Low'][i] }}</b>
+                          </div>
+                          {% else %}
+                          <div class="col" id="close{{i}}">
+                            <b style="color: #FF0000;">C-{{ result1['Close'][i] }}</b>
+                          </div>
+                          <div class="col" id="open{{i}}">
+                            <b style="color: #FF0000;">O-{{ result1['Open'][i] }}</b>
+                          </div>
+                          <div class="col" id="high{{i}}">
+                            <b style="color: #FF0000;">H-{{ result1['High'][i] }}</b>
+                          </div>
+                          <div class="col" id="low{{i}}">
+                            <b style="color: #FF0000;">L-{{ result1['Low'][i] }}</b>
+                          </div>
+                          {% endif %}
+                      </div>
+                    </div>
+                  </button>
+                <!-- </h4> -->
+                <!-- <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample"> -->
+                <div id="flush-collapse{{i|int+1}}" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                      {% if result1['CD'][i] == 'NIFTY' or result1['CD'][i] == 'CNXBAN' or result1['CD'][i] == 'NIFFIN' %}
+                      {% set oipcr = resultDict['OIPCR'][result1['CD'][i]] %}
+                      <table class="table-info">
+                          <tr class="table-info">
+                            <td colspan="4" style="background: #cbefff; text-align: center; border: 1px solid;"><b>PCR - OI</b> [{{ oipcr['Date'][oipcr.index|min] }} | {{ oipcr['ExpiryDate'][oipcr.index|min] }}]</td>
+                          </tr>
+                          <tr>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">Time</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">CALL OI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PUT OI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PCR</th>
+                          </tr>
+                        <tbody>
+                          {% for j in oipcr.index: %}
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">{{ oipcr['Time'][j] }}</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">{{ oipcr['CALL OI'][j] }}</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">{{ oipcr['PUT OI'][j] }}</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">{{ oipcr['PCR-OI'][j] }}</td>
+                          </tr>
+                          {% endfor %}
+                      {% set coipcr = resultDict['COIPCR'][result1['CD'][i]] %}
+                          <tr class="table-info">
+                            <td colspan="4" style="background: #cbefff; text-align: center; border: 1px solid;"><b>PCR - COI</b> [{{ coipcr['Date'][coipcr.index|min] }} | {{ coipcr['ExpiryDate'][coipcr.index|min] }}]</td>
+                          </tr>
+                          <tr>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">Strike</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">CALL COI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PUT COI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PCR COI</th>
+                          </tr>
+                          {% for j in coipcr.index: %}
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">{{ coipcr['StrikePrice'][j] }}</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">{{ coipcr['CALL COI'][j] }}</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">{{ coipcr['PUT COI'][j] }}</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">{{ coipcr['PCR-COI'][j] }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                      <br>
+
+                      {% endif %}
+
+
+
+                  <!-- <div class="accordion-body">Placeholder content for this accordion, which is intended to demonstrate the <code>.accordion-flush</code> class. This is the first item's accordion body.</div> -->
+                </div>
+
+
+              </div>
+            </div>
+
+
+            {% endfor %}
+        </div>
+      </div>
+    </section>
+  <hr/>
+  <!-- </div> -->
+{% endblock %}

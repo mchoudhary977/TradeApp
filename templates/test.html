@@ -1,0 +1,884 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8" />
+        <meta name="viewport"
+                content="width=device-width,
+                                initial-scale=1" />
+
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous"/>
+        <!-- <link rel="stylesheet"
+                href="style.css" /> -->
+        <link rel="preconnect" href="https://fonts.gstatic.com" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed&display=swap" rel="stylesheet"/>
+        <title>TradeApp</title>
+        <!--- <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <style>
+                .navbar {
+                overflow: hidden;
+                background-color: #333;
+                position: fixed;
+                top: 0;
+                width: 100%;
+                }
+                table {
+                border-collapse: collapse;
+                width: 100%;
+                }
+                /*
+                th {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: center;
+                background-color: #1a237e;
+                color: white;
+                }
+                td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: left;
+                } */
+
+                .custom-link {
+                        color: navy;
+                }
+
+                /* CSS for pop-up form */
+                .popup-form {
+                        display: none;
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background-color: #f2f2f2;
+                        padding: 20px;
+                        border-radius: 5px;
+                        box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+                }
+                                /* Define styles for the navigation bar */
+                                nav {
+                                        position: fixed;
+                                        top: 0;
+                                        left: 0;
+                                        width: 100%;
+                                        background-color: #f8f8f8;
+                                        z-index: 9999;
+                                }
+
+                                nav ul {
+                                        list-style-type: none;
+                                        margin: 0;
+                                        padding: 0;
+                                        overflow: hidden;
+                                }
+
+                                nav li {
+                                        display: inline-block;
+                                        margin: 0 10px;
+                                }
+
+                                nav a {
+                                        display: block;
+                                        padding: 10px;
+                                        text-decoration: none;
+                                        color: #333;
+                                }
+
+                                /* Add some content to create scrollable space */
+                                .content {
+                                        height: 2000px;
+                                        padding-top: 30px;
+                                }
+                                .main {
+                                  padding: 16px;
+                                  margin-top: 30px;
+                                  height: 2000px; /* Used in this example to enable scrolling */
+                                }
+                                #footer {
+                                  bottom: 0;
+                                  height: 2em;
+                                  left: 0;
+                                  position: relative; //changed to relative from fixed also works if position is not there
+                                  font-size: small;
+                                  width:100%;
+                              }
+        </style>
+        <script>
+                        // Function to open the pop-up form
+                        function openPopupForm() {
+                          document.getElementById("popupForm").style.display = "block";
+                        }
+
+                        // Function to close the pop-up form
+                        function closePopupForm() {
+                          document.getElementById("popupForm").style.display = "none";
+                        }
+
+                        function refreshPage() {
+                          var now = new Date();
+                          var dayOfWeek = now.getDay(); // Sunday = 0, Monday = 1, ..., Friday = 5, Saturday = 6
+                          var hour = now.getHours();
+
+                          if (dayOfWeek >= 1 && dayOfWeek <= 5 && hour >= 9 && hour < 16) {
+                                location.reload();
+                          }
+                        }
+
+                        setInterval(refreshPage, 10000); // Refresh every 10 seconds
+
+                        window.addEventListener('scroll', function() {
+                        var nav = document.querySelector('nav');
+                        if (window.pageYOffset > 0) {
+                                nav.classList.add('fixed-nav');
+                        } else {
+                                nav.classList.remove('fixed-nav');
+                        }
+                        });
+                </script>
+                <script>
+                    $(document).ready(function() {
+                        setInterval(function() {
+                            $.ajax({
+                                url: "/get_data",
+                                method: "GET",
+                                success: function(data) {
+                                    var targetDiv = $("#watchlist");
+                                    targetDiv.append($("<button>").addClass("accordion-button collapsed"));
+                                    targetDiv.append($("</button>"));
+
+                                    var symbol = $("#symbol");
+
+                                    targetDiv.empty(); // Clear the previous content
+
+                                    var tdiv = $("<div>").addClass("container");
+
+                                    var watchlist = data['WatchList']
+                                    $.each(watchlist, function(key, value) {
+                                        $("#symbol"+key).html("<b>"+value['NS']+"</b>");
+                                        //str1=$("<b>").text(value['Time']);
+
+
+                                        symbolname = $("<b>").text(value['NS'])
+                                        symbol.append(symbolname)
+                                        tdiv.append($("<hr>"));
+                                        tdiv.append($("<div>").addClass("row row-cols-2 row-cols-lg-4 g-2 g-lg-3"));
+                                        tdiv.append($("<div>").addClass("col"));
+                                        tdiv.append($("<b>").text(value['close']));
+                                        tdiv.append($("</div>"));
+
+                                        tdiv.append($("<div>").addClass("col"));
+                                        tdiv.append($("<b>").text(value['open']));
+                                        tdiv.append($("</div>"));
+
+                                        tdiv.append($("<div>").addClass("col"));
+                                        tdiv.append($("<b>").text(value['high']));
+                                        tdiv.append($("</div>"));
+
+                                        tdiv.append($("<div>").addClass("col"));
+                                        tdiv.append($("<b>").text(value['low']));
+                                        tdiv.append($("</div>"));
+
+                                        tdiv.append($("<div>").addClass("col"));
+                                        tdiv.append($("<b>").text(value['Time']));
+                                        tdiv.append($("</div>"));
+
+                                        tdiv.append($("</div>"));
+                                        tdiv.append($("<br>"));
+                                        console.log(str1)
+                                    });
+
+
+                                    // console.log(firstsymbol)
+                                    // var tdiv = $("<div>").addClass("container");
+
+                                    //tdiv.append($("<h6>").text(firstsymbol))
+
+                                    // tdiv.append($("</div>"));
+
+
+
+                                    // Loop through the received data and create HTML elements
+                                    $.each(data, function(key, value) {
+                                        var heading = $("<h3>").text(key);
+                                        targetDiv.append(heading);
+                                        tdiv.append($("<h3>").text("ABCD"));
+                                        var table = $("<table>").addClass("data-table");
+                                        var thead = $("<thead>");
+                                        var tbody = $("<tbody>");
+
+                                        // Create table headers
+                                        var headerRow = $("<tr>");
+                                        $.each(value[0], function(colName) {
+                                            headerRow.append($("<th>").text(colName));
+                                        });
+                                        thead.append(headerRow);
+
+                                        // Create table rows with data
+                                        $.each(value, function(_, row) {
+                                            tdiv.append($("<div>").addClass("row row-cols-2 row-cols-lg-4 g-2 g-lg-3"));
+                                            // tdiv.append($("<h3>").text(_));
+
+                                            var dataRow = $("<tr>");
+                                            $.each(row, function(_, cellValue) {
+                                                dataRow.append($("<td>").text(cellValue));
+
+                                                // if (_ == "NS")
+                                                //    tdiv.append($("<h3>").text(cellValue));
+
+                                                if (_ == "close")
+                                                    // tdiv.append($("<div>").addClass("col"));
+                                                    // tdiv.append($("<hr>"));
+                                                    tdiv.append($("<b>").text(cellValue));
+
+
+                                                    // tdiv.append($("</div>"));
+                                            });
+                                            tdiv.append($("<br>"));
+                                            //tdiv.append($("<hr>"));
+                                            tdiv.append($("</div>"));
+
+                                        });
+
+
+                                        tdiv.append($("</div>"));
+
+                                        table.append(thead).append(tbody);
+                                        targetDiv.append(tdiv).append(table);
+                                    });
+                                }
+                            });
+                        }, 1000); // Refresh every 1 second (1000 milliseconds)
+                    });
+                </script>
+</head>
+
+<body>
+  <div class="navbar" style="z-index: 5;">
+        <section id="navbar">
+        <nav class="navbar navbar-expand-lg navbar-light" style="background-color:black; color:white;">
+                        <div class="container-fluid">
+                        <a class="navbar-brand custom-link" href="" onclick="refreshPage()" style="color:white;"><b>TA - July 08, 2023 21:47</b></a>
+                        <button
+                                        class="navbar-toggler"
+                                        style="background-color:white; color:white;"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#navbarSupportedContent"
+                                        aria-controls="navbarSupportedContent"
+                                        aria-expanded="false"
+                                        aria-label="Toggle navigation"
+                        >
+                                        <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse"
+                                        id="navbarSupportedContent">
+                                        <ul class="navbar-nav m-auto">
+                                        <li class="nav-item"><a style="color:white;" href="" onclick="refreshPage()">Home</a></li>
+                                        <li class="nav-item"><a style="color:white;" href="#index">WatchList</a></li>
+                                        <li class="nav-item"><a style="color:white;" href="#positions">Positions</a></li>
+                                        <li class="nav-item"><a style="color:white;" href="#funds">Funds</a></li>
+                                        <li class="nav-item"><a style="color:white;" href="#strategies">Strategy</a></li>
+                                        <li class="nav-item"><a style="color:white;" href="#holdings">Holdings</a></li>
+                                        <li class="nav-item"><a style="color:white;" href="#orders">Orders</a></li>
+                                        <!-- <li class="nav-item"><a style="color:white;" href="#social">Contact Us</a></li> -->
+                                        <li class="nav-item"><a style="color:white;" href="#update" onclick="openPopupForm()">Update</a></li>
+                                        </ul>
+                        </div>
+                        </div>
+        </nav>
+        </section>
+    </div>
+
+    <div class="main container-fluid">
+
+  <!-- <div class="main container-fluid"> -->
+    <section id="index">
+      <br>
+      <h1 class="text-center">WatchList</h1>
+      <div class="container-fluid" id="service-container">
+        <div class="row" id="banner-row">
+
+          <!--<i style="text-align: right;">2023-07-08 16:30:20</i> -->
+          <i style="text-align: right;">2023-07-08 16:30:20</i>
+          <i style="text-align: right;">2023-07-07 15:25:00</i>
+          <br>
+
+          <div class="accordion" id="accordionFlushExample">
+            <div class="accordion-item" id="watchlist">
+
+            </div>
+
+          </div>
+
+            <!-- <div class="accordion accordion-flush" id="accordionFlushExample"> -->
+            <div class="accordion" id="accordionFlushExample">
+              <div class="accordion-item">
+                <!-- <h4 class="accordion-header"> -->
+                  <!-- <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne"> -->
+
+                  <button class="accordion-button collapsed" style="background: #FADCD9;" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse1" aria-expanded="false" aria-controls="flush-collapse1">
+
+                      <div class="container">
+                        <div class="row">
+                          <div class="col" id="symbol0">
+                            <b>NIFTY 50</b>
+                          </div>
+                        </div>
+                        <hr>
+                        <div class="row row-cols-2 row-cols-lg-4 g-2 g-lg-3">
+
+                          <div class="col">
+                            <b style="color: #FF0000;">C-19324.65</b>
+                          </div>
+                          <div class="col">
+                            <b style="color: #FF0000;">O-19422.8</b>
+                          </div>
+                          <div class="col">
+                            <b style="color: #FF0000;">H-19523.45</b>
+                          </div>
+                          <div class="col">
+                            <b style="color: #FF0000;">L-19304.95</b>
+                          </div>
+
+                      </div>
+                    </div>
+                  </button>
+                <!-- </h4> -->
+                <!-- <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample"> -->
+                <div id="flush-collapse1" class="accordion-collapse collapse show" data-bs-parent="#accordionFlushExample">
+
+
+                      <table class="table-info">
+                          <tr class="table-info">
+                            <td colspan="4" style="background: #cbefff; text-align: center; border: 1px solid;"><b>PCR - OI</b> [2023-07-08 | 13-Jul-2023]</td>
+                          </tr>
+                          <tr>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">Time</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">CALL OI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PUT OI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PCR</th>
+                          </tr>
+                        <tbody>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:55</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">2429256</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1652513</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.68</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:25</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">2429256</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1652513</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.68</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:20</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">2429256</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1652513</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.68</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:10</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">2429256</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1652513</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.68</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:05</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">2429256</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1652513</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.68</td>
+                          </tr>
+
+
+                          <tr class="table-info">
+                            <td colspan="4" style="background: #cbefff; text-align: center; border: 1px solid;"><b>PCR - COI</b> [2023-07-08 | 13-Jul-2023]</td>
+                          </tr>
+                          <tr>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">Strike</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">CALL COI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PUT COI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PCR COI</th>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">19200</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">5480</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">36984</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">6.749</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">19250</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">3784</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">-20322</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">-5.371</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">19300</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">32166</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">42229</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1.313</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">19350</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">34195</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">2427</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.071</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">19400</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">186617</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">32322</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.173</td>
+                          </tr>
+
+                        </tbody>
+                      </table>
+                      <br>
+
+
+
+
+
+                  <!-- <div class="accordion-body">Placeholder content for this accordion, which is intended to demonstrate the <code>.accordion-flush</code> class. This is the first item's accordion body.</div> -->
+                </div>
+
+
+              </div>
+            </div>
+
+
+
+            <!-- <div class="accordion accordion-flush" id="accordionFlushExample"> -->
+            <div class="accordion" id="accordionFlushExample">
+              <div class="accordion-item">
+                <!-- <h4 class="accordion-header"> -->
+                  <!-- <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne"> -->
+
+                  <button class="accordion-button collapsed" style="background: #FADCD9;" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse2" aria-expanded="false" aria-controls="flush-collapse2">
+
+                      <div class="container">
+                        <div class="row">
+                          <div class="col" id="symbol1">
+                            <b>NIFTY BANK</b>
+                          </div>
+                        </div>
+                        <hr>
+                        <div class="row row-cols-2 row-cols-lg-4 g-2 g-lg-3">
+
+                          <div class="col">
+                            <b style="color: #FF0000;">C-44892.1</b>
+                          </div>
+                          <div class="col">
+                            <b style="color: #FF0000;">O-45118.05</b>
+                          </div>
+                          <div class="col">
+                            <b style="color: #FF0000;">H-45226.4</b>
+                          </div>
+                          <div class="col">
+                            <b style="color: #FF0000;">L-44846.1</b>
+                          </div>
+
+                      </div>
+                    </div>
+                  </button>
+                <!-- </h4> -->
+                <!-- <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample"> -->
+                <div id="flush-collapse2" class="accordion-collapse collapse show" data-bs-parent="#accordionFlushExample">
+
+
+                      <table class="table-info">
+                          <tr class="table-info">
+                            <td colspan="4" style="background: #cbefff; text-align: center; border: 1px solid;"><b>PCR - OI</b> [2023-07-08 | 13-Jul-2023]</td>
+                          </tr>
+                          <tr>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">Time</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">CALL OI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PUT OI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PCR</th>
+                          </tr>
+                        <tbody>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:55</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1776607</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1215566</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.684</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:25</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1776607</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1215566</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.684</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:20</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1776607</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1215566</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.684</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:10</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1776607</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1215566</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.684</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:05</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1776607</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1215566</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.684</td>
+                          </tr>
+
+
+                          <tr class="table-info">
+                            <td colspan="4" style="background: #cbefff; text-align: center; border: 1px solid;"><b>PCR - COI</b> [2023-07-08 | 13-Jul-2023]</td>
+                          </tr>
+                          <tr>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">Strike</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">CALL COI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PUT COI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PCR COI</th>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">44700</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">12941</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">48717</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">3.765</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">44800</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">23909</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">28427</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1.189</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">44900</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">36847</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">24644</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.669</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">45000</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">95905</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">19804</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.206</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">45100</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">78939</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">-823</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">-0.01</td>
+                          </tr>
+
+                        </tbody>
+                      </table>
+                      <br>
+
+
+
+
+
+                  <!-- <div class="accordion-body">Placeholder content for this accordion, which is intended to demonstrate the <code>.accordion-flush</code> class. This is the first item's accordion body.</div> -->
+                </div>
+
+
+              </div>
+            </div>
+
+
+
+            <!-- <div class="accordion accordion-flush" id="accordionFlushExample"> -->
+            <div class="accordion" id="accordionFlushExample">
+              <div class="accordion-item">
+                <!-- <h4 class="accordion-header"> -->
+                  <!-- <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne"> -->
+
+                  <button class="accordion-button collapsed" style="background: #FADCD9;" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse3" aria-expanded="false" aria-controls="flush-collapse3">
+
+                      <div class="container">
+                        <div class="row">
+                          <div class="col">
+                            <b>NIFTY FINANCIAL</b>
+                          </div>
+                        </div>
+                        <hr>
+                        <div class="row row-cols-2 row-cols-lg-4 g-2 g-lg-3">
+
+                          <div class="col">
+                            <b style="color: #FF0000;">C-20071.05</b>
+                          </div>
+                          <div class="col">
+                            <b style="color: #FF0000;">O-20167.1</b>
+                          </div>
+                          <div class="col">
+                            <b style="color: #FF0000;">H-20246.3</b>
+                          </div>
+                          <div class="col">
+                            <b style="color: #FF0000;">L-20055.8</b>
+                          </div>
+
+                      </div>
+                    </div>
+                  </button>
+                <!-- </h4> -->
+                <!-- <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample"> -->
+                <div id="flush-collapse3" class="accordion-collapse collapse show" data-bs-parent="#accordionFlushExample">
+
+
+                      <table class="table-info">
+                          <tr class="table-info">
+                            <td colspan="4" style="background: #cbefff; text-align: center; border: 1px solid;"><b>PCR - OI</b> [2023-07-08 | 11-Jul-2023]</td>
+                          </tr>
+                          <tr>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">Time</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">CALL OI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PUT OI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PCR</th>
+                          </tr>
+                        <tbody>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:55</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1005950</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">602009</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.598</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:25</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1005950</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">602009</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.598</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:20</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1005950</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">602009</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.598</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:10</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1005950</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">602009</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.598</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">14:05</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1005950</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">602009</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.598</td>
+                          </tr>
+
+
+                          <tr class="table-info">
+                            <td colspan="4" style="background: #cbefff; text-align: center; border: 1px solid;"><b>PCR - COI</b> [2023-07-08 | 11-Jul-2023]</td>
+                          </tr>
+                          <tr>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">Strike</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">CALL COI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PUT COI</th>
+                            <th class="table-info" scope="col" style="background: #cbefff; text-align: center; border: 1px solid;">PCR COI</th>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">19950</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">610</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">3605</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">5.91</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">20000</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">3573</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">952</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.266</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">20050</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">5908</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">10420</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">1.764</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">20100</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">39444</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">9688</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">0.246</td>
+                          </tr>
+
+                          <tr>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">20150</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">21421</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">-2174</td>
+                            <td class="table-info" style="text-align: center; border: 1px solid;">-0.101</td>
+                          </tr>
+
+                        </tbody>
+                      </table>
+                      <br>
+
+
+
+
+
+                  <!-- <div class="accordion-body">Placeholder content for this accordion, which is intended to demonstrate the <code>.accordion-flush</code> class. This is the first item's accordion body.</div> -->
+                </div>
+
+
+              </div>
+            </div>
+
+
+
+            <!-- <div class="accordion accordion-flush" id="accordionFlushExample"> -->
+            <div class="accordion" id="accordionFlushExample">
+              <div class="accordion-item">
+                <!-- <h4 class="accordion-header"> -->
+                  <!-- <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne"> -->
+
+                  <button class="accordion-button collapsed" style="background: #FADCD9;" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse4" aria-expanded="false" aria-controls="flush-collapse4">
+
+                      <div class="container">
+                        <div class="row">
+                          <div class="col">
+                            <b>INDVIX</b>
+                          </div>
+                        </div>
+                        <hr>
+                        <div class="row row-cols-2 row-cols-lg-4 g-2 g-lg-3">
+
+                          <div class="col">
+                            <b style="color: #FF0000;">C-11.5</b>
+                          </div>
+                          <div class="col">
+                            <b style="color: #FF0000;">O-11.84</b>
+                          </div>
+                          <div class="col">
+                            <b style="color: #FF0000;">H-12.07</b>
+                          </div>
+                          <div class="col">
+                            <b style="color: #FF0000;">L-11.08</b>
+                          </div>
+
+                      </div>
+                    </div>
+                  </button>
+                <!-- </h4> -->
+                <!-- <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample"> -->
+                <div id="flush-collapse4" class="accordion-collapse collapse show" data-bs-parent="#accordionFlushExample">
+
+
+
+
+                  <!-- <div class="accordion-body">Placeholder content for this accordion, which is intended to demonstrate the <code>.accordion-flush</code> class. This is the first item's accordion body.</div> -->
+                </div>
+
+
+              </div>
+            </div>
+
+
+
+        </div>
+      </div>
+    </section>
+  <hr/>
+  <!-- </div> -->
+
+    </div>
+
+      <div id="popupForm" class="popup-form" style="z-index:10;">
+              <h3>Configuration Update</h3>
+              <form action="/%23" method="POST">
+                <div class="form-floating mb-4">
+                  <select class="form-select" aria-label="Default select example" name="live_order_flag">
+                    <option selected>Select Yes to Enable</option>
+                    <option value="Y">Yes</option>
+                    <option value="N">No</option>
+                  </select>
+                  <!-- <input type="text" class="form-control" id="floatingInput" name="live_order_flag" placeholder="Live Order Placement"> -->
+                  <label for="floatingInput">Live Order</label>
+                </div>
+                <div class="form-floating mb-4">
+                  <input type="text" class="form-control" id="floatingInput" name="icici_session_id" placeholder="ICICI Session ID">
+                  <label for="floatingInput">ICICI Session ID</label>
+                </div>
+                <div class="form-floating mb-4">
+                  <input type="text" class="form-control" id="floatingInput" name="dhan_token" placeholder="Dhan Acct Token">
+                  <label for="floatingInput">Dhan Acct Token</label>
+                </div>
+                <div class="form-floating mb-4">
+                  <input type="text" class="form-control" id="floatingInput" name="wa_token" placeholder="Whatsapp Token">
+                  <label for="floatingInput">Whatsapp Token</label>
+                </div>
+                <div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
+                  <div class="btn-group me-2" role="group" aria-label="First group">
+                    <button type="#" href="index.html" class="btn btn-outline-secondary">Submit</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="closePopupForm()">Close</button>
+                  </div>
+                </div>
+              </form>
+      </div>
+
+      <div id="footer">
+      <footer class="text-center text-black" style="background-color: #f1f1f1;">
+        <div class="container pt-4">
+          <section class="mb-4">
+            <a class="btn btn-floating btn-lg text-dark m-1" role="button" data-mdb-ripple-color="dark">
+              <h3>TradeApp</h3>
+              <p>Details About Capital Markets</p>
+            </a>
+            <a class="btn btn-floating btn-lg text-dark m-1" role="button" data-mdb-ripple-color="dark">
+              <form>
+                <div class="mb-4">
+                  <input type="email" placeholder="Enter Your Email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"/>
+                    <div id="emailHelp" class="form-text">
+                      We'll never share your email with anyone else.
+                    </div>
+                  </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+              </form>
+            </a>
+
+          </section>
+        </div>
+        <div class="text-center text-dark p-3" style="background-color: rgba(0, 0, 0, 0.2);">
+          © 2020 Copyright:
+          <a class="text-dark" href="https://mchoudhary.com/">MChoudhary.com</a>
+        </div>
+      </footer>
+      </div>
+    <!-- </div> -->
+
+        <!-- Option 1: Bootstrap Bundle with Popper -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
+</body>
+</html>
