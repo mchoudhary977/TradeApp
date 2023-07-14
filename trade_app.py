@@ -54,6 +54,7 @@ def get_data():
 
     resultDict['OIPCR'] = oipcr_dict
     resultDict['COIPCR'] = coipcr_dict
+    resultDict['ICICI_SESSION_URL'] = getConfig('ICICI_SESSION_URL')
     
     return resultDict
 
