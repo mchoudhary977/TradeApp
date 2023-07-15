@@ -1,6 +1,7 @@
 # Main TradeApp Start
 from flask import Flask, render_template, flash, redirect, url_for, request, jsonify
 from flask_cors import CORS
+from flask_sslify import SSLify
 import traceback
 from datetime import datetime,timedelta, time
 import pytz
@@ -8,13 +9,13 @@ import pandas as pd
 from threading import Thread
 import subprocess
 import json
-
+import ssl
 from trade_modules import *
 import os
 
 app = Flask(__name__)
 CORS(app)
-
+# sslify = SSLify(app, permanent=True, keyfile='key.pem', certfile='cert.pem')
 
 @app.route('/')
 def home():
@@ -208,4 +209,8 @@ if __name__ == '__main__':
     # get_watchList()
     # updateWL = threading.Thread(target=updateWatchList)
     # updateWL.start()
-    app.run(host='0.0.0.0')
+    # app.run(ssl_context=('cert.pem', 'key.pem'))
+    # app.run(host='0.0.0.0')
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    ssl_context.load_cert_chain('cert.pem', 'key.pem')
+    app.run(host='0.0.0.0',ssl_context=ssl_context)
