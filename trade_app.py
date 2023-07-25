@@ -109,6 +109,7 @@ def submit_form():
 
     if len(icici_session_id) > 0:
         print("Updating ICICI Session Token Details")
+        json_data["ICICI_API_SESSION"] = icici_session_id
         # st = iciciUpdSessToken(icici_session_id)
         st = icici_upd_sess_config(icici_session_id)
         if st['status'] == 'SUCCESS':
