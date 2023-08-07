@@ -14,6 +14,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from pyotp import TOTP
+import subprocess
 
 # Global Variables
 config_file="config.json"
@@ -82,6 +83,7 @@ def icici_autologon():
     with open('config.json', 'w') as the_file:
         json.dump(json_data, the_file, indent=4)
     driver.quit()
+    
     return session_id
 
 # Create ICICI Session Function
@@ -100,6 +102,9 @@ def createICICISession(icici_api):
         if 'AUTH' in str(e).upper():
             session_id = icici_autologon()
             if session_id is not None:
+                script_path = './startWebApp.sh'
+                send_whatsapp_msg(mtitle='TA ALERT',mtext='Restarting App')
+                subprocess.call([script_path])
                 createICICISession(icici_api)
             else:
                 return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {str(e)} - Update ICICI Session Token - {getConfig("ICICI_SESSION_URL")}'}
