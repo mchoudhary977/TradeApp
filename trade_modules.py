@@ -10,6 +10,10 @@ import time as tm
 import pandas as pd
 import traceback
 from breeze_connect import BreezeConnect
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from pyotp import TOTP
 
 # Global Variables
 config_file="config.json"
@@ -25,6 +29,61 @@ def getConfig(parameter):
 icici_api = BreezeConnect(api_key = getConfig('ICICI_API_KEY'))
 livePrices = pd.DataFrame()
 
+# ICICI Auto Logon 
+def icici_autologon():
+    # icici_api = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
+    icici_session_url = json.load(open('config.json', 'r'))['ICICI_SESSION_URL']
+    
+    service = webdriver.chrome.service.Service('./chromedriver')
+    service.start()
+    
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless=new")
+    
+    driver = webdriver.Chrome(options=options)
+    driver.get(icici_session_url)
+    driver.implicitly_wait(10)
+    username = driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[1]/input')
+    password = driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[3]/div/input')
+    
+    icici_uname = json.load(open('config.json', 'r'))['ICICI_USER_NAME']
+    icici_pwd = json.load(open('config.json', 'r'))['ICICI_PWD']
+    username.send_keys(icici_uname)
+    password.send_keys(icici_pwd)
+    
+    driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[4]/div/input').click()
+    driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[5]/input').click()
+    
+    tm.sleep(10)
+    totp = TOTP(json.load(open('config.json', 'r'))['ICICI_GOOGLE_AUTHENTICATOR'])
+    token = totp.now()
+    
+    t1 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[1]/input')
+    t2 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[2]/input')
+    t3 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[3]/input')
+    t4 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[4]/input')
+    t5 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[5]/input')
+    t6 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[6]/input')
+    
+    t1.send_keys(token[0])
+    t2.send_keys(token[1])
+    t3.send_keys(token[2])
+    t4.send_keys(token[3])
+    t5.send_keys(token[4])
+    t6.send_keys(token[5])
+    
+    driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[4]/input[1]').click()
+    
+    tm.sleep(10)
+    
+    session_id = driver.current_url.split('apisession=')[1]
+    json_data = json.load(open('config.json', 'r'))
+    json_data['ICICI_API_SESSION'] = session_id
+    with open('config.json', 'w') as the_file:
+        json.dump(json_data, the_file, indent=4)
+    driver.quit()
+    return session_id
+
 # Create ICICI Session Function
 def createICICISession(icici_api):
     try:
@@ -39,7 +98,11 @@ def createICICISession(icici_api):
         line_number = tb[-1].lineno
         print(f'createICICISession :: {line_number} : {err}')
         if 'AUTH' in str(e).upper():
-            return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {str(e)} - Update ICICI Session Token - {getConfig("ICICI_SESSION_URL")}'}
+            session_id = icici_autologon()
+            if session_id is not None:
+                createICICISession(icici_api)
+            else:
+                return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {str(e)} - Update ICICI Session Token - {getConfig("ICICI_SESSION_URL")}'}
             # send_whatsapp_msg(mtitle='ERROR',mtext=f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - Update ICICI Session Token - {readConfig("ICICI_SESSION_URL")}')
             # send_whatsapp_msg(msg=f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - Update ICICI Session Token - {readConfig("ICICI_SESSION_URL")}')
         return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {str(e)}'}
