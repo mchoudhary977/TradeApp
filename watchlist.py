@@ -179,6 +179,13 @@ while True:
                 send_whatsapp_msg('ICICI Error', err)
                 update_date != curr_dt
                 # update_icici_session_notify = 'Y'
+            session_id = icici_autologon()
+            if session_id is not None:
+                script_path = './startWebApp.sh'
+                send_whatsapp_msg(mtitle='TA ALERT',mtext='Restarting App')
+                subprocess.call([script_path])
+                createICICISession(icici_api)
+                
         print(f'watchlist.py :: {line_number} : {err}')
         
     if live_feed == 'Y':
