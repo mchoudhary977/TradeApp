@@ -56,7 +56,7 @@ def get_data():
     resultDict['OIPCR'] = oipcr_dict
     resultDict['COIPCR'] = coipcr_dict
     resultDict['ICICI_SESSION_URL'] = getConfig('ICICI_SESSION_URL')
-    
+
     return resultDict
 
 
@@ -70,9 +70,9 @@ def get_watchlist():
     resultDict['WatchList'] = pd.DataFrame(columns=['No Stocks in Watchlist'])
     if os.path.exists('WatchList.csv'):
         resultDict['WatchList'] = pd.read_csv('WatchList.csv')
-        
+
     resultDict['WatchList'] = resultDict['WatchList'].to_dict(orient='records')
-        
+
     return resultDict
     # return "Hello World"
 
@@ -82,7 +82,7 @@ def startWebApp():
     send_whatsapp_msg(mtitle='TA ALERT',mtext='Restarting App')
     subprocess.call([script_path])
     return home()
-    
+
 # Route to handle form submission
 @app.route('/#', methods=['POST'])
 def submit_form():
@@ -109,7 +109,6 @@ def submit_form():
 
     if len(icici_session_id) > 0:
         print("Updating ICICI Session Token Details")
-        json_data["ICICI_API_SESSION"] = icici_session_id
         # st = iciciUpdSessToken(icici_session_id)
         st = icici_upd_sess_config(icici_session_id)
         if st['status'] == 'SUCCESS':
@@ -211,7 +210,7 @@ if __name__ == '__main__':
     # updateWL = threading.Thread(target=updateWatchList)
     # updateWL.start()
     # app.run(ssl_context=('cert.pem', 'key.pem'))
-    # app.run(host='0.0.0.0')
-    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-    ssl_context.load_cert_chain('cert.pem', 'key.pem')
-    app.run(host='0.0.0.0',ssl_context=ssl_context)
+    app.run(host='0.0.0.0')
+    # ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    # ssl_context.load_cert_chain('cert.pem', 'key.pem')
+    # app.run(host='0.0.0.0',ssl_context=ssl_context)
