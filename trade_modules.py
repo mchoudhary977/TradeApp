@@ -15,6 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from pyotp import TOTP
 import subprocess
+import sqlite3
 
 # Global Variables
 config_file="config.json"

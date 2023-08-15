@@ -62,11 +62,7 @@ def get_data():
 
 @app.route('/get_watchlist')
 def get_watchlist():
-    curr_dt = datetime.now()
     resultDict = {}
-    data_list = ['WatchList','Funds','Positions','Orders','Holdings','Strategy','PCR']
-    # watchlist = getConfig('STOCK_CODES')
-    # watchlist = ["NIFTY","CNXBAN"]
     resultDict['WatchList'] = pd.DataFrame(columns=['No Stocks in Watchlist'])
     if os.path.exists('WatchList.csv'):
         resultDict['WatchList'] = pd.read_csv('WatchList.csv')
@@ -76,6 +72,49 @@ def get_watchlist():
     return resultDict
     # return "Hello World"
 
+
+db = sqlite3.connect('./ticks.db')
+def tokenLookup(symbol_list):
+    """Looks up instrument token for a given script from instrument dump"""
+    token_list = []
+    for symbol in symbol_list:
+        token_list.append(icici.get_names('NSE',symbol)['isec_token_level1'])
+        # token_list.append(int(instrument_df[instrument_df.tradingsymbol==symbol].instrument_token.values[0]))
+    return token_list
+
+def get_hist(ticker,interval,db):
+    token = tokenLookup(ticker)[0].split('!',1)[1].replace(' ','')
+    data = pd.read_sql('''SELECT * FROM TOKEN%s WHERE ts >=  date() - '7 day';''' %token, con=db)                
+    data = data.set_index(['ts'])
+    data.index = pd.to_datetime(data.index)
+    ticks = data.loc[:, ['price']]   
+    df=ticks['price'].resample(interval).ohlc().dropna()
+    return df
+
+def get_watchlist_1():
+    resultDict = {}
+    wl_df = pd.DataFrame(columns=['NS','open','high','low','close','prev_close','difference','candleTime'])
+    tickers = json.load(open('config.json', 'r'))['STOCK_CODES']
+    for ticker in tickers:
+        ticker = [ticker]
+        df = get_hist(ticker,'1d',db)
+        df['date'] = df.index
+        df['symbol'] = ticker[0]
+        df['prev_close'] = df['close'].shift()  
+        df['difference'] = round(df['close'] - df['close'].shift(),2)
+        df=df.iloc[-1]
+        new_row = {'date': df['date'], 'NS': df['symbol'], 'open': df['open'],
+                   'high': df['high'], 'low': df['low'],
+                   'close': df['close'], 'prev_close': df['prev_close'],
+                   'difference': df['difference'], 
+                   'candleTime': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        wl_df = wl_df.append(new_row, ignore_index=True)
+    wl_df = wl_df.to_dict(orient='records')
+    resultDict['WatchList'] = wl_df
+    
+    return resultDict    
+
+    
 @app.route('/restart')
 def startWebApp():
     script_path = '/home/ubuntu/webApp/startWebApp.sh'
