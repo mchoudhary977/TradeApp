@@ -6,6 +6,7 @@ import datetime as dt
 import pandas as pd 
 import json 
 import sqlite3 
+import sys
 
 # generate trading session
 # icici_session = json.load(open('config.json', 'r'))['ICICI_API_SESSION']
