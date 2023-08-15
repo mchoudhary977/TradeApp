@@ -26,13 +26,13 @@ def getConfig(parameter):
         retValue = configparam[parameter]
         return retValue
 
-
-icici_api = BreezeConnect(api_key = getConfig('ICICI_API_KEY'))
+icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
+# icici = BreezeConnect(api_key = getConfig('ICICI_API_KEY'))
 livePrices = pd.DataFrame()
 
 # ICICI Auto Logon 
 def icici_autologon():
-    # icici_api = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
+    # icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
     icici_session_url = json.load(open('config.json', 'r'))['ICICI_SESSION_URL']
     
     service = webdriver.chrome.service.Service('./chromedriver')
@@ -87,10 +87,12 @@ def icici_autologon():
     return session_id
 
 # Create ICICI Session Function
-def createICICISession(icici_api):
+def createICICISession(icici):
     try:
-        icici_api.generate_session(api_secret=getConfig('ICICI_API_SECRET_KEY'), session_token=getConfig('ICICI_API_SESSION'))
-        msg=f'ICICI Session Created for UserID - {icici_api.user_id}'
+        icici_session = json.load(open('config.json', 'r'))['ICICI_API_SESSION']
+        icici.generate_session(api_secret=json.load(open('config.json', 'r'))['ICICI_API_SECRET_KEY'], session_token=icici_session)
+        # icici.generate_session(api_secret=getConfig('ICICI_API_SECRET_KEY'), session_token=getConfig('ICICI_API_SESSION'))
+        msg=f'ICICI Session Created for UserID - {icici.user_id}'
         send_whatsapp_msg(mtitle='ICICI ALERT',mtext=msg)
         return{'status':'SUCCESS','data':msg}
 
@@ -105,7 +107,7 @@ def createICICISession(icici_api):
                 script_path = './startWebApp.sh'
                 send_whatsapp_msg(mtitle='TA ALERT',mtext='Restarting App')
                 subprocess.call([script_path])
-                createICICISession(icici_api)
+                createICICISession(icici)
             else:
                 return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {str(e)} - Update ICICI Session Token - {getConfig("ICICI_SESSION_URL")}'}
             # send_whatsapp_msg(mtitle='ERROR',mtext=f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - Update ICICI Session Token - {readConfig("ICICI_SESSION_URL")}')
@@ -154,8 +156,8 @@ def icici_upd_sess_config(icici_session_id):
 def iciciGetSymDetail(exchange_code = "NSE",stock_code = "NIFTY",product_type = "Cash",interval = "30minute",
                         from_date = (datetime.now()-timedelta(1)),to_date = (datetime.now()-timedelta(0))):
     try:
-        if icici_api.user_id is None:
-            st = createICICISession(icici_api)
+        if icici.user_id is None:
+            st = createICICISession(icici)
             if st['status'] != 'SUCCESS':
                 raise ValueError(st['data'])
 
@@ -169,7 +171,7 @@ def iciciGetSymDetail(exchange_code = "NSE",stock_code = "NIFTY",product_type = 
         to_date = to_date.strftime('%Y-%m-%d')+'T23:59:59.000Z'
         change = 'N'
         i=0
-        df_tick = icici_api.get_historical_data_v2(interval=interval,
+        df_tick = icici.get_historical_data_v2(interval=interval,
                     from_date= from_date,
                     to_date= to_date,
                     stock_code=stock_code,
