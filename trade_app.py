@@ -1,6 +1,6 @@
 # Main TradeApp Start
 from flask import Flask, render_template, flash, redirect, url_for, request, jsonify
-from flask_cors import CORS
+# from flask_cors import CORS
 # from flask_sslify import SSLify
 import traceback
 # from datetime import datetime as dt,timedelta, time
@@ -11,11 +11,11 @@ import subprocess
 import json
 import ssl
 from trade_modules import *
-from ic_watchlist import ic_get_watchlist, ic_get_sym_price
+# from ic_watchlist import ic_get_watchlist, ic_get_sym_price
 import os
 
 app = Flask(__name__)
-CORS(app)
+# CORS(app)
 
 instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
 instrument_df = instrument_list
@@ -23,6 +23,7 @@ instrument_df = instrument_list
 # sslify = SSLify(app, permanent=True, keyfile='key.pem', certfile='cert.pem')
 @app.route('/get_watchlist')
 def get_watchlist():
+    
     return ic_get_watchlist(mode='R')
     
 # w1=get_watchlist('R')    
@@ -41,7 +42,7 @@ def get_data():
     resultDict = {}
     data_list = ['WatchList','Funds','Positions','Orders','Holdings','Strategy','PCR']
     resultDict['WatchList'] = pd.DataFrame(columns=['No Stocks in Watchlist'])
-    resultDict['WatchList']=get_watchlist(mode='N')
+    resultDict['WatchList']=pd.read_csv('WatchList.csv')
     # if os.path.exists('WatchList.csv'):
     #     resultDict['WatchList'] = pd.read_csv('WatchList.csv')
 
@@ -56,7 +57,8 @@ def get_data():
     coipcr_dict = {}
     wl = resultDict['WatchList']
     for i in unique_symbols:
-        spot_px = wl.loc[wl['Code']==i].sort_values(by=['Date'], ascending=[False]).head(1)['Close'].item()
+        spot_px = wl.loc[wl['Code']==i].sort_values(by=['CandleTime'], ascending=[False]).head(1)['Close'].item()
+        # spot_px = wl.loc[wl['Code']==i].sort_values(by=['Date'], ascending=[False]).head(1)['Close'].item()
         print(spot_px)
         strike_step = 100 if i == 'CNXBAN' else 50
         atm_strike = int(round(spot_px/50,0)*50) if i != 'CNXBAN' else int(round(spot_px/100,0)*100)

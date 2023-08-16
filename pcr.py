@@ -16,7 +16,7 @@ while True:
             curr_dt = datetime.now()
             print(curr_dt)
             wl = pd.read_csv('WatchList.csv')
-            watchlist = wl['CD'].to_list()
+            watchlist = wl['Code'].to_list()
             oi_pcr = pd.DataFrame()
             coi_pcr = pd.DataFrame()
             for i in watchlist:
