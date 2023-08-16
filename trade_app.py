@@ -77,7 +77,7 @@ def get_watchlist_1():
     # return "Hello World"
 
 
-db = sqlite3.connect('./ticks.db')
+
 def tokenLookup(symbol_list):
     """Looks up instrument token for a given script from instrument dump"""
     token_list = []
@@ -87,6 +87,8 @@ def tokenLookup(symbol_list):
     return token_list
 
 def get_hist(ticker,interval,db):
+    db = sqlite3.connect('./ticks.db')
+    c=db.cursor()
     token = instrument_df[instrument_df['CD']==ticker]['TK'].values[0].replace(' ','')
     data = pd.read_sql('''SELECT * FROM TOKEN%s WHERE ts >=  date() - '7 day';''' %token, con=db)                
     data = data.set_index(['ts'])
