@@ -30,11 +30,12 @@ def on_ticks(ticks):
     # print(f'{ticks["symbol"]}-{ticks["last"]}')
     global livePrices 
     if len(livePrices) > 0:
-        livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'CandleTime'] = ticks['ltt']
+        livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'CandleTime'] = dt.datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'Close'] = ticks['last']
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'Open'] = ticks['open']
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'High'] = ticks['high']
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'Low'] = ticks['low']
+        
     else:
         new_row = {'CandleTime': ticks['ltt'], 'Token': ticks['symbol'][4:], 'Close': ticks['last'], 
                    'Open': ticks['open'], 'High': ticks['high'], 'Low': ticks['low']}
