@@ -11,6 +11,7 @@ import subprocess
 import json
 import ssl
 from trade_modules import *
+from ic_watchlist import *
 import os
 
 app = Flask(__name__)
