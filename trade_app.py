@@ -60,8 +60,8 @@ def get_data():
     return resultDict
 
 
-@app.route('/get_watchlist')
-def get_watchlist():
+# @app.route('/get_watchlist')
+def get_watchlist_1():
     resultDict = {}
     resultDict['WatchList'] = pd.DataFrame(columns=['No Stocks in Watchlist'])
     if os.path.exists('WatchList.csv'):
@@ -91,9 +91,10 @@ def get_hist(ticker,interval,db):
     df=ticks['price'].resample(interval).ohlc().dropna()
     return df
 
-def get_watchlist_1():
+@app.route('/get_watchlist')
+def get_watchlist():
     resultDict = {}
-    wl_df = pd.DataFrame(columns=['NS','open','high','low','close','prev_close','difference','candleTime'])
+    wl_df = pd.DataFrame(columns=['NS','Open','High','Low','Close','PrevClose','Difference','CandleTime'])
     tickers = json.load(open('config.json', 'r'))['STOCK_CODES']
     for ticker in tickers:
         ticker = [ticker]
@@ -103,11 +104,11 @@ def get_watchlist_1():
         df['prev_close'] = df['close'].shift()  
         df['difference'] = round(df['close'] - df['close'].shift(),2)
         df=df.iloc[-1]
-        new_row = {'date': df['date'], 'NS': df['symbol'], 'open': df['open'],
-                   'high': df['high'], 'low': df['low'],
-                   'close': df['close'], 'prev_close': df['prev_close'],
-                   'difference': df['difference'], 
-                   'candleTime': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        new_row = {'date': df['date'], 'NS': df['symbol'], 'Open': df['open'],
+                   'High': df['high'], 'Low': df['low'],
+                   'Close': df['close'], 'PrevClose': df['prev_close'],
+                   'Difference': df['difference'], 
+                   'CandleTime': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         wl_df = wl_df.append(new_row, ignore_index=True)
     wl_df = wl_df.to_dict(orient='records')
     resultDict['WatchList'] = wl_df

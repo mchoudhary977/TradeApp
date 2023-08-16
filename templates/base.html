@@ -169,7 +169,7 @@
                                     $.each(watchlist, function(key, value) {
                                         $("#symbol"+key).html("<b>"+value['NS']+"</b>");
                                         $("#candle_time").html(value['CandleTime']);
-                                        if (value['Close'] > value['Open']){
+                                        if (value['Close'] > value['PrevClose']){
                                           $("#close"+key).html("<b style='color: #007500;'>"+"C-"+value['Close']+"</b>");
                                           $("#open"+key).html("<b style='color: #007500;'>"+"O-"+value['Open']+"</b>");
                                           $("#high"+key).html("<b style='color: #007500;'>"+"H-"+value['High']+"</b>");
