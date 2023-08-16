@@ -1,7 +1,7 @@
 # Main TradeApp Start
 from flask import Flask, render_template, flash, redirect, url_for, request, jsonify
 from flask_cors import CORS
-from flask_sslify import SSLify
+# from flask_sslify import SSLify
 import traceback
 # from datetime import datetime as dt,timedelta, time
 import pytz
@@ -11,7 +11,7 @@ import subprocess
 import json
 import ssl
 from trade_modules import *
-from ic_watchlist import *
+from ic_watchlist import ic_get_watchlist, ic_get_sym_price
 import os
 
 app = Flask(__name__)
