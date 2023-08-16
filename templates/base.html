@@ -167,7 +167,7 @@
                                     var watchlist = data['WatchList']
 
                                     $.each(watchlist, function(key, value) {
-                                        $("#symbol"+key).html("<b>"+value['NS']+"</b>");
+                                        $("#symbol"+key).html("<b>"+value['SymbolName']+"</b>");
                                         $("#candle_time").html(value['CandleTime']);
                                         if (value['Close'] > value['PrevClose']){
                                           $("#close"+key).html("<b style='color: #007500;'>"+"C-"+value['Close']+"</b>");

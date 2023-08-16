@@ -17,7 +17,7 @@
               <div class="accordion-item">
                 <!-- <h4 class="accordion-header"> -->
                   <!-- <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne"> -->
-                  {% if result1['Close'][i] > result1['Open'][i] %}
+                  {% if result1['Close'][i] > result1['PrevClose'][i] %}
                   <button class="accordion-button collapsed" id="button{{i}}" style="background: #bcf5d9;" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{i|int+1}}" aria-expanded="false" aria-controls="flush-collapse{{i|int+1}}">
                   {% else %}
                   <button class="accordion-button collapsed" id="button{{i}}" style="background: #FADCD9;" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{i|int+1}}" aria-expanded="false" aria-controls="flush-collapse{{i|int+1}}">
@@ -25,12 +25,12 @@
                       <div class="container">
                         <div class="row">
                           <div class="col" id="symbol{{i}}">
-                            <b>{{ result1['NS'][i] }}</b>
+                            <b>{{ result1['SymbolName'][i] }}</b>
                           </div>
                         </div>
                         <hr>
                         <div class="row row-cols-2 row-cols-lg-4 g-2 g-lg-3">
-                          {% if result1['Close'][i] > result1['Open'][i] %}
+                          {% if result1['Close'][i] > result1['PrevClose'][i] %}
                           <div class="col" id="close{{i}}">
                             <b style="color: #007500;">C-{{ result1['Close'][i] }}</b>
                           </div>
@@ -63,8 +63,8 @@
                 <!-- </h4> -->
                 <!-- <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample"> -->
                 <div id="flush-collapse{{i|int+1}}" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
-                      {% if result1['CD'][i] == 'NIFTY' or result1['CD'][i] == 'CNXBAN' or result1['CD'][i] == 'NIFFIN' %}
-                      {% set oipcr = resultDict['OIPCR'][result1['CD'][i]] %}
+                      {% if result1['Code'][i] == 'NIFTY' or result1['Code'][i] == 'CNXBAN' or result1['Code'][i] == 'NIFFIN' %}
+                      {% set oipcr = resultDict['OIPCR'][result1['Code'][i]] %}
                       <table class="table-info">
                           <tr class="table-info">
                             <td colspan="4" style="background: #cbefff; text-align: center; border: 1px solid;"><b>PCR - OI</b> [{{ oipcr['Date'][oipcr.index|min] }} | {{ oipcr['ExpiryDate'][oipcr.index|min] }}]</td>
@@ -84,7 +84,7 @@
                             <td class="table-info" style="text-align: center; border: 1px solid;">{{ oipcr['PCR-OI'][j] }}</td>
                           </tr>
                           {% endfor %}
-                      {% set coipcr = resultDict['COIPCR'][result1['CD'][i]] %}
+                      {% set coipcr = resultDict['COIPCR'][result1['Code'][i]] %}
                           <tr class="table-info">
                             <td colspan="4" style="background: #cbefff; text-align: center; border: 1px solid;"><b>PCR - COI</b> [{{ coipcr['Date'][coipcr.index|min] }} | {{ coipcr['ExpiryDate'][coipcr.index|min] }}]</td>
                           </tr>
