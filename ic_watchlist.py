@@ -128,12 +128,11 @@ def ic_get_watchlist(mode='R'):
 def ic_start_market_feed():
     global livePrices
     if icici.user_id is None:
-        st = createICICISession(icici)    
-    if os.path.exists('WatchList.csv'):
-        wl_df = pd.read_csv('WatchList.csv')
-        livePrices = wl_df
-        tokens=ic_tokenLookup(list(wl_df['Code'].values))
-        ic_subscribeFeed(tokens)
+        st = createICICISession(icici)
+    wl_df = pd.read_csv('WatchList.csv')
+    livePrices = wl_df
+    tokens=ic_tokenLookup(list(wl_df['Code'].values))
+    ic_subscribeFeed(tokens)
 
 instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
 instrument_df = instrument_list
@@ -146,12 +145,15 @@ subscription_flag = 'N'
 while True:    
     now = dt.datetime.now()       
     if (now.time() >= time(9,14,50) and now.time() < time(15,35,0)):
-        if subscription_flag=='N':
-            icici.ws_connect()
-            icici.on_ticks = on_ticks
-            ic_start_market_feed()
-            # subscribeFeed(tokens)
-            subscription_flag = 'Y'    
+        if subscription_flag=='N':           
+            if os.path.exists('WatchList.csv'):
+                icici.ws_connect()
+                icici.on_ticks = on_ticks
+                ic_start_market_feed()
+                subscription_flag = 'Y'
+            else:
+                ic_get_watchlist(mode='C')
+            # subscribeFeed(tokens)                
         else:
             livePrices.to_csv('WatchList.csv',index=False) 
             print(livePrices)
