@@ -106,9 +106,9 @@ def createICICISession(icici):
         if 'AUTH' in str(e).upper():
             session_id = icici_autologon()
             if session_id is not None:
-                script_path = './startWebApp.sh'
-                send_whatsapp_msg(mtitle='TA ALERT',mtext='Restarting App')
-                subprocess.call([script_path])
+                # script_path = './startWebApp.sh'
+                # send_whatsapp_msg(mtitle='TA ALERT',mtext='Restarting App')
+                # subprocess.call([script_path])
                 createICICISession(icici)
             else:
                 return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {str(e)} - Update ICICI Session Token - {getConfig("ICICI_SESSION_URL")}'}
