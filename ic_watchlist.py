@@ -3,6 +3,7 @@ from trade_modules import *
 import logging 
 import os 
 import datetime as dt 
+from datetime import timedelta, time
 import pandas as pd 
 import json 
 import sys
@@ -44,16 +45,39 @@ def on_ticks(ticks):
                    'Open': ticks['open'], 'High': ticks['high'], 'Low': ticks['low']}
         livePrices=pd.DataFrame(new_row, index = [0]) 
 
-def ic_get_sym_price(symbol):
+def ic_get_sym_price(symbol,exchange_code='NSE',interval = "1minute",product_type="Cash"):
     sym = instrument_df[instrument_df['CD']==symbol][['NS','EC','SG','TK','CD','LS']]  
     sym.rename(columns={'NS':'SymbolName','EC':'ExchangeCode','SG':'Segment',
                         'TK':'Token','CD':'Code','LS':'LotSize'}, inplace=True) 
     
-    response=iciciGetSymDetail(exchange_code = "NSE",stock_code = symbol,product_type = "Cash",interval = "5minute",
-                            from_date = (datetime.now()-timedelta(1)),to_date = (datetime.now()-timedelta(0)))
-    if response['status'] == 'SUCCESS':
-        if len(response['data']) > 0:
-            data = response['data']
+    if icici.user_id is None:
+        st = createICICISession(icici)
+        if st['status'] != 'SUCCESS':
+            print(st['data'])
+            # raise ValueError(st['data'])
+    i=0
+    from_date = (datetime.now()-timedelta(1))
+    while i < 10:
+        from_date = from_date-timedelta(i)
+        if from_date.weekday() not in (5,6) and from_date.strftime('%Y-%m-%d') not in getConfig('HOLIDAY_LIST'):
+            break
+        i=i+1
+    from_date = from_date.strftime('%Y-%m-%d')+'T00:00:00.000Z'
+    to_date = datetime.now().strftime('%Y-%m-%d')+'T23:59:59.000Z'
+    change = 'N'
+    i=0   
+    
+    response = icici.get_historical_data_v2(interval=interval,
+                 from_date= from_date,
+                 to_date= to_date,
+                 stock_code=symbol,
+                 # stock_code='CNXBAN',
+                 exchange_code=exchange_code,
+                 # exchange_code='NSE',
+                 product_type=product_type)
+    if response['Status']==200:
+        if len(response['Success']) > 0:
+            data = pd.DataFrame(response['Success'])
             data['date'] = data['datetime']
             data['datetime'] = data['datetime'].apply(lambda x: dt.datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
             max_timestamp = data.groupby(data['datetime'].dt.date)['datetime'].max()[-2]
@@ -142,34 +166,31 @@ def ic_start_market_feed():
 
 
 
-# wl_df = pd.read_csv('WatchList.csv')
-# tokens=tokenLookup(list(wl_df['Code'].values))
-
-while True:    
-    now = dt.datetime.now()       
-    if (now.time() >= time(9,14,50) and now.time() < time(15,35,0)):
-        if subscription_flag=='N':           
-            if os.path.exists('WatchList.csv'):
-                icici.ws_connect()
-                icici.on_ticks = on_ticks
-                ic_start_market_feed()
-                subscription_flag = 'Y'
-            else:
-                ic_get_watchlist(mode='C')
-            # subscribeFeed(tokens)                
-        else:
-            livePrices.to_csv('WatchList.csv',index=False) 
-            print(livePrices)
-    if (now.hour >= 15 and now.minute >= 35 and subscription_flag=='Y'):
-        ic_unsubscribeFeed(tokens)
-        icici.ws_disconnect()
-        subscription_flag='N'
-        db_delete_ticks(tickers)
-        break
+if __name__ == '__main__':
+    if os.path.exists('WatchList.csv') == False:
+        ic_get_watchlist(mode='C')
     
-    if subscription_flag == 'Y':
-        tm.sleep(1)
-    else:
-        tm.sleep(60)
-
-sys.exit()
+    while True:
+        now = dt.datetime.now()
+        if (now.time() >= time(9,14,50) and now.time() < time(15,35,0)):
+            if subscription_flag=='N':
+                if os.path.exists('WatchList.csv'):
+                    icici.ws_connect()
+                    icici.on_ticks = on_ticks
+                    ic_start_market_feed()
+                    subscription_flag = 'Y'
+                else:
+                    ic_get_watchlist(mode='C')
+            else:
+                livePrices.to_csv('WatchList.csv',index=False) 
+        if (now.hour >= 15 and now.minute >= 35 and subscription_flag=='Y'):
+            ic_unsubscribeFeed(tokens)
+            icici.ws_disconnect()
+            subscription_flag='N'
+            db_delete_ticks(tickers)
+            break
+        
+        if subscription_flag == 'Y':
+            tm.sleep(1)
+        else:
+            tm.sleep(60)

@@ -109,7 +109,9 @@ def createICICISession(icici):
                 # script_path = './startWebApp.sh'
                 # send_whatsapp_msg(mtitle='TA ALERT',mtext='Restarting App')
                 # subprocess.call([script_path])
-                createICICISession(icici)
+                st=createICICISession(icici)
+                return st
+                
             else:
                 return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {str(e)} - Update ICICI Session Token - {getConfig("ICICI_SESSION_URL")}'}
             # send_whatsapp_msg(mtitle='ERROR',mtext=f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - Update ICICI Session Token - {readConfig("ICICI_SESSION_URL")}')
