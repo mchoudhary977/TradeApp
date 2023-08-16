@@ -50,7 +50,7 @@ def get_sym_price(symbol):
             sym['Close']=0
             sym['PrevClose']=0
             sym['Difference']=0
-            sym['CandleTime']=dt.datetime.now()
+            sym['CandleTime']=datetime.now()
     else:
         sym['Open']=0
         sym['High']=0
