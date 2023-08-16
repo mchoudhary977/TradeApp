@@ -30,8 +30,8 @@ def get_sym_price(symbol):
     if response['status'] == 'SUCCESS':
         if len(response['data']) > 0:
             data = response['data']
-            data['datetime'] = data['datetime'].apply(lambda x: dt.datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
-            max_timestamp = data.groupby(data['datetime'].dt.date)['datetime'].max()[-2]
+            data['datetime'] = data['datetime'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
+            max_timestamp = data.groupby(data['datetime'].date)['datetime'].max()[-2]
             data = data[data['datetime']>=max_timestamp]
             data['date'] = data['datetime']
             data = data.set_index('datetime')
