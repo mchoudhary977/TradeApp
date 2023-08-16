@@ -27,7 +27,7 @@ def unsubscribeFeed(tokens):
         print(st)
 
 def on_ticks(ticks): 
-    print(f'{ticks["symbol"]}-{ticks["last"]}')
+    # print(f'{ticks["symbol"]}-{ticks["last"]}')
     global livePrices 
     if len(livePrices) > 0:
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'CandleTime'] = ticks['ltt']
@@ -61,7 +61,7 @@ while True:
             subscription_flag = 'Y'    
         else:
             livePrices.to_csv('WatchList.csv',index=False) 
-            print(livePrices)
+            # print(livePrices)
     if (now.hour >= 15 and now.minute >= 35 and subscription_flag=='Y'):
         unsubscribeFeed(tokens)
         icici.ws_disconnect()
