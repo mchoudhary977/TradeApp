@@ -3,7 +3,7 @@ from flask import Flask, render_template, flash, redirect, url_for, request, jso
 from flask_cors import CORS
 from flask_sslify import SSLify
 import traceback
-from datetime import datetime as dt,timedelta, time
+# from datetime import datetime as dt,timedelta, time
 import pytz
 import pandas as pd
 from threading import Thread
@@ -20,90 +20,10 @@ instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/tx
 instrument_df = instrument_list
 
 # sslify = SSLify(app, permanent=True, keyfile='key.pem', certfile='cert.pem')
-def get_sym_price(symbol):
-    sym = instrument_df[instrument_df['CD']==symbol][['NS','EC','SG','TK','CD','LS']]  
-    sym.rename(columns={'NS':'SymbolName','EC':'ExchangeCode','SG':'Segment',
-                        'TK':'Token','CD':'Code','LS':'LotSize'}, inplace=True) 
-    
-    response=iciciGetSymDetail(exchange_code = "NSE",stock_code = symbol,product_type = "Cash",interval = "5minute",
-                            from_date = (datetime.now()-timedelta(1)),to_date = (datetime.now()-timedelta(0)))
-    if response['status'] == 'SUCCESS':
-        if len(response['data']) > 0:
-            data = response['data']
-            data['datetime'] = data['datetime'].apply(lambda x: dt.datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
-            max_timestamp = data.groupby(data['datetime'].dt.date)['datetime'].max()[-2]
-            data = data[data['datetime']>=max_timestamp]
-            data['date'] = data['datetime']
-            data = data.set_index('datetime')
-            data=data.resample('1D').agg({'date':'last','stock_code':'first','open': 'first','high':'max','low':'min','close':'last'}).dropna()               
-            sym['Open']=data.iloc[-1]['open']
-            sym['High']=data.iloc[-1]['high']
-            sym['Low']=data.iloc[-1]['low']
-            sym['Close']=data.iloc[-1]['close']
-            sym['PrevClose']=data.iloc[-2]['close']
-            sym['Difference']=data.iloc[-1]['close'] - data.iloc[-2]['close']
-            sym['CandleTime']=data.iloc[-1]['date']
-        else:
-            sym['Open']=0
-            sym['High']=0
-            sym['Low']=0
-            sym['Close']=0
-            sym['PrevClose']=0
-            sym['Difference']=0
-            sym['CandleTime']=dt.datetime.now()
-    else:
-        sym['Open']=0
-        sym['High']=0
-        sym['Low']=0
-        sym['Close']=0
-        sym['PrevClose']=0
-        sym['Difference']=0
-        sym['CandleTime']=dt.datetime.now()
-    return sym
-
 @app.route('/get_watchlist')
-def get_watchlist(mode='R'):
-    resultDict = {}
-    symbol_list = json.load(open('config.json', 'r'))['STOCK_CODES']
-    wl_df = pd.DataFrame(columns=['SymbolName','ExchangeCode','Segment','Token','Code','LotSize',
-                                  'Open','High','Low','Close','PrevClose','Difference','CandleTime'])
-    if mode == 'C':  # Create
-        for symbol in symbol_list:
-            sym=get_sym_price(symbol)
-            wl_df = pd.concat([wl_df,sym],ignore_index=True)
-        wl_df.to_csv('WatchList.csv',index=False)       
-            
-    elif mode == 'I':  # Insert
-        wl_df = pd.read_csv('WatchList.csv')
-        wl = list(wl_df['Code'].values)
-        inserted_symbols = [element for element in symbol_list if element not in wl]
-        
-        if len(inserted_symbols) > 0:
-            for i in inserted_symbols:
-                sym=get_sym_price(symbol)
-                wl_df = pd.concat([wl_df,sym],ignore_index=True)
-            wl_df.to_csv('WatchList.csv',index=False) 
-    elif mode == 'D':  # Delete
-        wl_df = pd.read_csv('WatchList.csv')
-        wl = list(wl_df['Code'].values)
-        deleted_symbols = [element for element in wl if element not in symbol_list]
-        if len(deleted_symbols) > 0:
-            wl_df = wl_df[~wl_df['Code'].isin(deleted_symbols)]
-            wl_df.to_csv('WatchList.csv',index=False)
-    elif mode == 'R':  # Read
-        if os.path.exists('WatchList.csv'):
-            wl_df = pd.read_csv('WatchList.csv')
-        else:
-            wl_df = get_watchlist('C')  
-        wl_df = wl_df.to_dict(orient='records')
-    elif mode == 'N':  # NormalRead
-        if os.path.exists('WatchList.csv'):
-            wl_df = pd.read_csv('WatchList.csv')
-        else:
-            wl_df = get_watchlist('C')  
-    resultDict['WatchList-DF'] = wl_df
-    return resultDict
-
+def get_watchlist():
+    return ic_get_watchlist(mode='R')
+    
 # w1=get_watchlist('R')    
         
 @app.route('/')
