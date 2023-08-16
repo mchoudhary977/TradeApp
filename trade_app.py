@@ -219,7 +219,7 @@ def get_webhook():
     
 
 if __name__ == '__main__':
-    ic_get_watchlist(mode='C')
+    # ic_get_watchlist(mode='C')
     # createICICISession(icici_api)
     # createAccountFiles()
     # get_watchList()
