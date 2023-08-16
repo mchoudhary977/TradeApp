@@ -77,7 +77,7 @@ def get_watchlist_1():
     # return "Hello World"
 
 
-
+# db = sqlite3.connect('./ticks.db')
 def tokenLookup(symbol_list):
     """Looks up instrument token for a given script from instrument dump"""
     token_list = []
@@ -86,7 +86,8 @@ def tokenLookup(symbol_list):
         # token_list.append(int(instrument_df[instrument_df.tradingsymbol==symbol].instrument_token.values[0]))
     return token_list
 
-def get_hist(ticker,interval,db):
+# def get_hist(ticker,interval,db):
+def get_hist(ticker,interval):
     db = sqlite3.connect('./ticks.db')
     c=db.cursor()
     token = instrument_df[instrument_df['CD']==ticker]['TK'].values[0].replace(' ','')
@@ -104,7 +105,7 @@ def get_watchlist():
     tickers = json.load(open('config.json', 'r'))['STOCK_CODES']
     for ticker in tickers:
         # ticker = [ticker]
-        df = get_hist(ticker,'1d',db)
+        df = get_hist(ticker,'1d')
         df['date'] = df.index
         df['symbol'] = ticker[0]
         df['prev_close'] = df['close'].shift()  
