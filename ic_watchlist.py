@@ -126,17 +126,19 @@ def ic_get_watchlist(mode='R'):
 
 
 def ic_start_market_feed():
+    global livePrices
     if icici.user_id is None:
         st = createICICISession(icici)    
     if os.path.exists('WatchList.csv'):
         wl_df = pd.read_csv('WatchList.csv')
+        livePrices = wl_df
     tokens=tokenLookup(list(wl_df['Code'].values))
     subscribeFeed(tokens)
 
 instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
 instrument_df = instrument_list
 subscription_flag = 'N'
-livePrices = wl_df
+
 
 # wl_df = pd.read_csv('WatchList.csv')
 # tokens=tokenLookup(list(wl_df['Code'].values))
