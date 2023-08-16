@@ -1,22 +1,45 @@
 from dhanhq import dhanhq
 import json
 import pandas as pd 
-
-dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],
-              json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+import os 
 
 # dhan.get_fund_limits()
 # dh_place_mkt_order('NFO',52337,'buy',50,0)
 
 def dh_get_positions():
+    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
     st = dhan.get_positions()
     if st['status']=='success':
         if len(st['data']) > 0:
-            return {'status':'SUCCESS', 'data':st['data']}
+            data = st['data']            
+            df = pd.DataFrame(data)         
+            df.to_csv('Positions.csv',index=False)
+            return {'status':'SUCCESS', 'data':df}
     return {'status':'FAILURE', 'data':'No data returned'}
-
     
-def dh_place_mkt_order(exchange,security_id,buy_sell,quantity,sl_price):
+
+def dh_get_orders():
+    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+    st = dhan.get_order_list()
+    if st['status']=='success':
+        if len(st['data']) > 0:
+            data = st['data']
+            df = pd.DataFrame(data)
+            df.to_csv('Orders.csv',index=False)
+            return {'status':'SUCCESS', 'data':df}
+    return {'status':'FAILURE', 'data':'No data returned'}
+ 
+
+def dh_get_order_id(order_id):
+    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+    st = dhan.get_order_by_id(order_id)
+    if st['status']=='success':
+        if len(st['data']) > 0:
+            data = st['data']
+        return data
+   
+def dh_place_mkt_order(exchange,security_id,buy_sell,quantity,sl_price=0):
+    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
     drv_expiry_date=None
     drv_options_type=None
     drv_strike_price=None
@@ -56,7 +79,8 @@ def dh_place_mkt_order(exchange,security_id,buy_sell,quantity,sl_price):
 # dhan.get_order_by_id('6523081610313')
 # order_id = '6523081610313'
 # ModifyOrder('6523081610313',price=32,quantity=100)
-def dh_modify_order(order_id,price,quantity):    
+def dh_modify_order(order_id,price,quantity):  
+    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
     # Modify order given order id
     dhan.modify_order(order_id=order_id,
                       order_type=dhan.LIMIT,
@@ -70,5 +94,6 @@ def dh_modify_order(order_id,price,quantity):
 
 # s=dh_cancel_order(order_id = '6523081610313')
 def dh_cancel_order(order_id):
+    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
     st = dhan.cancel_order(order_id)
     return st 

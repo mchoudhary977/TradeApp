@@ -19,6 +19,7 @@ ic_instrument_df['EXPIRY'] = ic_instrument_df[ic_instrument_df['EC']=='NFO']['CD
 ic_instrument_df['OT'] = ic_instrument_df[ic_instrument_df['EC']=='NFO']['CD'].apply(lambda s: s.split('-')[-1])
 
 dh_instrument_df=pd.read_csv('https://images.dhan.co/api-data/api-scrip-master.csv')
+dh_instrument_df = dh_instrument_df[dh_instrument_df['SEM_OPTION_TYPE'].isin(['PE','CE'])][dh_instrument_df['SEM_EXM_EXCH_ID']=='NSE']
 
 ic_instrument_df.to_csv('icici.csv',index=False)
 dh_instrument_df.to_csv('dhan.csv',index=False)

@@ -10,6 +10,8 @@ from dh_functions import *
 # from trade_modules import * 
 # from kiteconnect import KiteTicker, KiteConnect
 import pandas as pd
+import time as tm
+from datetime import datetime, time
 # import datetime as dt
 import os
 import sys
@@ -65,13 +67,65 @@ if __name__ == '__main__':
                 if (sig['active'] == 'Y' and sig['signal'] == 'green' and last_px > sig['entry'] and sig['entry'] > 0):
                     sig['active'] = 'N'
                     opt=ic_option_chain(ticker, underlying_price=last_px, duration=0).iloc[2]
+                    st = dh_place_mkt_order('NFO',opt['TK'],'buy',50,0)
+                    tm.sleep(2)
+                    order_id = st['data']['orderId'] if st['status']=='success' else None
+                    order_det = dh_get_order_id(order_id)['data']
+                    if order_det['orderStatus']=='TRADED':
+                        new_row = {}
+                        new_row['name'] = 'Bullish EMA Strategy'
+                        new_row['tradingSymbol'] = order_det['tradingSymbol']
+                        new_row['securityId'] = order_det['securityId']
+                        new_row['type'] = 'long'
+                        new_row['quantity'] = order_det['quantity']
+                        new_row['entry_id'] = order_det['orderId']
+                        new_row['entry_px'] = order_det['price']
+                        new_row['exit_id'] = None
+                        new_row['exit_px'] = None
+                        new_row['symbol'] = ticker
+                        new_row['entry'] = sig['entry']
+                        new_row['stoploss'] = sig['sl']
+                        new_row['target'] = sig['entry'] + (sig['entry'] - sig['sl'])
+                        new_row['step'] = sig['entry'] - sig['sl']
+                        
+                        stg_file = 'Strategy.csv'
+                        stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
+                        stg_df = pd.concat([stg_df,pd.DataFrame(new_row)],ignore_index=True)
+                         
                     print(f"add buy order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}")
                 elif (sig['active'] == 'Y' and sig['signal'] == 'red' and last_px < sig['entry'] and sig['entry'] > 0):
                     sig['active'] = 'N'
                     opt=ic_option_chain(ticker, underlying_price=last_px, option_type="PE", duration=0).iloc[-3]
+                    st = dh_place_mkt_order('NFO',opt['TK'],'buy',50,0)
+                    tm.sleep(2)
+                    order_id = st['data']['orderId'] if st['status']=='success' else None
+                    order_det = dh_get_order_id(order_id)['data']
+                    if order_det['orderStatus']=='TRADED':
+                        new_row = {}
+                        new_row['name'] = 'Bullish EMA Strategy'
+                        new_row['tradingSymbol'] = order_det['tradingSymbol']
+                        new_row['securityId'] = order_det['securityId']
+                        new_row['type'] = 'short'
+                        new_row['quantity'] = order_det['quantity']
+                        new_row['entry_id'] = order_det['orderId']
+                        new_row['entry_px'] = order_det['price']
+                        new_row['exit_id'] = None
+                        new_row['exit_px'] = None
+                        new_row['symbol'] = ticker
+                        new_row['entry'] = sig['entry']
+                        new_row['stoploss'] = sig['sl']
+                        new_row['target'] = sig['entry'] + (sig['entry'] - sig['sl'])
+                        new_row['step'] = sig['entry'] - sig['sl']
+                        
+                        stg_file = 'Strategy.csv'
+                        stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
+                        stg_df = pd.concat([stg_df,pd.DataFrame(new_row)],ignore_index=True)
+                    
                     print(f"add sell order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}")
+                    
         else:
             break
-        time.sleep(1)
+        tm.sleep(1)
         
     sys.exit()
+    
