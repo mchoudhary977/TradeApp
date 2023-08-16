@@ -7,6 +7,10 @@ import pandas as pd
 import json 
 import sys
 
+instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
+instrument_df = instrument_list
+subscription_flag = 'N'
+
 def ic_tokenLookup(symbol_list):
     """Looks up instrument token for a given script from instrument dump"""
     token_list = []
@@ -129,14 +133,13 @@ def ic_start_market_feed():
     global livePrices
     if icici.user_id is None:
         st = createICICISession(icici)
-    wl_df = pd.read_csv('WatchList.csv')
-    livePrices = wl_df
-    tokens=ic_tokenLookup(list(wl_df['Code'].values))
-    ic_subscribeFeed(tokens)
+    if os.path.exists('WatchList.csv'):
+        wl_df = pd.read_csv('WatchList.csv')
+        livePrices = wl_df
+        tokens=ic_tokenLookup(list(wl_df['Code'].values))
+        ic_subscribeFeed(tokens)
 
-instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
-instrument_df = instrument_list
-subscription_flag = 'N'
+
 
 
 # wl_df = pd.read_csv('WatchList.csv')
