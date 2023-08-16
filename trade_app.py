@@ -3,7 +3,7 @@ from flask import Flask, render_template, flash, redirect, url_for, request, jso
 from flask_cors import CORS
 from flask_sslify import SSLify
 import traceback
-from datetime import datetime,timedelta, time
+from datetime import datetime as dt,timedelta, time
 import pytz
 import pandas as pd
 from threading import Thread
@@ -30,8 +30,8 @@ def get_sym_price(symbol):
     if response['status'] == 'SUCCESS':
         if len(response['data']) > 0:
             data = response['data']
-            data['datetime'] = data['datetime'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
-            max_timestamp = data.groupby(data['datetime'].datetime.date)['datetime'].max()[-2]
+            data['datetime'] = data['datetime'].apply(lambda x: dt.datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
+            max_timestamp = data.groupby(data['datetime'].dt.date)['datetime'].max()[-2]
             data = data[data['datetime']>=max_timestamp]
             data['date'] = data['datetime']
             data = data.set_index('datetime')
@@ -50,7 +50,7 @@ def get_sym_price(symbol):
             sym['Close']=0
             sym['PrevClose']=0
             sym['Difference']=0
-            sym['CandleTime']=datetime.now()
+            sym['CandleTime']=dt.datetime.now()
     else:
         sym['Open']=0
         sym['High']=0
