@@ -3,6 +3,7 @@ import requests
 import http.client
 import json
 import hashlib
+import datetime as dt
 from datetime import datetime, timedelta, time
 from dateutil.relativedelta import relativedelta
 import pytz
@@ -17,10 +18,12 @@ from pyotp import TOTP
 import subprocess
 import sqlite3
 import platform 
+import os
 
 # Global Variables
 config_file="config.json"
-
+instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
+instrument_df = instrument_list
 
 def getConfig(parameter):
     with open(config_file) as f:
@@ -195,10 +198,6 @@ def iciciGetSymDetail(exchange_code = "NSE",stock_code = "NIFTY",product_type = 
         print(f'iciciGetSymDetail :: {line_number} : {err}')
         return {"status": "FAILURE", "data": err}
 
-
-
-
-
 # Get Next Expiry Date
 def get_next_expiry_date(e_day='thursday'):
     curr_dt = datetime.now().astimezone(pytz.timezone('Asia/Kolkata'))
@@ -366,3 +365,119 @@ def send_whatsapp_msg(mtitle='TRADE-APP', mtext='Welcome to TradeApp!'):
     else:
         # return render_template('index.html',alert_msg = response.text)
         return {'status':'ERROR','msg':response.text}
+
+def ic_get_sym_price(symbol,exchange_code='NSE',interval = "1minute",product_type="Cash"):
+    sym = instrument_df[instrument_df['CD']==symbol][['NS','EC','SG','TK','CD','LS']]  
+    sym.rename(columns={'NS':'SymbolName','EC':'ExchangeCode','SG':'Segment',
+                        'TK':'Token','CD':'Code','LS':'LotSize'}, inplace=True) 
+    
+    if icici.user_id is None:
+        st = createICICISession(icici)
+        if st['status'] != 'SUCCESS':
+            print(st['data'])
+            return st
+            # raise ValueError(st['data'])
+    i=0
+    from_date = (datetime.now()-timedelta(1))
+    while i < 10:
+        from_date = from_date-timedelta(i)
+        if from_date.weekday() not in (5,6) and from_date.strftime('%Y-%m-%d') not in getConfig('HOLIDAY_LIST'):
+            break
+        i=i+1
+    from_date = from_date.strftime('%Y-%m-%d')+'T00:00:00.000Z'
+    to_date = datetime.now().strftime('%Y-%m-%d')+'T23:59:59.000Z'
+    change = 'N'
+    i=0   
+
+    response = icici.get_historical_data_v2(interval=interval,
+                 from_date= from_date,
+                 to_date= to_date,
+                 stock_code=symbol,
+                 # stock_code='CNXBAN',
+                 exchange_code=exchange_code,
+                 # exchange_code='NSE',
+                 product_type=product_type)
+    if response['Status']==200:
+        if len(response['Success']) > 0:
+            data = pd.DataFrame(response['Success'])
+            data['date'] = data['datetime']
+            data['datetime'] = data['datetime'].apply(lambda x: dt.datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
+            max_timestamp = data.groupby(data['datetime'].dt.date)['datetime'].max()[-2]
+            data = data[data['datetime']>=max_timestamp]
+            
+            data = data.set_index('datetime')
+            data=data.resample('1D').agg({'date':'last','stock_code':'first','open': 'first','high':'max','low':'min','close':'last'}).dropna()               
+            sym['Open']=data.iloc[-1]['open']
+            sym['High']=data.iloc[-1]['high']
+            sym['Low']=data.iloc[-1]['low']
+            sym['Close']=data.iloc[-1]['close']
+            sym['PrevClose']=data.iloc[-2]['close']
+            sym['Difference']=data.iloc[-1]['close'] - data.iloc[-2]['close']
+            sym['CandleTime']=data.iloc[-1]['date']
+        else:
+            sym['Open']=0
+            sym['High']=0
+            sym['Low']=0
+            sym['Close']=0
+            sym['PrevClose']=0
+            sym['Difference']=0
+            sym['CandleTime']=dt.datetime.now()
+    else:
+        sym['Open']=0
+        sym['High']=0
+        sym['Low']=0
+        sym['Close']=0
+        sym['PrevClose']=0
+        sym['Difference']=0
+        sym['CandleTime']=dt.datetime.now()
+    return sym
+
+def ic_get_watchlist(mode='R'):
+    resultDict = {}
+    symbol_list = json.load(open('config.json', 'r'))['STOCK_CODES']
+    wl_df = pd.DataFrame(columns=['SymbolName','ExchangeCode','Segment','Token','Code','LotSize',
+                                  'Open','High','Low','Close','PrevClose','Difference','CandleTime'])
+    if mode == 'C':  # Create
+        for symbol in symbol_list:
+            sym=ic_get_sym_price(symbol)
+            wl_df = pd.concat([wl_df,sym],ignore_index=True)
+        wl_df.to_csv('WatchList.csv',index=False)       
+            
+    elif mode == 'I':  # Insert
+        wl_df = pd.read_csv('WatchList.csv')
+        wl = list(wl_df['Code'].values)
+        inserted_symbols = [element for element in symbol_list if element not in wl]
+        
+        if len(inserted_symbols) > 0:
+            for i in inserted_symbols:
+                sym=ic_get_sym_price(symbol)
+                wl_df = pd.concat([wl_df,sym],ignore_index=True)
+            wl_df.to_csv('WatchList.csv',index=False) 
+    elif mode == 'D':  # Delete
+        wl_df = pd.read_csv('WatchList.csv')
+        wl = list(wl_df['Code'].values)
+        deleted_symbols = [element for element in wl if element not in symbol_list]
+        if len(deleted_symbols) > 0:
+            wl_df = wl_df[~wl_df['Code'].isin(deleted_symbols)]
+            wl_df.to_csv('WatchList.csv',index=False)
+    elif mode == 'R':  # Read
+        if os.path.exists('WatchList.csv'):
+            wl_df = pd.read_csv('WatchList.csv')
+        else:
+            wl_df = get_watchlist('C')  
+        wl_df = wl_df.to_dict(orient='records')
+    elif mode == 'N':  # NormalRead
+        if os.path.exists('WatchList.csv'):
+            wl_df = pd.read_csv('WatchList.csv')
+        else:
+            wl_df = get_watchlist('C')  
+    resultDict['WatchList-DF'] = wl_df
+    return resultDict
+
+def ic_tokenLookup(symbol_list):
+    """Looks up instrument token for a given script from instrument dump"""
+    token_list = []
+    for symbol in symbol_list:
+        token_list.append(icici.get_names('NSE',symbol)['isec_token_level1'])
+        # token_list.append(int(instrument_df[instrument_df.tradingsymbol==symbol].instrument_token.values[0]))
+    return token_list

@@ -1,6 +1,6 @@
 # Main TradeApp Start
 from flask import Flask, render_template, flash, redirect, url_for, request, jsonify
-# from flask_cors import CORS
+from flask_cors import CORS
 # from flask_sslify import SSLify
 import traceback
 # from datetime import datetime as dt,timedelta, time
@@ -15,7 +15,7 @@ from trade_modules import *
 import os
 
 app = Flask(__name__)
-# CORS(app)
+CORS(app)
 
 instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
 instrument_df = instrument_list
@@ -26,15 +26,12 @@ def get_watchlist():
     resultDict = {}
     resultDict['WatchList']=pd.read_csv('WatchList.csv')
     resultDict['WatchList'] = resultDict['WatchList'].to_dict(orient='records')
-    return resultDict
-    
-# w1=get_watchlist('R')    
+    return resultDict  
         
 @app.route('/')
 def home():
     resultDict = get_data()
     html_dict = {}
-
     return render_template('index.html', tdate=datetime.now().strftime("%B %d, %Y %H:%M"),
                            resultDict=resultDict)
 
@@ -44,9 +41,8 @@ def get_data():
     resultDict = {}
     data_list = ['WatchList','Funds','Positions','Orders','Holdings','Strategy','PCR']
     resultDict['WatchList'] = pd.DataFrame(columns=['No Stocks in Watchlist'])
-    resultDict['WatchList']=pd.read_csv('WatchList.csv')
-    # if os.path.exists('WatchList.csv'):
-    #     resultDict['WatchList'] = pd.read_csv('WatchList.csv')
+    if os.path.exists('WatchList.csv'):
+        resultDict['WatchList'] = pd.read_csv('WatchList.csv')
 
     oipcr = pd.read_csv('OIPCR.csv')
     unique_symbols = oipcr['SymbolCode'].unique()
@@ -73,21 +69,6 @@ def get_data():
     resultDict['ICICI_SESSION_URL'] = getConfig('ICICI_SESSION_URL')
 
     return resultDict
-
-
-# @app.route('/get_watchlist')
-# def get_watchlist():
-#     resultDict = {}
-#     resultDict['WatchList'] = pd.DataFrame(columns=['No Stocks in Watchlist'])
-#     if os.path.exists('WatchList.csv'):
-#         resultDict['WatchList'] = pd.read_csv('WatchList.csv')
-
-#     resultDict['WatchList'] = resultDict['WatchList'].to_dict(orient='records')
-
-#     return resultDict
-#     # return "Hello World"
-
-
     
 @app.route('/restart')
 def startWebApp():
