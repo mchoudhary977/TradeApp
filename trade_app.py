@@ -107,7 +107,7 @@ def get_watchlist():
         # ticker = [ticker]
         df = get_hist(ticker,'1d')
         df['date'] = df.index
-        df['symbol'] = ticker[0]
+        df['symbol'] = ticker
         df['prev_close'] = df['close'].shift()  
         df['difference'] = round(df['close'] - df['close'].shift(),2)
         df=df.iloc[-1]
@@ -116,7 +116,8 @@ def get_watchlist():
                    'Close': df['close'], 'PrevClose': df['prev_close'],
                    'Difference': df['difference'], 
                    'CandleTime': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-        wl_df = wl_df.append(new_row, ignore_index=True)
+        # wl_df = wl_df.append(new_row, ignore_index=True)
+        wl_df = pd.concat([wl_df,pd.DataFrame(new_row,index=[0])],ignore_index=True)
     wl_df = wl_df.to_dict(orient='records')
     resultDict['WatchList'] = wl_df
     
