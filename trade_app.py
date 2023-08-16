@@ -96,7 +96,7 @@ def get_watchlist(mode='R'):
         else:
             wl_df = get_watchlist('C')  
         wl_df = wl_df.to_dict(orient='records')
-    elif mode == 'NR':  # NormalRead
+    elif mode == 'N':  # NormalRead
         if os.path.exists('WatchList.csv'):
             wl_df = pd.read_csv('WatchList.csv')
         else:
@@ -120,7 +120,7 @@ def get_data():
     resultDict = {}
     data_list = ['WatchList','Funds','Positions','Orders','Holdings','Strategy','PCR']
     resultDict['WatchList'] = pd.DataFrame(columns=['No Stocks in Watchlist'])
-    resultDict['WatchList']=get_watchlist(mode='NR')
+    resultDict['WatchList']=get_watchlist(mode='N')
     # if os.path.exists('WatchList.csv'):
     #     resultDict['WatchList'] = pd.read_csv('WatchList.csv')
 

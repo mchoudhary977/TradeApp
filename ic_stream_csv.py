@@ -26,7 +26,8 @@ def unsubscribeFeed(tokens):
         st=icici.unsubscribe_feeds(token)
         print(st)
 
-def on_ticks(ticks):  
+def on_ticks(ticks): 
+    print(f'{ticks["symbol"]}-{ticks["last"]}')
     global livePrices 
     if len(livePrices) > 0:
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'CandleTime'] = ticks['ltt']
@@ -41,7 +42,7 @@ def on_ticks(ticks):
         
     # print(f"Ticks: {ticks['symbol']}-{ticks['stock_name']}-{ticks['ltt']}-{ticks['last']}-{ticks['ltq']}")
     # insert_ticks=db_insert_ticks(ticks)
-    
+   
 if icici.user_id is None:
     st = createICICISession(icici)
 
@@ -51,16 +52,16 @@ subscription_flag = 'N'
 livePrices = wl_df
 
 while True:    
-    now = dt.datetime.now()   
-    if (now.hour >= 9 and now.minute >= 14 and now.second >= 50 and 
-        now.hour <= 15 and now.minute <= 35):
+    now = dt.datetime.now()       
+    if (now.time() >= time(9,14,50) and now.time() < time(15,35,0)):
         if subscription_flag=='N':
             icici.ws_connect()
             icici.on_ticks = on_ticks
             subscribeFeed(tokens)
             subscription_flag = 'Y'    
         else:
-            livePrices.to_csv('WatchList.csv',index=False)    
+            livePrices.to_csv('WatchList.csv',index=False) 
+            print(livePrices)
     if (now.hour >= 15 and now.minute >= 35 and subscription_flag=='Y'):
         unsubscribeFeed(tokens)
         icici.ws_disconnect()

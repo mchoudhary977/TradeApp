@@ -16,6 +16,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from pyotp import TOTP
 import subprocess
 import sqlite3
+import platform 
 
 # Global Variables
 config_file="config.json"
@@ -36,7 +37,7 @@ def icici_autologon():
     # icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
     icici_session_url = json.load(open('config.json', 'r'))['ICICI_SESSION_URL']
     
-    service = webdriver.chrome.service.Service('./chromedriver')
+    service = webdriver.chrome.service.Service('./chromedriver.exe' if platform.system()=='Windows' else './chromedriver')
     service.start()
     
     options = webdriver.ChromeOptions()
