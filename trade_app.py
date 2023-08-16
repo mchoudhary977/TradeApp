@@ -15,6 +15,10 @@ import os
 
 app = Flask(__name__)
 CORS(app)
+
+instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
+instrument_df = instrument_list
+
 # sslify = SSLify(app, permanent=True, keyfile='key.pem', certfile='cert.pem')
 
 @app.route('/')
@@ -83,7 +87,7 @@ def tokenLookup(symbol_list):
     return token_list
 
 def get_hist(ticker,interval,db):
-    token = tokenLookup(ticker)[0].split('!',1)[1].replace(' ','')
+    token = instrument_df[instrument_df['CD']==ticker]['TK'].values[0].replace(' ','')
     data = pd.read_sql('''SELECT * FROM TOKEN%s WHERE ts >=  date() - '7 day';''' %token, con=db)                
     data = data.set_index(['ts'])
     data.index = pd.to_datetime(data.index)
@@ -97,7 +101,7 @@ def get_watchlist():
     wl_df = pd.DataFrame(columns=['NS','Open','High','Low','Close','PrevClose','Difference','CandleTime'])
     tickers = json.load(open('config.json', 'r'))['STOCK_CODES']
     for ticker in tickers:
-        ticker = [ticker]
+        # ticker = [ticker]
         df = get_hist(ticker,'1d',db)
         df['date'] = df.index
         df['symbol'] = ticker[0]
