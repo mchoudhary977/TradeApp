@@ -132,8 +132,8 @@ def ic_start_market_feed():
     if os.path.exists('WatchList.csv'):
         wl_df = pd.read_csv('WatchList.csv')
         livePrices = wl_df
-    tokens=tokenLookup(list(wl_df['Code'].values))
-    subscribeFeed(tokens)
+    tokens=ic_tokenLookup(list(wl_df['Code'].values))
+    ic_subscribeFeed(tokens)
 
 instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
 instrument_df = instrument_list
@@ -156,7 +156,7 @@ while True:
             livePrices.to_csv('WatchList.csv',index=False) 
             print(livePrices)
     if (now.hour >= 15 and now.minute >= 35 and subscription_flag=='Y'):
-        unsubscribeFeed(tokens)
+        ic_unsubscribeFeed(tokens)
         icici.ws_disconnect()
         subscription_flag='N'
         db_delete_ticks(tickers)
