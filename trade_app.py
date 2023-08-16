@@ -118,6 +118,7 @@ def get_watchlist():
                    'CandleTime': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         # wl_df = wl_df.append(new_row, ignore_index=True)
         wl_df = pd.concat([wl_df,pd.DataFrame(new_row,index=[0])],ignore_index=True)
+        print(wl_df)
     wl_df = wl_df.to_dict(orient='records')
     resultDict['WatchList'] = wl_df
     
