@@ -11,7 +11,7 @@ import subprocess
 import json
 import ssl
 from trade_modules import *
-# from ic_watchlist import ic_get_watchlist, ic_get_sym_price
+from ic_watchlist import *
 import os
 
 app = Flask(__name__)
@@ -23,7 +23,6 @@ instrument_df = instrument_list
 # sslify = SSLify(app, permanent=True, keyfile='key.pem', certfile='cert.pem')
 @app.route('/get_watchlist')
 def get_watchlist():
-    
     return ic_get_watchlist(mode='R')
     
 # w1=get_watchlist('R')    
