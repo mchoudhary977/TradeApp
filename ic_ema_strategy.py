@@ -64,9 +64,15 @@ if __name__ == '__main__':
             if np.isnan(sig['signal'])==False and sig['signal'] is not None:
                 wl = pd.read_csv('WatchList.csv')
                 last_px = wl[wl['Code']==ticker]['Close'].values[0]
+                stg_file = 'Strategy.csv'
+                stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
+                
                 if (sig['active'] == 'Y' and sig['signal'] == 'green' and last_px > sig['entry'] and sig['entry'] > 0):
                     sig['active'] = 'N'
                     opt=ic_option_chain(ticker, underlying_price=last_px, duration=0).iloc[2]
+                    if len(stg_df)>0:
+                        if len(stg_df[stg_df['securityId'] == opt['TK']]) > 0:
+                            continue
                     st = dh_place_mkt_order('NFO',opt['TK'],'buy',50,0)
                     tm.sleep(2)
                     order_id = st['data']['orderId'] if st['status']=='success' else None
@@ -88,14 +94,15 @@ if __name__ == '__main__':
                         new_row['target'] = sig['entry'] + (sig['entry'] - sig['sl'])
                         new_row['step'] = sig['entry'] - sig['sl']
                         
-                        stg_file = 'Strategy.csv'
-                        stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
                         stg_df = pd.concat([stg_df,pd.DataFrame(new_row)],ignore_index=True)
                          
                     print(f"add buy order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}")
                 elif (sig['active'] == 'Y' and sig['signal'] == 'red' and last_px < sig['entry'] and sig['entry'] > 0):
                     sig['active'] = 'N'
                     opt=ic_option_chain(ticker, underlying_price=last_px, option_type="PE", duration=0).iloc[-3]
+                    if len(stg_df)>0:
+                        if len(stg_df[stg_df['securityId'] == opt['TK']]) > 0:
+                            continue
                     st = dh_place_mkt_order('NFO',opt['TK'],'buy',50,0)
                     tm.sleep(2)
                     order_id = st['data']['orderId'] if st['status']=='success' else None
@@ -117,8 +124,6 @@ if __name__ == '__main__':
                         new_row['target'] = sig['entry'] + (sig['entry'] - sig['sl'])
                         new_row['step'] = sig['entry'] - sig['sl']
                         
-                        stg_file = 'Strategy.csv'
-                        stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
                         stg_df = pd.concat([stg_df,pd.DataFrame(new_row)],ignore_index=True)
                     
                     print(f"add sell order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}")
