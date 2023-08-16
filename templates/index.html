@@ -7,8 +7,6 @@
       <div class="container-fluid" id="service-container">
         <div class="row" id="banner-row">
           {% set result1 = resultDict['WatchList'] %}
-          <!--<i style="text-align: right;">{{ result1['Date'][0] }} {{ result1['Time'][0] }}</i> -->
-          <!-- <i style="text-align: right;">{{ result1['Date'][0] }} {{ result1['Time'][0] }}</i> -->
           <i style="text-align: right;" id="candle_time">{{ result1['CandleTime'][0] }}</i>
           <br>
             {% for i in result1.index: %}
