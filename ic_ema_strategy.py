@@ -55,7 +55,7 @@ if __name__ == '__main__':
     ticker='NIFTY'
     while True:
         now = datetime.now()
-        if now.time() < time(9,0) or now.time() > time(15,30):
+        if now.time() < time(9,0) or now.time() > time(15,10):
             break
         
         if (now.minute % 5 == 0 and now.second == 5):
