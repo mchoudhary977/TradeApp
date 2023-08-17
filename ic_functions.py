@@ -19,7 +19,7 @@ import numpy as np
 import os 
 
 icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
-livePrices = pd.DataFrame()
+
 
 # ICICI Auto Logon 
 def ic_autologon():
@@ -112,20 +112,7 @@ def ic_tokenLookup(symbol_list):
         token_list.append(icici.get_names('NSE',symbol)['isec_token_level1'])
         # token_list.append(int(instrument_df[instrument_df.tradingsymbol==symbol].instrument_token.values[0]))
     return{'status':'SUCCESS','data':token_list} 
-
-# Subscribe ICICI Tokens
-def ic_subscribeFeed(tokens):
-    for token in tokens:
-        st = icici.subscribe_feeds(token)
-        print(st)
-
-# UnSubscribe ICICI Tokens
-def ic_unsubscribeFeed(tokens):
-    for token in tokens:
-        st=icici.unsubscribe_feeds(token)
-        # st=icici.unsubscribe_feeds(token)
-        print(st)
-        
+     
         
 # Get Symbol Data From ICICI API - ic_get_sym_detail()
 def ic_get_sym_detail(exch_code='NSE',symbol='NIFTY',prod_type='Cash',interval='5minute',

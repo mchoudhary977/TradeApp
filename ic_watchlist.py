@@ -8,6 +8,22 @@ import pandas as pd
 # import json 
 # import sys
 
+livePrices = pd.DataFrame()
+
+# Subscribe ICICI Tokens
+def ic_subscribeFeed(tokens):
+    for token in tokens:
+        st = icici.subscribe_feeds(token)
+        print(st)
+
+# UnSubscribe ICICI Tokens
+def ic_unsubscribeFeed(tokens):
+    for token in tokens:
+        st=icici.unsubscribe_feeds(token)
+        # st=icici.unsubscribe_feeds(token)
+        print(st)
+        
+# On Ticks function
 def on_ticks(ticks): 
     print(f'{ticks["symbol"]}-{ticks["last"]}')
     global livePrices 
@@ -23,6 +39,8 @@ def on_ticks(ticks):
                    'Open': ticks['open'], 'High': ticks['high'], 'Low': ticks['low']}
         livePrices=pd.DataFrame(new_row, index = [0]) 
 
+
+# Main Function Start
 if __name__ == '__main__':
     if os.path.exists('WatchList.csv') == False:
         ic_update_watchlist(mode='C')
