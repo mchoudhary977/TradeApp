@@ -3,13 +3,13 @@ import logging
 import os 
 from datetime import datetime, time
 # import datetime as dt 
-# import time as tm 
+import time as tm 
 import pandas as pd 
 # import json 
 # import sys
 
 def on_ticks(ticks): 
-    # print(f'{ticks["symbol"]}-{ticks["last"]}')
+    print(f'{ticks["symbol"]}-{ticks["last"]}')
     global livePrices 
     if len(livePrices) > 0:
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'CandleTime'] = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
@@ -38,7 +38,7 @@ if __name__ == '__main__':
                     wl_df = pd.read_csv('WatchList.csv')
                     livePrices = wl_df
                     tokens=ic_tokenLookup(list(wl_df['Code'].values))
-                    ic_subscribeFeed(tokens)
+                    ic_subscribeFeed(tokens['data'])
                     subscription_flag = 'Y'
                 else:
                     ic_get_watchlist(mode='C')
@@ -51,6 +51,6 @@ if __name__ == '__main__':
             break
         
         if subscription_flag == 'Y':
-            time.sleep(1)
+            tm.sleep(1)
         else:
-            time.sleep(60)
+            tm.sleep(60)
