@@ -46,6 +46,7 @@ def dh_place_mkt_order(exchange,security_id,buy_sell,quantity,sl_price=0):
     drv_options_type=None
     drv_strike_price=None
     exchange_segment = dhan.NSE
+    tag = f"{buy_sell}-{security_id}-{quantity}"
     if exchange=='NFO':
         instrument = pd.read_csv('dhan.csv')
         instrument = instrument[instrument['SEM_SMST_SECURITY_ID']==security_id]
@@ -77,14 +78,15 @@ def dh_place_mkt_order(exchange,security_id,buy_sell,quantity,sl_price=0):
                                     )
     return order_st 
 
-# opt=ic_option_chain(ticker='NIFTY', underlying_price=19370, option_type="PE", duration=0).iloc[-3]
-# dh_place_bo_order(exchange='NFO',security_id=52337,buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
+# opt=ic_option_chain(ticker='NIFTY', underlying_price=19370, option_type="PE", duration=1).iloc[-3]
+# dh_place_bo_order(exchange='NFO',security_id=61756,buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
 def dh_place_bo_order(exchange,security_id,buy_sell,quantity,sl_point=5,tg_point=20,sl_price=0):
     dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
     drv_expiry_date=None
     drv_options_type=None
     drv_strike_price=None
     exchange_segment = dhan.NSE
+    tag = f"{buy_sell}-{security_id}-{quantity}"
     if exchange=='NFO':
         instrument = pd.read_csv('dhan.csv')
         instrument = instrument[instrument['SEM_SMST_SECURITY_ID']==security_id]

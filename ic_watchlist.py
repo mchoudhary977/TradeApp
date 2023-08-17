@@ -45,6 +45,7 @@ if __name__ == '__main__':
     if os.path.exists('WatchList.csv') == False:
         ic_update_watchlist(mode='C')
     subscription_flag = 'N'
+    ic_update_watchlist(mode='C')
 
     while True:
         now = datetime.now()
@@ -52,6 +53,7 @@ if __name__ == '__main__':
             if (now.time() >= time(9,14,50) and now.time() < time(15,35,0)):
                 if subscription_flag=='N':
                     if os.path.exists('WatchList.csv'):
+                        print('Subscribed')
                         icici.ws_connect()
                         icici.on_ticks = on_ticks
                         wl_df = pd.read_csv('WatchList.csv')
