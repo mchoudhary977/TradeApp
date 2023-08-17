@@ -230,7 +230,7 @@ def get_position_details():
                        'costPrice'
                        ]
             positions = positions[selected_cols]
-            positions['realizedProfit'] = round(positions['dayBuyValue'] - positions['daySellValue'],2)
+            positions['realizedProfit'] = round(positions['daySellValue'] - positions['dayBuyValue'],2)
             positions = positions.sort_values(by=['positionType', 'productType'], ascending=[False, True])
         else:
             no_positions = f'No Positions for the day - {datetime.now().strftime("%B %d, %Y")}'
