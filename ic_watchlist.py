@@ -45,7 +45,7 @@ if __name__ == '__main__':
             else:
                 livePrices.to_csv('WatchList.csv',index=False) 
         if (now.time() >= time(15,35) and subscription_flag=='Y'):
-            ic_unsubscribeFeed(tokens)
+            ic_unsubscribeFeed(tokens['data'])
             icici.ws_disconnect()
             subscription_flag='N'
             break
