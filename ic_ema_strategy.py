@@ -57,6 +57,7 @@ if __name__ == '__main__':
             break
         
         if (now.minute % 5 == 0 and now.second == 5):
+            print('EMA Calculation Start')
             df=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)['data']
             df['15-ema'] = df['close'].ewm(span=15, adjust=False).mean()
             df['9-ema'] = df['close'].ewm(span=9, adjust=False).mean()
