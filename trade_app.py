@@ -217,7 +217,7 @@ def get_order_details():
                            orders=orders.to_html(index=False))
     
 @app.route('/positions')
-def get_order_details():
+def get_position_details():
     positions = dh_get_positions()
     if positions['status'] == 'SUCCESS':
         if len(positions['data']) > 0:
