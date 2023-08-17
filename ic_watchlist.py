@@ -1,4 +1,5 @@
 from ic_functions import *
+from wa_notifications import * 
 import logging
 import os
 from datetime import datetime, time
@@ -63,6 +64,7 @@ if __name__ == '__main__':
                         tokens=ic_tokenLookup(list(wl_df['Code'].values))
                         ic_subscribeFeed(tokens['data'])
                         subscription_flag = 'Y'
+                        send_whatsapp_msg('Feed Alert','Market Live Feed Started!')
                     else:
                         ic_get_watchlist(mode='C')
                 else:
@@ -71,6 +73,7 @@ if __name__ == '__main__':
                 ic_unsubscribeFeed(tokens['data'])
                 icici.ws_disconnect()
                 subscription_flag='N'
+                send_whatsapp_msg('Feed Alert','Market Live Feed Stopped!')
                 break
 
             if subscription_flag == 'Y':
