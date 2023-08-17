@@ -54,6 +54,7 @@ if __name__ == '__main__':
         try:
             if (now.time() >= time(9,15) and now.time() < time(15,35)):
                 if subscription_flag=='N':
+                    print('Streaming data')
                     if os.path.exists('WatchList.csv'):
                         icici.ws_connect()
                         icici.on_ticks = on_ticks
