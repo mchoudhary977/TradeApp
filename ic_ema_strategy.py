@@ -103,14 +103,34 @@ if __name__ == '__main__':
             if (sig['signal'] == 'green' and last_px > sig['entry'] and sig['entry'] > 0):
                 sig['active'] = 'N'
                 opt=ic_option_chain(ticker, underlying_price=last_px, option_type="CE", duration=0).iloc[2]
-                msg=f"add buy order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}"
+                
+                msg=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}"
+                orders = pd.DataFrame(dhan.get_order_list()['data'])
+                if len(orders) > 0:
+                    if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
+                        st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=10,sl_price=0)
+                        tm.sleep(2)
+                        order_id = st['data']['orderId'] if st['status']=='success' else None
+                        order_det = dh_get_order_id(order_id)['data']
+                        msg=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {order_det['tradingSymbol']}"
+                
                 send_whatsapp_msg('EMA Alert', msg)
                 print(f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}")
                 
             elif (sig['signal'] == 'red' and last_px < sig['entry'] and sig['entry'] > 0):
                 sig['active'] = 'N'
                 opt=ic_option_chain(ticker, underlying_price=last_px, option_type="PE", duration=0).iloc[-3]
-                msg=f"add sell order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}"
+            
+                msg=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}"
+                orders = pd.DataFrame(dhan.get_order_list()['data'])
+                if len(orders) > 0:
+                    if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
+                        st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=10,sl_price=0)
+                        tm.sleep(2)
+                        order_id = st['data']['orderId'] if st['status']=='success' else None
+                        order_det = dh_get_order_id(order_id)['data']
+                        msg=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {order_det['tradingSymbol']}"
+                
                 send_whatsapp_msg('EMA Alert', msg)
                 print(f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}")
                         
