@@ -1,11 +1,11 @@
-from ic_functions import * 
-import logging 
-import os 
+from ic_functions import *
+import logging
+import os
 from datetime import datetime, time
-# import datetime as dt 
-import time as tm 
-import pandas as pd 
-# import json 
+# import datetime as dt
+import time as tm
+import pandas as pd
+# import json
 # import sys
 
 livePrices = pd.DataFrame()
@@ -22,39 +22,35 @@ def ic_unsubscribeFeed(tokens):
         st=icici.unsubscribe_feeds(token)
         # st=icici.unsubscribe_feeds(token)
         print(st)
-        
+
 # On Ticks function
-def on_ticks(ticks): 
+def on_ticks(ticks):
     # print(f'{ticks["symbol"]}-{ticks["last"]}')
-    global livePrices 
+    global livePrices
     if len(livePrices) > 0:
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'CandleTime'] = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'Close'] = ticks['last']
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'Open'] = ticks['open']
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'High'] = ticks['high']
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'Low'] = ticks['low']
-        
+
     else:
-        new_row = {'CandleTime': ticks['ltt'], 'Token': ticks['symbol'][4:], 'Close': ticks['last'], 
+        new_row = {'CandleTime': ticks['ltt'], 'Token': ticks['symbol'][4:], 'Close': ticks['last'],
                    'Open': ticks['open'], 'High': ticks['high'], 'Low': ticks['low']}
-        livePrices=pd.DataFrame(new_row, index = [0]) 
+        livePrices=pd.DataFrame(new_row, index = [0])
 
 
 # Main Function Start
 if __name__ == '__main__':
     if os.path.exists('WatchList.csv') == False:
         ic_update_watchlist(mode='C')
-    ic_update_watchlist(mode='C')
     subscription_flag = 'N'
-    
+
     while True:
         now = datetime.now()
-        if now.time() < time(9,0) and now.time() > time(15,45):
-            break
         try:
-            if (now.time() >= time(9,15) and now.time() < time(15,35)):
+            if (now.time() >= time(9,14,50) and now.time() < time(15,35,0)):
                 if subscription_flag=='N':
-                    print('Streaming data')
                     if os.path.exists('WatchList.csv'):
                         icici.ws_connect()
                         icici.on_ticks = on_ticks
@@ -66,20 +62,16 @@ if __name__ == '__main__':
                     else:
                         ic_get_watchlist(mode='C')
                 else:
-                    livePrices.to_csv('WatchList.csv',index=False) 
+                    livePrices.to_csv('WatchList.csv',index=False)
             if (now.time() >= time(15,35) and subscription_flag=='Y'):
-                ic_unsubscribeFeed(tokens['data'])            
+                ic_unsubscribeFeed(tokens['data'])
                 icici.ws_disconnect()
                 subscription_flag='N'
                 break
-            
+
             if subscription_flag == 'Y':
                 tm.sleep(1)
             else:
                 tm.sleep(60)
         except Exception as e:
             pass
-        
-        tm.sleep(60)
-    
-    sys.exit()
