@@ -1,0 +1,13 @@
+{% extends "base.html"%}
+{% block content %}
+  <!-- <div class="main container-fluid"> -->
+    <section id="index">
+      <br>
+      <h1 class="text-center">Position Details</h1>
+      <br>
+      <br>      
+        <div class="container text-center">
+          {{ positions | safe }}
+        </div>
+  <!-- </div> -->
+{% endblock %}

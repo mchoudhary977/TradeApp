@@ -1,0 +1,13 @@
+{% extends "base.html"%}
+{% block content %}
+  <!-- <div class="main container-fluid"> -->
+    <section id="index">
+      <br>
+      <h1 class="text-center">Order Details</h1>
+      <br>
+      <br>      
+        <div class="container text-center">
+          {{ orders | safe }}
+        </div>
+  <!-- </div> -->
+{% endblock %}

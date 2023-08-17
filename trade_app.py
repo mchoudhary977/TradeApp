@@ -11,6 +11,7 @@ import subprocess
 import json
 import ssl
 from trade_modules import *
+from dh_functions import * 
 # from ic_watchlist import ic_get_watchlist
 import os
 
@@ -196,8 +197,44 @@ def get_webhook():
         # send_whatsapp_msg(msg=msg['text'])
         return 'success', 200
 
-# def main():
+@app.route('/orders')
+def get_order_details():
+    orders = dh_get_orders()
+    if orders['status'] == 'SUCCESS':
+        if len(orders['data']) > 0:
+            orders = orders['data']
+            selected_cols = ['orderId', 'tradingSymbol','securityId','orderStatus',
+                       'orderType','productType','validity','transactionType',
+                       'quantity','filled_qty','price','legName','exchangeTime'
+                       ]
+            orders = orders[selected_cols]
+            orders = orders.sort_values(by=['orderStatus', 'exchangeTime'], ascending=[False, False])
+        else:
+            no_orders = f'No Orders for the day - {datetime.now().strftime("%B %d, %Y")}'
+            orders = pd.DataFrame(columns=[no_orders])
     
+    return render_template('orders.html', tdate=datetime.now().strftime("%B %d, %Y %H:%M"),
+                           orders=orders.to_html(index=False))
+    
+@app.route('/positions')
+def get_order_details():
+    positions = dh_get_positions()
+    if positions['status'] == 'SUCCESS':
+        if len(positions['data']) > 0:
+            positions = positions['data']
+            selected_cols = ['tradingSymbol','securityId','positionType',
+                       'productType','realizedProfit','buyQty','sellQty',
+                       'buyAvg','sellAvg','dayBuyValue','daySellValue',
+                       'costPrice'
+                       ]
+            positions = positions[selected_cols]
+            positions = positions.sort_values(by=['positionType', 'productType'], ascending=[False, True])
+        else:
+            no_positions = f'No Positions for the day - {datetime.now().strftime("%B %d, %Y")}'
+            positions = pd.DataFrame(columns=[no_orders])
+    
+    return render_template('positions.html', tdate=datetime.now().strftime("%B %d, %Y %H:%M"),
+                           positions=positions.to_html(index=False))
 
 if __name__ == '__main__':
     # ic_get_watchlist(mode='C')
