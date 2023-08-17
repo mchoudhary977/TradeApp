@@ -50,7 +50,9 @@ if __name__ == '__main__':
     while True:
         now = datetime.now()
         try:
-            if (now.time() >= time(9,14,50) and now.time() < time(15,35,0)):
+            if now.time() < time(9,0) or now.time() > time(15,40):
+                break
+            if (now.time() >= time(9,14) and now.time() < time(15,35,0)):
                 if subscription_flag=='N':
                     if os.path.exists('WatchList.csv'):
                         print('Subscribed')
