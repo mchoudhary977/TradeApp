@@ -86,11 +86,11 @@ if __name__ == '__main__':
                         sig['target'] = sig['entry'] - sig['step']
                         sig['active'] = 'Y'
                         break
-            print(sig)
-            wl = pd.read_csv('WatchList.csv')
-            last_px = wl[wl['Code']==ticker]['Close'].values[0]
-            send_whatsapp_msg('EMA Alert', mtext=f"price-{last_px}")
-            print(f"price-{last_px}")
+            # print(sig)
+            # wl = pd.read_csv('WatchList.csv')
+            # last_px = wl[wl['Code']==ticker]['Close'].values[0]
+            # send_whatsapp_msg('EMA Alert', mtext=f"price-{last_px}")
+            # print(f"price-{last_px}")
         
         if len(sig) == 0:
             continue
@@ -109,11 +109,14 @@ if __name__ == '__main__':
                 orders = pd.DataFrame(dhan.get_order_list()['data'])
                 if len(orders) >= 0:
                     if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
-                        st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
-                        tm.sleep(2)
-                        order_id = st['data']['orderId'] if st['status']=='success' else None
-                        order_det = dh_get_order_id(order_id)['data']
-                        mtext=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {order_det['tradingSymbol']}"
+                        try:
+                            st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
+                            tm.sleep(2)
+                            order_id = st['data']['orderId'] if st['status']=='success' else None
+                            order_det = dh_get_order_id(order_id)['data']
+                            mtext=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {order_det['tradingSymbol']}"
+                        except Exception as e:
+                            mtext=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - Order Placement Error"
                     else:
                         mtext=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
                 
@@ -128,11 +131,14 @@ if __name__ == '__main__':
                 orders = pd.DataFrame(dhan.get_order_list()['data'])
                 if len(orders) >= 0:
                     if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
-                        st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
-                        tm.sleep(2)
-                        order_id = st['data']['orderId'] if st['status']=='success' else None
-                        order_det = dh_get_order_id(order_id)['data']
-                        mtext=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {order_det['tradingSymbol']}"
+                        try:
+                            st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
+                            tm.sleep(2)
+                            order_id = st['data']['orderId'] if st['status']=='success' else None
+                            order_det = dh_get_order_id(order_id)['data']
+                            mtext=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {order_det['tradingSymbol']}"
+                        except Exception as e:
+                            mtext=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - Order Placement Error"
                     else:
                         mtext=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
                 
