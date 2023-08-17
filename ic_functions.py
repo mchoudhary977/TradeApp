@@ -123,6 +123,7 @@ def ic_subscribeFeed(tokens):
 def ic_unsubscribeFeed(tokens):
     for token in tokens:
         st=icici.unsubscribe_feeds(token)
+        # st=icici.unsubscribe_feeds(token)
         print(st)
         
         
