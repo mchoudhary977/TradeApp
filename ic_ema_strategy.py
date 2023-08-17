@@ -89,7 +89,7 @@ if __name__ == '__main__':
             print(sig)
             wl = pd.read_csv('WatchList.csv')
             last_px = wl[wl['Code']==ticker]['Close'].values[0]
-            send_whatsapp_msg('EMA Alert', msg=f"price-{last_px}")
+            send_whatsapp_msg('EMA Alert', mtext=f"price-{last_px}")
             print(f"price-{last_px}")
         
         if len(sig) == 0:
@@ -105,7 +105,7 @@ if __name__ == '__main__':
                 sig['active'] = 'N'
                 opt=ic_option_chain(ticker, underlying_price=last_px, option_type="CE", duration=0).iloc[2]
                 
-                msg=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}"
+                mtext=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}"
                 orders = pd.DataFrame(dhan.get_order_list()['data'])
                 if len(orders) >= 0:
                     if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
@@ -113,18 +113,18 @@ if __name__ == '__main__':
                         tm.sleep(2)
                         order_id = st['data']['orderId'] if st['status']=='success' else None
                         order_det = dh_get_order_id(order_id)['data']
-                        msg=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {order_det['tradingSymbol']}"
+                        mtext=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {order_det['tradingSymbol']}"
                     else:
-                        msg=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
+                        mtext=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
                 
-                send_whatsapp_msg('EMA Alert', msg)
+                send_whatsapp_msg('EMA Alert', mtext)
                 print(f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}")
                 
             elif (sig['signal'] == 'red' and last_px < sig['entry'] and sig['entry'] > 0):
                 sig['active'] = 'N'
                 opt=ic_option_chain(ticker, underlying_price=last_px, option_type="PE", duration=0).iloc[-3]
             
-                msg=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}"
+                mtext=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}"
                 orders = pd.DataFrame(dhan.get_order_list()['data'])
                 if len(orders) >= 0:
                     if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
@@ -132,11 +132,11 @@ if __name__ == '__main__':
                         tm.sleep(2)
                         order_id = st['data']['orderId'] if st['status']=='success' else None
                         order_det = dh_get_order_id(order_id)['data']
-                        msg=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {order_det['tradingSymbol']}"
+                        mtext=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {order_det['tradingSymbol']}"
                     else:
-                        msg=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
+                        mtext=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
                 
-                send_whatsapp_msg('EMA Alert', msg)
+                send_whatsapp_msg('EMA Alert', mtext)
                 print(f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}")
                         
         tm.sleep(1)
