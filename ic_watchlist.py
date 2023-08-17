@@ -44,12 +44,15 @@ def on_ticks(ticks):
 if __name__ == '__main__':
     if os.path.exists('WatchList.csv') == False:
         ic_update_watchlist(mode='C')
+    ic_update_watchlist(mode='C')
     subscription_flag = 'N'
     
     while True:
         now = datetime.now()
+        if now.time() < time(9,0) and now.time() > time(15,45):
+            break
         try:
-            if (now.time() >= time(9,14,50) and now.time() < time(15,35,0)):
+            if (now.time() >= time(9,15) and now.time() < time(15,35)):
                 if subscription_flag=='N':
                     if os.path.exists('WatchList.csv'):
                         icici.ws_connect()
@@ -75,4 +78,7 @@ if __name__ == '__main__':
                 tm.sleep(60)
         except Exception as e:
             pass
-            
+        
+        tm.sleep(60)
+    
+    sys.exit()
