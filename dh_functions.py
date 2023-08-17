@@ -37,7 +37,9 @@ def dh_get_order_id(order_id):
         if len(st['data']) > 0:
             data = st['data']
         return data
-   
+
+# opt=ic_option_chain(ticker='NIFTY', underlying_price=19370, option_type="PE", duration=0).iloc[-3]
+# dh_place_mkt_order(exchange='NFO',security_id=52337,buy_sell='buy',quantity=50,sl_price=0)
 def dh_place_mkt_order(exchange,security_id,buy_sell,quantity,sl_price=0):
     dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
     drv_expiry_date=None
@@ -65,7 +67,7 @@ def dh_place_mkt_order(exchange,security_id,buy_sell,quantity,sl_price=0):
                                     disclosed_quantity=0,
                                     price=0,
                                     trigger_price=0,
-                                    after_market_order=True,
+                                    after_market_order=False,
                                     amo_time='OPEN',
                                     bo_profit_value=0,
                                     bo_stop_loss_Value=0,
@@ -74,6 +76,46 @@ def dh_place_mkt_order(exchange,security_id,buy_sell,quantity,sl_price=0):
                                     drv_strike_price=drv_strike_price  
                                     )
     return order_st 
+
+# opt=ic_option_chain(ticker='NIFTY', underlying_price=19370, option_type="PE", duration=0).iloc[-3]
+# dh_place_bo_order(exchange='NFO',security_id=52337,buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
+def dh_place_bo_order(exchange,security_id,buy_sell,quantity,sl_point=5,tg_point=20,sl_price=0):
+    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+    drv_expiry_date=None
+    drv_options_type=None
+    drv_strike_price=None
+    exchange_segment = dhan.NSE
+    if exchange=='NFO':
+        instrument = pd.read_csv('dhan.csv')
+        instrument = instrument[instrument['SEM_SMST_SECURITY_ID']==security_id]
+        # lot_size = instrument['SEM_LOT_UNITS'].values[0]
+        drv_expiry_date=instrument['SEM_EXPIRY_DATE'].values[0]
+        drv_options_type='PUT' if instrument['SEM_OPTION_TYPE'].values[0] == 'PE' else 'CALL'
+        drv_strike_price=instrument['SEM_STRIKE_PRICE'].values[0]
+        exchange_segment = dhan.FNO
+    
+    t_type = dhan.BUY if buy_sell == 'buy' else dhan.SELL
+    order_st = dhan.place_order(tag='',
+                                    transaction_type=t_type,
+                                    exchange_segment=exchange_segment,
+                                    product_type=dhan.BO,
+                                    order_type=dhan.MARKET,
+                                    validity='DAY',
+                                    security_id=str(security_id),
+                                    quantity=quantity,
+                                    disclosed_quantity=0,
+                                    price=0,
+                                    trigger_price=0,
+                                    after_market_order=False,
+                                    amo_time='OPEN',
+                                    bo_profit_value=tg_point,
+                                    bo_stop_loss_Value=sl_point,
+                                    drv_expiry_date=drv_expiry_date,
+                                    drv_options_type=drv_options_type,
+                                    drv_strike_price=drv_strike_price  
+                                    )
+    return order_st 
+
 
 # dhan.get_order_list()    
 # dhan.get_order_by_id('6523081610313')

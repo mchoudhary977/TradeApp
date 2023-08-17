@@ -107,13 +107,15 @@ if __name__ == '__main__':
                 
                 msg=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}"
                 orders = pd.DataFrame(dhan.get_order_list()['data'])
-                if len(orders) > 0:
+                if len(orders) >= 0:
                     if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
-                        st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=10,sl_price=0)
+                        st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
                         tm.sleep(2)
                         order_id = st['data']['orderId'] if st['status']=='success' else None
                         order_det = dh_get_order_id(order_id)['data']
                         msg=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {order_det['tradingSymbol']}"
+                    else:
+                        msg=f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
                 
                 send_whatsapp_msg('EMA Alert', msg)
                 print(f"BUY Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}")
@@ -124,13 +126,15 @@ if __name__ == '__main__':
             
                 msg=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}"
                 orders = pd.DataFrame(dhan.get_order_list()['data'])
-                if len(orders) > 0:
+                if len(orders) >= 0:
                     if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
-                        st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=10,sl_price=0)
+                        st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
                         tm.sleep(2)
                         order_id = st['data']['orderId'] if st['status']=='success' else None
                         order_det = dh_get_order_id(order_id)['data']
                         msg=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {order_det['tradingSymbol']}"
+                    else:
+                        msg=f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
                 
                 send_whatsapp_msg('EMA Alert', msg)
                 print(f"SELL Order - {sig['entry']} - {sig['sl']} - {opt['CD']} - {opt['TK']}")
