@@ -48,31 +48,31 @@ if __name__ == '__main__':
     
     while True:
         now = datetime.now()
-        if (now.time() >= time(9,14,50) and now.time() < time(15,35,0)):
-            if subscription_flag=='N':
-                if os.path.exists('WatchList.csv'):
-                    icici.ws_connect()
-                    icici.on_ticks = on_ticks
-                    wl_df = pd.read_csv('WatchList.csv')
-                    livePrices = wl_df
-                    tokens=ic_tokenLookup(list(wl_df['Code'].values))
-                    ic_subscribeFeed(tokens['data'])
-                    subscription_flag = 'Y'
+        try:
+            if (now.time() >= time(9,14,50) and now.time() < time(15,35,0)):
+                if subscription_flag=='N':
+                    if os.path.exists('WatchList.csv'):
+                        icici.ws_connect()
+                        icici.on_ticks = on_ticks
+                        wl_df = pd.read_csv('WatchList.csv')
+                        livePrices = wl_df
+                        tokens=ic_tokenLookup(list(wl_df['Code'].values))
+                        ic_subscribeFeed(tokens['data'])
+                        subscription_flag = 'Y'
+                    else:
+                        ic_get_watchlist(mode='C')
                 else:
-                    ic_get_watchlist(mode='C')
+                    livePrices.to_csv('WatchList.csv',index=False) 
+            if (now.time() >= time(15,35) and subscription_flag=='Y'):
+                ic_unsubscribeFeed(tokens['data'])            
+                icici.ws_disconnect()
+                subscription_flag='N'
+                break
+            
+            if subscription_flag == 'Y':
+                tm.sleep(1)
             else:
-                livePrices.to_csv('WatchList.csv',index=False) 
-        if (now.time() >= time(15,35) and subscription_flag=='Y'):
-            try:
-                ic_unsubscribeFeed(tokens['data'])
-            except Exception as e:
-                pass
-            icici.ws_disconnect()
-            subscription_flag='N'
-            break
-        
-        if subscription_flag == 'Y':
-            tm.sleep(1)
-        else:
-            tm.sleep(60)
+                tm.sleep(60)
+        except Exception as e:
+            pass
             
