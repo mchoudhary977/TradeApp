@@ -29,15 +29,15 @@ def dh_get_orders():
             return {'status':'SUCCESS', 'data':df}
     return {'status':'FAILURE', 'data':'No data returned'}
  
-
+# dh_get_order_id
 def dh_get_order_id(order_id):
     dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
     st = dhan.get_order_by_id(order_id)
     if st['status']=='success':
         if len(st['data']) > 0:
             data = st['data']
-        return data
-
+        return {'status':'SUCCESS','data':data}
+    
 # opt=ic_option_chain(ticker='NIFTY', underlying_price=19370, option_type="PE", duration=0).iloc[-3]
 # dh_place_mkt_order(exchange='NFO',security_id=52337,buy_sell='buy',quantity=50,sl_price=0)
 def dh_place_mkt_order(exchange,security_id,buy_sell,quantity,sl_price=0):
@@ -122,7 +122,7 @@ def dh_place_bo_order(exchange,security_id,buy_sell,quantity,sl_point=5,tg_point
 # dhan.get_order_list()    
 # dhan.get_order_by_id('6523081610313')
 # order_id = '6523081610313'
-# ModifyOrder('6523081610313',price=32,quantity=100)
+# dh_modify_order('6523081610313',price=32,quantity=100)
 def dh_modify_order(order_id,price,quantity):  
     dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
     # Modify order given order id

@@ -22,8 +22,8 @@ import os
 
 # Global Variables
 config_file="config.json"
-instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
-instrument_df = instrument_list
+# instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
+# instrument_df = instrument_list
 
 def getConfig(parameter):
     with open(config_file) as f:
@@ -310,10 +310,10 @@ def getPCR(symCode='NIFTY', spot_px = 19169):
     return pcr_dict #oi_change_pcr_dict #oi_pcr_dict
 # # # # # # # # # # # # # # # # # # # # # # # # # # # PCR CALCULATION END # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-
+# send_whatsapp_msg()
 # WhatsApp Meesage Module
 def send_whatsapp_msg(mtitle='TRADE-APP', mtext='Welcome to TradeApp!'):
-    tkn = 'Bearer ' + getConfig('WA_TKN')
+    tkn = 'Bearer ' + json.load(open('config.json', 'r'))['WA_TKN']
     url = 'https://graph.facebook.com/v16.0/108228668943284/messages'
     headers = {
         'Authorization': tkn,
@@ -367,6 +367,7 @@ def send_whatsapp_msg(mtitle='TRADE-APP', mtext='Welcome to TradeApp!'):
         return {'status':'ERROR','msg':response.text}
 
 def ic_get_sym_price(symbol,exchange_code='NSE',interval = "1minute",product_type="Cash"):
+    instrument_df = pd.read_csv('icici.csv')
     sym = instrument_df[instrument_df['CD']==symbol][['NS','EC','SG','TK','CD','LS']]  
     sym.rename(columns={'NS':'SymbolName','EC':'ExchangeCode','SG':'Segment',
                         'TK':'Token','CD':'Code','LS':'LotSize'}, inplace=True) 

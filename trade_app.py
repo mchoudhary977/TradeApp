@@ -18,8 +18,8 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
-instrument_df = instrument_list
+# instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
+# instrument_df = instrument_list
 
 # sslify = SSLify(app, permanent=True, keyfile='key.pem', certfile='cert.pem')
 @app.route('/get_watchlist')
