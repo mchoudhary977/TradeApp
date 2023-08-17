@@ -7,7 +7,7 @@ ICICIDirect - Implementing real time EMA Strategy
 
 from ic_functions import * 
 from dh_functions import *
-from wa_nofitications import * 
+from wa_notifications import * 
 # from trade_modules import * 
 # from kiteconnect import KiteTicker, KiteConnect
 import pandas as pd
