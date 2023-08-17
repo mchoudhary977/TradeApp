@@ -49,6 +49,7 @@ def update_entry(row):
         return 0    
     
 if __name__ == '__main__':
+    print('---------------- Start EMA Strategy ----------------')
     sig = {}
     ticker='NIFTY'
     while True:
@@ -84,6 +85,10 @@ if __name__ == '__main__':
                         sig['target'] = sig['entry'] - sig['step']
                         sig['active'] = 'Y'
                         break
+            print(sig)
+            wl = pd.read_csv('WatchList.csv')
+            last_px = wl[wl['Code']==ticker]['Close'].values[0]
+            print(f"price-{last_px}")
         
         if len(sig) == 0:
             continue
