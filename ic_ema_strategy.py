@@ -47,7 +47,7 @@ if __name__ == '__main__':
     ticker='NIFTY'
     while True:
         now = datetime.now()
-        if now.time() >= time(9,15) and now.time() <= time(15,30):
+        if now.time() >= time(9,1) and now.time() <= time(15,30):
             if (now.minute % 5 == 0 and now.second == 5):
                 df=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=5)['data']
                 df['15-ema'] = df['close'].ewm(span=15, adjust=False).mean()
