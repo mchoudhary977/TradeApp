@@ -88,6 +88,7 @@ if __name__ == '__main__':
             print(sig)
             wl = pd.read_csv('WatchList.csv')
             last_px = wl[wl['Code']==ticker]['Close'].values[0]
+            send_whatsapp_msg('EMA Alert', msg=f"price-{last_px}")
             print(f"price-{last_px}")
         
         if len(sig) == 0:
