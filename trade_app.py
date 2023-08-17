@@ -199,6 +199,7 @@ def get_webhook():
 
 @app.route('/orders')
 def get_order_details():
+    resultDict={}
     orders = dh_get_orders()
     if orders['status'] == 'SUCCESS':
         if len(orders['data']) > 0:
@@ -212,12 +213,13 @@ def get_order_details():
         else:
             no_orders = f'No Orders for the day - {datetime.now().strftime("%B %d, %Y")}'
             orders = pd.DataFrame(columns=[no_orders])
-    
+    resultDict['Orders'] = orders.to_html(index=False)
     return render_template('orders.html', tdate=datetime.now().strftime("%B %d, %Y %H:%M"),
-                           orders=orders.to_html(index=False))
+                           resultDict=resultDict)
     
 @app.route('/positions')
 def get_position_details():
+    resultDict = {}
     positions = dh_get_positions()
     if positions['status'] == 'SUCCESS':
         if len(positions['data']) > 0:
@@ -232,9 +234,9 @@ def get_position_details():
         else:
             no_positions = f'No Positions for the day - {datetime.now().strftime("%B %d, %Y")}'
             positions = pd.DataFrame(columns=[no_orders])
-    
+    resultDict['Positions'] = positions.to_html(index=False)
     return render_template('positions.html', tdate=datetime.now().strftime("%B %d, %Y %H:%M"),
-                           positions=positions.to_html(index=False))
+                           resultDict=resultDict)
 
 if __name__ == '__main__':
     # ic_get_watchlist(mode='C')
