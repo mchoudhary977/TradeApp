@@ -223,6 +223,36 @@ def update_entry(row):
     else:
         return 0    
 
+def generate_ema_signal(df):
+    df['15-ema'] = round(df['close'].ewm(span=15, adjust=False).mean(),2)
+    df['9-ema'] = round(df['close'].ewm(span=9, adjust=False).mean(),2)
+    df['ema_xover'] = round(df['9-ema'] - df['15-ema'],2)
+    df['rsi'] = round(rsi(df,14),2)
+    df['signal'] = df.apply(signal, axis=1)
+    df['signal'] = df['signal'].where(df['signal'] != df['signal'].shift())
+    df['entry'] = round(df.apply(update_entry, axis=1),2)
+    df['active'] = 'N'
+    
+    sig = df.iloc[-1]
+    
+    # sig = last_row.copy()
+    for index,row in df.iloc[::-1].iterrows():
+        if sig['signal'] == 'green':
+            if row['ema_xover'] < 0:
+                sig['stoploss'] = row['low']
+                sig['step'] = abs(sig['entry']-sig['stoploss'])
+                sig['target'] = sig['entry'] + sig['step']
+                sig['active'] = 'Y'
+                break
+        if sig['signal'] == 'red':
+            if row['ema_xover'] > 0:
+                sig['stoploss'] = row['high']
+                sig['step'] = abs(sig['entry']-sig['stoploss'])
+                sig['target'] = sig['entry'] - sig['step']
+                sig['active'] = 'Y'
+                break          
+    return sig 
+
 
 def main():
     sig = {}
@@ -244,34 +274,9 @@ def main():
                 # df = df[df['datetime']<='2023-08-18 13:05:00']          
                 df['timestamp'] = pd.to_datetime(df['datetime'])
                 df = df[df['timestamp'].dt.time >= pd.Timestamp('09:15:00').time()]
-                df['15-ema'] = round(df['close'].ewm(span=15, adjust=False).mean(),2)
-                df['9-ema'] = round(df['close'].ewm(span=9, adjust=False).mean(),2)
-                df['ema_xover'] = round(df['9-ema'] - df['15-ema'],2)
-                df['rsi'] = round(rsi(df,14),2)
-                df['signal'] = df.apply(signal, axis=1)
-                df['signal'] = df['signal'].where(df['signal'] != df['signal'].shift())
-                df['entry'] = round(df.apply(update_entry, axis=1),2)
-                df['active'] = 'N'
                 
-                sig = df.iloc[-1]
-                
-                # sig = last_row.copy()
-                for index,row in df.iloc[::-1].iterrows():
-                    if sig['signal'] == 'green':
-                        if row['ema_xover'] < 0:
-                            sig['stoploss'] = row['low']
-                            sig['step'] = abs(sig['entry']-sig['stoploss'])
-                            sig['target'] = sig['entry'] + sig['step']
-                            sig['active'] = 'Y'
-                            break
-                    if sig['signal'] == 'red':
-                        if row['ema_xover'] > 0:
-                            sig['stoploss'] = row['high']
-                            sig['step'] = abs(sig['entry']-sig['stoploss'])
-                            sig['target'] = sig['entry'] - sig['step']
-                            sig['active'] = 'Y'
-                            break
-                        
+                # ema strategy signal generation
+                sig = generate_ema_signal(df)                        
                 if sig['active'] == 'Y':
                     print(sig)
                     
