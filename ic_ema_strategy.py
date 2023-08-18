@@ -79,7 +79,7 @@ def levels(ohlc_day):
     return (pivot,r1,r2,r3,s1,s2,s3)
 
 # ohlc_df = trend(ohlc_df,n=1)
-# n=1
+# number of candles to be considered for trend identification n = 7
 def trend(ohlc_df,n):
     "function to assess the trend by analyzing each candle"
     df = ohlc_df.copy()
@@ -241,14 +241,14 @@ def generate_ema_signal(df):
             if row['ema_xover'] < 0:
                 sig['stoploss'] = row['low']
                 sig['step'] = abs(sig['entry']-sig['stoploss'])
-                sig['target'] = sig['entry'] + sig['step']
+                sig['target'] = round(sig['entry'] + sig['step'],2)
                 sig['active'] = 'Y'
                 break
         if sig['signal'] == 'red':
             if row['ema_xover'] > 0:
                 sig['stoploss'] = row['high']
                 sig['step'] = abs(sig['entry']-sig['stoploss'])
-                sig['target'] = sig['entry'] - sig['step']
+                sig['target'] = round(sig['entry'] - sig['step'],2)
                 sig['active'] = 'Y'
                 break          
     return sig 
@@ -372,6 +372,8 @@ if __name__ == '__main__':
 
 
 # function created for test purpose only
+# change the second interval to 0 (now.second ==5) as tick data should match filter criteria accordingly
+# last_px code update to have a valid matching value for strategy to give positive signals
 def back_test_ema_strategy():
     dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
     tick_data = pd.DataFrame(dhan.intraday_daily_minute_charts(

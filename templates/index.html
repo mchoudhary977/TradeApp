@@ -25,6 +25,9 @@
                           <div class="col" id="symbol{{i}}">
                             <b>{{ result1['SymbolName'][i] }}</b>
                           </div>
+                          <div class="col" id="difference{{i}}">
+                            <b style="font-size: 18px;">{{ result1['PrevClose'][i] - result1['Close'][i] }}</b>
+                          </div>
                         </div>
                         <hr>
                         <div class="row row-cols-2 row-cols-lg-4 g-2 g-lg-3">
