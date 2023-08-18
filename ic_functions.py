@@ -146,6 +146,10 @@ def ic_get_sym_detail(exch_code='NSE',symbol='NIFTY',prod_type='Cash',interval='
                         
     except Exception as e:
         err = str(e)
+        if 'AUTH' in str(e).upper():
+            st=ic_create_session(icici)
+            return st
+        return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {err}'}
         print(f'iciciGetSymDetail :: {err}')
         return {"status": "FAILURE", "data": err} 
     
