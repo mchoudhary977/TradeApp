@@ -86,6 +86,9 @@ if __name__ == '__main__':
                         sig['target'] = sig['entry'] - sig['step']
                         sig['active'] = 'Y'
                         break
+                    
+            if sig['active'] == 'Y':
+                print(sig)
             # print(sig)
             # wl = pd.read_csv('WatchList.csv')
             # last_px = wl[wl['Code']==ticker]['Close'].values[0]
