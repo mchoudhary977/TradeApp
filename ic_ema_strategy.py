@@ -305,7 +305,7 @@ if __name__ == '__main__':
                 opt=ic_option_chain(ticker, underlying_price=last_px, option_type="CE", duration=0).iloc[2]
                 
                 mtext=f"BUY Order - {sig['entry']} - {sig['stoploss']} - {opt['CD']} - {opt['TK']}"
-                orders = pd.DataFrame(dhan.get_order_list()['data'])
+                orders = pd.DataFrame(dh_get_orders()['data'])
                 if len(orders) >= 0:
                     if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
                         try:
