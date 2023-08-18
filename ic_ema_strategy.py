@@ -228,126 +228,132 @@ def main():
     sig = {}
     ticker='NIFTY'
     while True:
-        now = datetime.now()
-        if now.time() < time(9,0) or now.time() > time(15,10):
-            break
-        
-        if (now.minute % 5 == 0 and now.second == 5):
-            print('EMA Calculation Start')
-            st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)           
-            df = st['data'].copy()
-            if st['status'] == 'FAILURE':
-                send_whatsapp_msg('Failure Alert', 'Tick data not returned')            
-                continue
-            df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))         
-            # df = df[df['datetime']<='2023-08-18 13:05:00']          
-            df['timestamp'] = pd.to_datetime(df['datetime'])
-            df = df[df['timestamp'].dt.time >= pd.Timestamp('09:15:00').time()]
-            df['15-ema'] = round(df['close'].ewm(span=15, adjust=False).mean(),2)
-            df['9-ema'] = round(df['close'].ewm(span=9, adjust=False).mean(),2)
-            df['ema_xover'] = round(df['9-ema'] - df['15-ema'],2)
-            df['rsi'] = round(rsi(df,14),2)
-            df['signal'] = df.apply(signal, axis=1)
-            df['signal'] = df['signal'].where(df['signal'] != df['signal'].shift())
-            df['entry'] = round(df.apply(update_entry, axis=1),2)
-            df['active'] = 'N'
+        try:
+            now = datetime.now()
+            if now.time() < time(9,0) or now.time() > time(15,10):
+                break
             
-            sig = df.iloc[-1]
-            
-            # sig = last_row.copy()
-            for index,row in df.iloc[::-1].iterrows():
-                if sig['signal'] == 'green':
-                    if row['ema_xover'] < 0:
-                        sig['stoploss'] = row['low']
-                        sig['step'] = abs(sig['entry']-sig['stoploss'])
-                        sig['target'] = sig['entry'] + sig['step']
-                        sig['active'] = 'Y'
-                        break
-                if sig['signal'] == 'red':
-                    if row['ema_xover'] > 0:
-                        sig['stoploss'] = row['high']
-                        sig['step'] = abs(sig['entry']-sig['stoploss'])
-                        sig['target'] = sig['entry'] - sig['step']
-                        sig['active'] = 'Y'
-                        break
-                    
-            if sig['active'] == 'Y':
-                print(sig)
+            if (now.minute % 5 == 0 and now.second == 5):
+                print('EMA Calculation Start')
+                st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)           
+                df = st['data'].copy()
+                if st['status'] == 'FAILURE':
+                    send_whatsapp_msg('Failure Alert', 'Tick data not returned')            
+                    continue
+                df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))         
+                # df = df[df['datetime']<='2023-08-18 13:05:00']          
+                df['timestamp'] = pd.to_datetime(df['datetime'])
+                df = df[df['timestamp'].dt.time >= pd.Timestamp('09:15:00').time()]
+                df['15-ema'] = round(df['close'].ewm(span=15, adjust=False).mean(),2)
+                df['9-ema'] = round(df['close'].ewm(span=9, adjust=False).mean(),2)
+                df['ema_xover'] = round(df['9-ema'] - df['15-ema'],2)
+                df['rsi'] = round(rsi(df,14),2)
+                df['signal'] = df.apply(signal, axis=1)
+                df['signal'] = df['signal'].where(df['signal'] != df['signal'].shift())
+                df['entry'] = round(df.apply(update_entry, axis=1),2)
+                df['active'] = 'N'
                 
-            ohlc_df = df
-            ohlc_day = ohlc_df.copy()             
-            ohlc_day.set_index('datetime', inplace=True)
-            ohlc_day = ohlc_day.resample('D').agg({'stock_code':'first', 'open': 'first', 'high':'max','low':'min','close':'last'}).iloc[:-1].dropna()
-            cdl_pattern = candle_pattern(ohlc_df,ohlc_day)
-            
-            if cdl_pattern['pattern'] is not None:
-                send_whatsapp_msg(f'CandleStick Alert - {cdl_pattern["timestamp"]}', f"Pattern -> {cdl_pattern['pattern']} :: Significance -> {cdl_pattern['significance']} ")
-                print(f"{now} - Pattern -> {cdl_pattern['pattern']} :: Significance -> {cdl_pattern['significance']} ")
-            
-            # last_px = wl[wl['Code']==ticker]['Close'].values[0]
-            # last_px = 19272        
-        if len(sig) == 0:
-            continue
-        
-        if sig['active'] == 'Y':
-            wl = pd.read_csv('WatchList.csv')
-            last_px = wl[wl['Code']==ticker]['Close'].values[0]
-            stg_file = 'Strategy.csv'
-            stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
-            
-            if (sig['signal'] == 'green' and last_px > sig['entry'] and sig['entry'] > 0):
-                sig['active'] = 'N'
-                opt=ic_option_chain(ticker, underlying_price=last_px, option_type="CE", duration=0).iloc[2]
+                sig = df.iloc[-1]
                 
-                mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}"
-                orders = pd.DataFrame(dh_get_orders()['data'])
-                pos = pd.DataFrame(dh_get_positions()['data'])
-                pos_actv = len(pos[pos['securityId']==str(opt['TK'])][pos['positionType']!='CLOSED'])
-                if pos_actv > 0:
-                    mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']} -> Active Position Present - Order Not Placed"
-                    
-                if len(orders) >= 0 and pos_actv == 0:
-                    if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
-                        try:
-                            st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
-                            tm.sleep(2)
-                            order_id = st['data']['orderId'] if st['status']=='success' else None
-                            order_det = dh_get_order_id(order_id)['data']
-                            mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {order_det['tradingSymbol']}"
-                        except Exception as e:
-                            mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error"
-                    else:
-                        mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
-                
-                send_whatsapp_msg(f"EMA Alert - {sig['datetime']}", mtext)
-                print(f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}")
-                
-            elif (sig['signal'] == 'red' and last_px < sig['entry'] and sig['entry'] > 0):
-                sig['active'] = 'N'
-                opt=ic_option_chain(ticker, underlying_price=last_px, option_type="PE", duration=0).iloc[-3]
-            
-                mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}"
-                orders = pd.DataFrame(dh_get_orders()['data'])
-                pos = pd.DataFrame(dh_get_positions()['data'])
-                pos_actv = len(pos[pos['securityId']==str(opt['TK'])][pos['positionType']!='CLOSED'])
-                if pos_actv > 0:
-                    mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']} -> Active Position Present - Order Not Placed"
-                if len(orders) >= 0 and pos_actv == 0:
-                    if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
-                        try:
-                            st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
-                            tm.sleep(2)
-                            order_id = st['data']['orderId'] if st['status']=='success' else None
-                            order_det = dh_get_order_id(order_id)['data']
-                            mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {order_det['tradingSymbol']}"
-                        except Exception as e:
-                            mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error"
-                    else:
-                        mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
-                
-                send_whatsapp_msg(f"EMA Alert - {sig['datetime']}", mtext)
-                print(f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}")
+                # sig = last_row.copy()
+                for index,row in df.iloc[::-1].iterrows():
+                    if sig['signal'] == 'green':
+                        if row['ema_xover'] < 0:
+                            sig['stoploss'] = row['low']
+                            sig['step'] = abs(sig['entry']-sig['stoploss'])
+                            sig['target'] = sig['entry'] + sig['step']
+                            sig['active'] = 'Y'
+                            break
+                    if sig['signal'] == 'red':
+                        if row['ema_xover'] > 0:
+                            sig['stoploss'] = row['high']
+                            sig['step'] = abs(sig['entry']-sig['stoploss'])
+                            sig['target'] = sig['entry'] - sig['step']
+                            sig['active'] = 'Y'
+                            break
                         
+                if sig['active'] == 'Y':
+                    print(sig)
+                    
+                ohlc_df = df
+                ohlc_day = ohlc_df.copy()             
+                ohlc_day.set_index('datetime', inplace=True)
+                ohlc_day = ohlc_day.resample('D').agg({'stock_code':'first', 'open': 'first', 'high':'max','low':'min','close':'last'}).iloc[:-1].dropna()
+                cdl_pattern = candle_pattern(ohlc_df,ohlc_day)
+                
+                if cdl_pattern['pattern'] is not None:
+                    send_whatsapp_msg(f'CandleStick Alert - {cdl_pattern["timestamp"]}', f"Pattern -> {cdl_pattern['pattern']} :: Significance -> {cdl_pattern['significance']} ")
+                    print(f"{now} - Pattern -> {cdl_pattern['pattern']} :: Significance -> {cdl_pattern['significance']} ")
+                
+                # last_px = wl[wl['Code']==ticker]['Close'].values[0]
+                # last_px = 19272        
+            if len(sig) == 0:
+                continue
+            
+            if sig['active'] == 'Y':
+                wl = pd.read_csv('WatchList.csv')
+                last_px = wl[wl['Code']==ticker]['Close'].values[0]
+                stg_file = 'Strategy.csv'
+                stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
+                
+                if (sig['signal'] == 'green' and last_px > sig['entry'] and sig['entry'] > 0):
+                    sig['active'] = 'N'
+                    opt=ic_option_chain(ticker, underlying_price=last_px, option_type="CE", duration=0).iloc[2]
+                    
+                    mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}"
+                    orders = pd.DataFrame(dh_get_orders()['data'])
+                    pos = pd.DataFrame(dh_get_positions()['data'])
+                    pos_actv = len(pos[pos['securityId']==str(opt['TK'])][pos['positionType']!='CLOSED'])
+                    if pos_actv > 0:
+                        mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']} -> Active Position Present - Order Not Placed"
+                        
+                    if len(orders) >= 0 and pos_actv == 0:
+                        if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
+                            try:
+                                st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
+                                tm.sleep(2)
+                                order_id = st['data']['orderId'] if st['status']=='success' else None
+                                order_det = dh_get_order_id(order_id)['data']
+                                mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {order_det['tradingSymbol']}"
+                            except Exception as e:
+                                mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error"
+                        else:
+                            mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
+                    
+                    send_whatsapp_msg(f"EMA Alert - {sig['datetime']}", mtext)
+                    print(f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}")
+                    
+                elif (sig['signal'] == 'red' and last_px < sig['entry'] and sig['entry'] > 0):
+                    sig['active'] = 'N'
+                    opt=ic_option_chain(ticker, underlying_price=last_px, option_type="PE", duration=0).iloc[-3]
+                
+                    mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}"
+                    orders = pd.DataFrame(dh_get_orders()['data'])
+                    pos = pd.DataFrame(dh_get_positions()['data'])
+                    pos_actv = len(pos[pos['securityId']==str(opt['TK'])][pos['positionType']!='CLOSED'])
+                    if pos_actv > 0:
+                        mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']} -> Active Position Present - Order Not Placed"
+                    if len(orders) >= 0 and pos_actv == 0:
+                        if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
+                            try:
+                                st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
+                                tm.sleep(2)
+                                order_id = st['data']['orderId'] if st['status']=='success' else None
+                                order_det = dh_get_order_id(order_id)['data']
+                                mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {order_det['tradingSymbol']}"
+                            except Exception as e:
+                                mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error"
+                        else:
+                            mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
+                    
+                    send_whatsapp_msg(f"EMA Alert - {sig['datetime']}", mtext)
+                    print(f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}")
+        
+        except Exception as e:
+            err = str(e)
+            send_whatsapp_msg(f"EMA Failure Alert - {now}", err)
+            pass
+                   
         tm.sleep(1)
     
     sys.exit()
