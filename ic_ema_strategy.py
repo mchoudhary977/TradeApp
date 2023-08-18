@@ -234,7 +234,11 @@ if __name__ == '__main__':
         
         if (now.minute % 5 == 0 and now.second == 5):
             print('EMA Calculation Start')
-            df=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)['data']
+            st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)           
+            df = st['data']
+            if st['status'] == 'FAILURE':
+                send_whatsapp_msg('Failure Alert', 'Tick data not returned')            
+                continue
             df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))         
             df['timestamp'] = pd.to_datetime(df['datetime'])
             df = df[df['timestamp'].dt.time >= pd.Timestamp('09:15:00').time()]
