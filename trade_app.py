@@ -201,6 +201,7 @@ def get_webhook():
 def get_order_details():
     resultDict={}
     orders = dh_get_orders()
+    no_orders = ''
     if orders['status'] == 'SUCCESS':
         if len(orders['data']) > 0:
             orders = orders['data']
@@ -213,6 +214,9 @@ def get_order_details():
         else:
             no_orders = f'No Orders for the day - {datetime.now().strftime("%B %d, %Y")}'
             orders = pd.DataFrame(columns=[no_orders])
+    else:
+        no_orders = 'Order Information Not Returned...'
+        orders = pd.DataFrame(columns=[no_orders])
     resultDict['Orders'] = orders.to_html(index=False)
     return render_template('orders.html', tdate=datetime.now().strftime("%B %d, %Y %H:%M"),
                            resultDict=resultDict)
@@ -234,7 +238,10 @@ def get_position_details():
             positions = positions.sort_values(by=['positionType', 'productType'], ascending=[False, True])
         else:
             no_positions = f'No Positions for the day - {datetime.now().strftime("%B %d, %Y")}'
-            positions = pd.DataFrame(columns=[no_orders])
+            positions = pd.DataFrame(columns=[no_positions])
+    else:
+        no_positions = 'Position Information Not Returned...'
+        positions = pd.DataFrame(columns=[no_positions])
     resultDict['Positions'] = positions.to_html(index=False)
     return render_template('positions.html', tdate=datetime.now().strftime("%B %d, %Y %H:%M"),
                            resultDict=resultDict)
