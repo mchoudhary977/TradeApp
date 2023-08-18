@@ -235,11 +235,12 @@ if __name__ == '__main__':
         if (now.minute % 5 == 0 and now.second == 5):
             print('EMA Calculation Start')
             st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)           
-            df = st['data']
+            df = st['data'].copy()
             if st['status'] == 'FAILURE':
                 send_whatsapp_msg('Failure Alert', 'Tick data not returned')            
                 continue
             df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))         
+            # df = df[df['datetime']<='2023-08-18 13:05:00']          
             df['timestamp'] = pd.to_datetime(df['datetime'])
             df = df[df['timestamp'].dt.time >= pd.Timestamp('09:15:00').time()]
             df['15-ema'] = df['close'].ewm(span=15, adjust=False).mean()
@@ -250,8 +251,10 @@ if __name__ == '__main__':
             df['signal'] = df['signal'].where(df['signal'] != df['signal'].shift())
             df['entry'] = df.apply(update_entry, axis=1)
             df['active'] = 'N'
-            # df = df[df['datetime']<='2023-08-16 12:30:00']          
+            
             sig = df.iloc[-1]
+            
+            # sig = last_row.copy()
             for index,row in df.iloc[::-1].iterrows():
                 if sig['signal'] == 'green':
                     if row['ema_xover'] < 0:
@@ -284,7 +287,7 @@ if __name__ == '__main__':
             # print(sig)
             # wl = pd.read_csv('WatchList.csv')
             # last_px = wl[wl['Code']==ticker]['Close'].values[0]
-            # last_px = 19377
+            # last_px = 19272
             # send_whatsapp_msg('EMA Alert', mtext=f"price-{last_px}")
             # print(f"price-{last_px}")
         
@@ -324,7 +327,7 @@ if __name__ == '__main__':
                 opt=ic_option_chain(ticker, underlying_price=last_px, option_type="PE", duration=0).iloc[-3]
             
                 mtext=f"SELL Order - {sig['entry']} - {sig['stoploss']} - {opt['CD']} - {opt['TK']}"
-                orders = pd.DataFrame(dhan.get_order_list()['data'])
+                orders = pd.DataFrame(dh_get_orders()['data'])
                 if len(orders) >= 0:
                     if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
                         try:
