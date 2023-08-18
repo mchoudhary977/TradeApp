@@ -293,7 +293,7 @@ if __name__ == '__main__':
         
         if sig['active'] == 'Y':
             wl = pd.read_csv('WatchList.csv')
-            # last_px = wl[wl['Code']==ticker]['Close'].values[0]
+            last_px = wl[wl['Code']==ticker]['Close'].values[0]
             stg_file = 'Strategy.csv'
             stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
             
