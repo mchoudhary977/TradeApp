@@ -321,11 +321,11 @@ def main():
             
             if (now.minute % 5 == 0 and now.second == 5):
                 print('EMA Calculation Start')
-                st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)           
-                df = st['data'].copy()
+                st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)                          
                 if st['status'] == 'FAILURE':
                     send_whatsapp_msg('Failure Alert', 'Tick data not returned')            
                     continue
+                df = st['data'].copy()
                 df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))         
                 # df = df[df['datetime']<='2023-08-18 13:05:00']          
                 df['timestamp'] = pd.to_datetime(df['datetime'])
@@ -341,10 +341,15 @@ def main():
                 ohlc_day.set_index('datetime', inplace=True)
                 ohlc_day = ohlc_day.resample('D').agg({'stock_code':'first', 'open': 'first', 'high':'max','low':'min','close':'last'}).iloc[:-1].dropna()
                 cdl_pattern = candle_pattern(ohlc_df,ohlc_day)
+                num_of_candles = 7
+                trend_direction = trend(ohlc_df,num_of_candles)
                 
                 if cdl_pattern['pattern'] is not None:
-                    send_whatsapp_msg(f'CandleStick Alert - {cdl_pattern["timestamp"]}', f"Pattern -> {cdl_pattern['pattern']} :: Significance -> {cdl_pattern['significance']} ")
-                    print(f"{now} - Pattern -> {cdl_pattern['pattern']} :: Significance -> {cdl_pattern['significance']} ")
+                    msg = f"Symbol : {ticker} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : sideways"
+                    if trend_direction is not None:
+                        msg = f"Symbol : {ticker} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : {trend_direction}"
+                    send_whatsapp_msg(f'CandleStick Alert - {cdl_pattern["timestamp"]}', msg)
+                    print(msg)
                 
                 # last_px = wl[wl['Code']==ticker]['Close'].values[0]
                 # last_px = 19272        
@@ -422,11 +427,16 @@ def back_test_ema_strategy():
                 ohlc_day.set_index('datetime', inplace=True)
                 ohlc_day = ohlc_day.resample('D').agg({'stock_code':'first', 'open': 'first', 'high':'max','low':'min','close':'last'}).iloc[:-1].dropna()
                 cdl_pattern = candle_pattern(ohlc_df,ohlc_day)
+                num_of_candles = 7
+                trend_direction = trend(ohlc_df,num_of_candles)
                 
                 if cdl_pattern['pattern'] is not None:
-                    send_whatsapp_msg(f'CandleStick Alert - {cdl_pattern["timestamp"]}', f"Pattern -> {cdl_pattern['pattern']} :: Significance -> {cdl_pattern['significance']} ")
-                    print(f"{now} - Pattern -> {cdl_pattern['pattern']} :: Significance -> {cdl_pattern['significance']} ")
-     
+                    msg = f"Symbol : {ticker} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : sideways"
+                    if trend_direction is not None:
+                        msg = f"Symbol : {ticker} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : {trend_direction}"
+                    send_whatsapp_msg(f'CandleStick Alert - {cdl_pattern["timestamp"]}', msg)
+                    print(msg)
+                    
             if len(sig) == 0:
                 continue
             
