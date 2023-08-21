@@ -253,7 +253,7 @@ def generate_ema_signal(df):
                 break
     return sig
 
-
+# ticker='NIFTY' last_px = 19370
 def check_ema_signal(ticker, sig, last_px):
     if (sig['signal'] == 'green' and last_px > sig['entry'] and sig['entry'] > 0):
         sig['active'] = 'N'

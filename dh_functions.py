@@ -85,6 +85,7 @@ def dh_place_bo_order(exchange,security_id,buy_sell,quantity,sl_point=5,tg_point
     drv_expiry_date=None
     drv_options_type=None
     drv_strike_price=None
+    security_id = int(security_id)
     exchange_segment = dhan.NSE
     tag = f"{buy_sell}-{security_id}-{quantity}"
     if exchange=='NFO':
@@ -118,7 +119,9 @@ def dh_place_bo_order(exchange,security_id,buy_sell,quantity,sl_point=5,tg_point
                                     )
     return order_st 
 
+# st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
 
+# type(opt['TK'])
 # dhan.get_order_list()    
 # dhan.get_order_by_id('6523081610313')
 # order_id = '6523081610313'
