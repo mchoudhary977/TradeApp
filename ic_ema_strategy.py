@@ -277,7 +277,7 @@ def check_ema_signal(ticker, sig, last_px):
                     write_log('ic_ema_strategy','i',mtext)
                 except Exception as e:
                     write_log('ic_ema_strategy','e',str(e))
-                    mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error"
+                    mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error - {str(e)}"
             else:
                 mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
 
@@ -304,7 +304,7 @@ def check_ema_signal(ticker, sig, last_px):
                     mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {order_det['tradingSymbol']}"
                     write_log('ic_ema_strategy','i',mtext)
                 except Exception as e:
-                    mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error"
+                    mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error - {str(e)}"
                     write_log('ic_ema_strategy','e',str(e))
             else:
                 mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
