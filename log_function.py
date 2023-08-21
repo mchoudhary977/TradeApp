@@ -1,7 +1,7 @@
 import logging
 import datetime as dt 
 
-log_file = f"logs/trade_app_{dt.datetime.now().strftime('%Y%M%d')}.log"
+log_file = f"logs/trade_app_{dt.datetime.now().strftime('%Y%m%d')}.log"
 
 logging.basicConfig(filename=log_file,level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 # logging.basicConfig(filename='mylog.log',level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
