@@ -5,10 +5,11 @@ ICICIDirect - Implementing real time EMA Strategy
 @author: Mukesh Choudhary
 """
 
-from ic_functions import * 
+from ic_functions import *
 from dh_functions import *
-from wa_notifications import * 
-# from trade_modules import * 
+from wa_notifications import *
+from log_function import * 
+# from trade_modules import *
 # from kiteconnect import KiteTicker, KiteConnect
 import pandas as pd
 import time as tm
@@ -18,9 +19,8 @@ import os
 import sys
 import numpy as np
 
-
 # ohlc_df = doji(ohlc_df)
-def doji(ohlc_df):    
+def doji(ohlc_df):
     """returns dataframe with doji candle column"""
     df = ohlc_df.copy()
     avg_candle_size = abs(df["close"] - df["open"]).median()
@@ -28,7 +28,7 @@ def doji(ohlc_df):
     return df
 
 # ohlc_df = maru_bozu(ohlc_df)
-def maru_bozu(ohlc_df):    
+def maru_bozu(ohlc_df):
     """returns dataframe with maru bozu candle column"""
     df = ohlc_df.copy()
     avg_candle_size = abs(df["close"] - df["open"]).median()
@@ -44,7 +44,7 @@ def maru_bozu(ohlc_df):
     return df
 
 # ohlc_df = hammer(ohlc_df)
-def hammer(ohlc_df):    
+def hammer(ohlc_df):
     """returns dataframe with hammer candle column"""
     df = ohlc_df.copy()
     df["hammer"] = (((df["high"] - df["low"])>3*(df["open"] - df["close"])) & \
@@ -54,7 +54,7 @@ def hammer(ohlc_df):
     return df
 
 # ohlc_df = shooting_star(ohlc_df)
-def shooting_star(ohlc_df):    
+def shooting_star(ohlc_df):
     """returns dataframe with shooting star candle column"""
     df = ohlc_df.copy()
     df["sstar"] = (((df["high"] - df["low"])>3*(df["open"] - df["close"])) & \
@@ -64,7 +64,7 @@ def shooting_star(ohlc_df):
     return df
 
 # ohlc_df = levels(ohlc_day)
-def levels(ohlc_day):    
+def levels(ohlc_day):
     """returns pivot point and support/resistance levels"""
     high = round(ohlc_day["high"].iloc[-1],2)
     low = round(ohlc_day["low"].iloc[-1],2)
@@ -113,84 +113,84 @@ def res_sup(ohlc_df,ohlc_day):
 
 
 # ohlc_df = candle_type(ohlc_df)
-def candle_type(ohlc_df):    
+def candle_type(ohlc_df):
     """returns the candle type of the last candle of an OHLC DF"""
     candle = None
     if doji(ohlc_df)["doji"].iloc[-1] == True:
-        candle = "doji"    
+        candle = "doji"
     if maru_bozu(ohlc_df)["maru_bozu"].iloc[-1] == "maru_bozu_green":
-        candle = "maru_bozu_green"       
+        candle = "maru_bozu_green"
     if maru_bozu(ohlc_df)["maru_bozu"].iloc[-1] == "maru_bozu_red":
-        candle = "maru_bozu_red"        
+        candle = "maru_bozu_red"
     if shooting_star(ohlc_df)["sstar"].iloc[-1] == True:
-        candle = "shooting_star"        
+        candle = "shooting_star"
     if hammer(ohlc_df)["hammer"].iloc[-1] == True:
-        candle = "hammer"       
+        candle = "hammer"
     return candle
 
 # ohlc_df = candle_pattern(ohlc_df,ohlc_day)
-def candle_pattern(ohlc_df,ohlc_day):    
+def candle_pattern(ohlc_df,ohlc_day):
     """returns the candle pattern identified"""
     pattern = None
     signi = "low"
     avg_candle_size = abs(ohlc_df["close"] - ohlc_df["open"]).median()
     sup, res = res_sup(ohlc_df,ohlc_day)
-    
+
     if (sup - 1.5*avg_candle_size) < ohlc_df["close"].iloc[-1] < (sup + 1.5*avg_candle_size):
         signi = "HIGH"
-        
+
     if (res - 1.5*avg_candle_size) < ohlc_df["close"].iloc[-1] < (res + 1.5*avg_candle_size):
         signi = "HIGH"
-    
+
     if candle_type(ohlc_df) == 'doji' \
         and ohlc_df["close"].iloc[-1] > ohlc_df["close"].iloc[-2] \
         and ohlc_df["close"].iloc[-1] > ohlc_df["open"].iloc[-1]:
             pattern = "doji_bullish"
-    
+
     if candle_type(ohlc_df) == 'doji' \
         and ohlc_df["close"].iloc[-1] < ohlc_df["close"].iloc[-2] \
         and ohlc_df["close"].iloc[-1] < ohlc_df["open"].iloc[-1]:
-            pattern = "doji_bearish" 
-            
+            pattern = "doji_bearish"
+
     if candle_type(ohlc_df) == "maru_bozu_green":
         pattern = "maru_bozu_bullish"
-    
+
     if candle_type(ohlc_df) == "maru_bozu_red":
         pattern = "maru_bozu_bearish"
-        
+
     if trend(ohlc_df.iloc[:-1,:],7) == "uptrend" and candle_type(ohlc_df) == "hammer":
         pattern = "hanging_man_bearish"
-        
+
     if trend(ohlc_df.iloc[:-1,:],7) == "downtrend" and candle_type(ohlc_df) == "hammer":
         pattern = "hammer_bullish"
-        
+
     if trend(ohlc_df.iloc[:-1,:],7) == "uptrend" and candle_type(ohlc_df) == "shooting_star":
         pattern = "shooting_star_bearish"
-        
+
     if trend(ohlc_df.iloc[:-1,:],7) == "uptrend" \
         and candle_type(ohlc_df) == "doji" \
         and ohlc_df["high"].iloc[-1] < ohlc_df["close"].iloc[-2] \
         and ohlc_df["low"].iloc[-1] > ohlc_df["open"].iloc[-2]:
         pattern = "harami_cross_bearish"
-        
+
     if trend(ohlc_df.iloc[:-1,:],7) == "downtrend" \
         and candle_type(ohlc_df) == "doji" \
         and ohlc_df["high"].iloc[-1] < ohlc_df["open"].iloc[-2] \
         and ohlc_df["low"].iloc[-1] > ohlc_df["close"].iloc[-2]:
         pattern = "harami_cross_bullish"
-        
+
     if trend(ohlc_df.iloc[:-1,:],7) == "uptrend" \
         and candle_type(ohlc_df) != "doji" \
         and ohlc_df["open"].iloc[-1] > ohlc_df["high"].iloc[-2] \
         and ohlc_df["close"].iloc[-1] < ohlc_df["low"].iloc[-2]:
         pattern = "engulfing_bearish"
-        
+
     if trend(ohlc_df.iloc[:-1,:],7) == "downtrend" \
         and candle_type(ohlc_df) != "doji" \
         and ohlc_df["close"].iloc[-1] > ohlc_df["high"].iloc[-2] \
         and ohlc_df["open"].iloc[-1] < ohlc_df["low"].iloc[-2]:
         pattern = "engulfing_bullish"
-       
+
     return {'timestamp':ohlc_df["datetime"].iloc[-1], 'significance': signi, 'pattern': pattern}
 
 def rsi(df, n):
@@ -221,7 +221,7 @@ def update_entry(row):
     elif row['signal'] == 'red':
         return row['low']
     else:
-        return 0    
+        return 0
 
 def generate_ema_signal(df):
     df['15-ema'] = round(df['close'].ewm(span=15, adjust=False).mean(),2)
@@ -232,9 +232,9 @@ def generate_ema_signal(df):
     df['signal'] = df['signal'].where(df['signal'] != df['signal'].shift())
     df['entry'] = round(df.apply(update_entry, axis=1),2)
     df['active'] = 'N'
-    
+
     sig = df.iloc[-1]
-    
+
     # sig = last_row.copy()
     for index,row in df.iloc[::-1].iterrows():
         if sig['signal'] == 'green':
@@ -250,22 +250,22 @@ def generate_ema_signal(df):
                 sig['step'] = abs(sig['entry']-sig['stoploss'])
                 sig['target'] = round(sig['entry'] - sig['step'],2)
                 sig['active'] = 'Y'
-                break          
-    return sig 
+                break
+    return sig
 
 
 def check_ema_signal(ticker, sig, last_px):
     if (sig['signal'] == 'green' and last_px > sig['entry'] and sig['entry'] > 0):
         sig['active'] = 'N'
         opt=ic_option_chain(ticker, underlying_price=last_px, option_type="CE", duration=0).iloc[2]
-        
+
         mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}"
         orders = pd.DataFrame(dh_get_orders()['data'])
         pos = pd.DataFrame(dh_get_positions()['data'])
         pos_actv = len(pos[pos['securityId']==str(opt['TK'])][pos['positionType']!='CLOSED'])
         if pos_actv > 0:
             mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']} -> Active Position Present - Order Not Placed"
-            
+
         if len(orders) >= 0 and pos_actv == 0:
             if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
                 try:
@@ -274,18 +274,20 @@ def check_ema_signal(ticker, sig, last_px):
                     order_id = st['data']['orderId'] if st['status']=='success' else None
                     order_det = dh_get_order_id(order_id)['data']
                     mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {order_det['tradingSymbol']}"
+                    write_log('ic_ema_strategy','i',mtext)
                 except Exception as e:
+                    write_log('ic_ema_strategy','e',str(e))
                     mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error"
             else:
                 mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
-        
+
         send_whatsapp_msg(f"EMA Alert - {sig['datetime']}", mtext)
         print(f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}")
-        
+
     elif (sig['signal'] == 'red' and last_px < sig['entry'] and sig['entry'] > 0):
         sig['active'] = 'N'
         opt=ic_option_chain(ticker, underlying_price=last_px, option_type="PE", duration=0).iloc[-3]
-    
+
         mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}"
         orders = pd.DataFrame(dh_get_orders()['data'])
         pos = pd.DataFrame(dh_get_positions()['data'])
@@ -300,11 +302,13 @@ def check_ema_signal(ticker, sig, last_px):
                     order_id = st['data']['orderId'] if st['status']=='success' else None
                     order_det = dh_get_order_id(order_id)['data']
                     mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {order_det['tradingSymbol']}"
+                    write_log('ic_ema_strategy','i',mtext)
                 except Exception as e:
                     mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error"
+                    write_log('ic_ema_strategy','e',str(e))
             else:
                 mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
-        
+
         send_whatsapp_msg(f"EMA Alert - {sig['datetime']}", mtext)
         print(f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}")
     return {'status':'SUCCESS','data':'Signal Check Complete'}
@@ -318,57 +322,58 @@ def main():
             now = datetime.now()
             if now.time() < time(9,0) or now.time() > time(15,10):
                 break
-            
+
             if (now.minute % 5 == 0 and now.second == 5):
                 print('EMA Calculation Start')
-                st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)                          
+                st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)
                 if st['status'] == 'FAILURE':
-                    send_whatsapp_msg('Failure Alert', 'Tick data not returned')            
+                    send_whatsapp_msg('Failure Alert', 'Tick data not returned')
                     continue
                 df = st['data'].copy()
-                df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))         
-                # df = df[df['datetime']<='2023-08-18 13:05:00']          
+                df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))
+                # df = df[df['datetime']<='2023-08-18 13:05:00']
                 df['timestamp'] = pd.to_datetime(df['datetime'])
                 df = df[df['timestamp'].dt.time >= pd.Timestamp('09:15:00').time()]
-                
+
                 # ema strategy signal generation
-                sig = generate_ema_signal(df)                        
+                sig = generate_ema_signal(df)
                 if sig['active'] == 'Y':
                     print(sig)
-                    
+
                 ohlc_df = df
-                ohlc_day = ohlc_df.copy()             
+                ohlc_day = ohlc_df.copy()
                 ohlc_day.set_index('datetime', inplace=True)
                 ohlc_day = ohlc_day.resample('D').agg({'stock_code':'first', 'open': 'first', 'high':'max','low':'min','close':'last'}).iloc[:-1].dropna()
                 cdl_pattern = candle_pattern(ohlc_df,ohlc_day)
                 num_of_candles = 7
                 trend_direction = trend(ohlc_df,num_of_candles)
-                
+
                 if cdl_pattern['pattern'] is not None:
                     msg = f"Symbol : {ticker} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : sideways"
                     if trend_direction is not None:
                         msg = f"Symbol : {ticker} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : {trend_direction}"
                     send_whatsapp_msg(f'CandleStick Alert - {cdl_pattern["timestamp"]}', msg)
                     print(msg)
-                
+
                 # last_px = wl[wl['Code']==ticker]['Close'].values[0]
-                # last_px = 19272        
+                # last_px = 19272
             if len(sig) == 0:
                 continue
-            
+
             if sig['active'] == 'Y':
                 wl = pd.read_csv('WatchList.csv')
                 last_px = wl[wl['Code']==ticker]['Close'].values[0]
                 stg_file = 'Strategy.csv'
                 stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
-                check_ema_signal(ticker, sig, last_px)                  
+                check_ema_signal(ticker, sig, last_px)
         except Exception as e:
             err = str(e)
+            write_log('ic_ema_strategy','e',err)
             send_whatsapp_msg(f"EMA Failure Alert - {now}", err)
             pass
-                   
+
         tm.sleep(1)
-    
+
     sys.exit()
 
 if __name__ == '__main__':
@@ -386,72 +391,73 @@ def back_test_ema_strategy():
         exchange_segment='IDX_I',
         instrument_type='EQUITY'
     )['data'])
-    
-    temp_list = []    
+
+    temp_list = []
     for i in tick_data['start_Time']:
         temp = dhan.convert_to_date_time(i)
         temp_list.append(temp)
     tick_data['Date'] = temp_list
     sig = {}
     ticker='NIFTY'
-    
-    st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4) 
-    
-    i=0 
+
+    st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)
+
+    i=0
     while i < len(tick_data):
         try:
             now = tick_data.iloc[i]['Date']
             if now.time() < time(9,0) or now.time() > time(15,10):
                 break
-            
+
             if (now.minute % 5 == 0 and now.second == 0):
                 print('EMA Calculation Start')
-                # st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)           
+                # st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)
                 df = st['data'].copy()
-                
+
                 if st['status'] == 'FAILURE':
-                    send_whatsapp_msg('Failure Alert', 'Tick data not returned')            
+                    send_whatsapp_msg('Failure Alert', 'Tick data not returned')
                     continue
-                df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))         
-                df = df[df['datetime']<=now]      
+                df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))
+                df = df[df['datetime']<=now]
                 df['timestamp'] = pd.to_datetime(df['datetime'])
                 df = df[df['timestamp'].dt.time >= pd.Timestamp('09:15:00').time()]
-                
+
                 # ema strategy signal generation
-                sig = generate_ema_signal(df)                        
+                sig = generate_ema_signal(df)
                 if sig['active'] == 'Y':
                     print(sig)
-                    
+
                 ohlc_df = df
-                ohlc_day = ohlc_df.copy()             
+                ohlc_day = ohlc_df.copy()
                 ohlc_day.set_index('datetime', inplace=True)
                 ohlc_day = ohlc_day.resample('D').agg({'stock_code':'first', 'open': 'first', 'high':'max','low':'min','close':'last'}).iloc[:-1].dropna()
                 cdl_pattern = candle_pattern(ohlc_df,ohlc_day)
                 num_of_candles = 7
                 trend_direction = trend(ohlc_df,num_of_candles)
-                
+
                 if cdl_pattern['pattern'] is not None:
                     msg = f"Symbol : {ticker} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : sideways"
                     if trend_direction is not None:
                         msg = f"Symbol : {ticker} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : {trend_direction}"
                     send_whatsapp_msg(f'CandleStick Alert - {cdl_pattern["timestamp"]}', msg)
                     print(msg)
-                    
+
             if len(sig) == 0:
                 continue
-            
+
             if sig['active'] == 'Y':
                 last_px = (sig['entry']+1) if sig['signal'] == 'green' else (sig['entry']-1)
                 print(f'Checking for active signal - {now}-{last_px}')
                 stg_file = 'Strategy.csv'
                 stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
-                check_ema_signal(ticker, sig, last_px)                  
+                check_ema_signal(ticker, sig, last_px)
         except Exception as e:
             err = str(e)
+            write_log('ic_ema_strategy','e',err)
             send_whatsapp_msg(f"EMA Failure Alert - {now}", err)
             pass
-                   
+
         tm.sleep(1)
-        i=i+1   
+        i=i+1
     sys.exit()
-    
+	
