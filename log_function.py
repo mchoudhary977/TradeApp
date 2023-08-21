@@ -3,8 +3,8 @@ import datetime as dt
 
 log_file = f"logs/trade_app_{dt.datetime.now().strftime('%Y%M%d')}.log"
 
-# logging.basicConfig(filename=log_file,level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-logging.basicConfig(filename='mylog.log',level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename=log_file,level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# logging.basicConfig(filename='mylog.log',level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def write_log(file_name, log_type, log_msg):
     message = f"{file_name} - {log_msg}"
