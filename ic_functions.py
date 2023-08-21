@@ -165,7 +165,7 @@ def ic_update_watchlist(mode='R'):
     if mode == 'C' or len(wl_df)==0:
         wl_df = pd.DataFrame(columns=wl_cols)
         for sym in symbol_list:
-            response = ic_get_sym_detail(symbol=sym,interval='5minute')           
+            response = ic_get_sym_detail(symbol=sym,interval='5minute',duration=5)           
             sym = ic_instruments[ic_instruments['CD']==sym][['NS','EC','SG','TK','CD','LS']] 
             sym.rename(columns={'NS':'SymbolName','EC':'ExchangeCode','SG':'Segment',
                                 'TK':'Token','CD':'Code','LS':'LotSize'}, inplace=True)
