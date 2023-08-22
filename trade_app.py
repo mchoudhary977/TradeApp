@@ -246,6 +246,7 @@ def get_position_details():
             total_value = positions['realizedProfit'].sum()
             total_row = pd.DataFrame({'tradingSymbol':'Total','realizedProfit': [total_value]}, index=['Total'])
             positions = pd.concat([positions,total_row])
+            positions.iloc[-1] = positions.iloc[-1].fillna('')
         else:
             no_positions = f'No Positions for the day - {datetime.now().strftime("%B %d, %Y")}'
             positions = pd.DataFrame(columns=[no_positions])
