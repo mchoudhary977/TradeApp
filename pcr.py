@@ -12,7 +12,7 @@ from trade_modules import *
 while True:
     curr_dt = datetime.now()
     try:
-        if os.path.exists('OIPCR.csv') == False or (curr_dt.time() > time(8,0) and curr_dt.time() < time(15,31) and curr_dt.minute%5 == 0 and curr_dt.second == 5):
+        if os.path.exists('OIPCR.csv') == False or (curr_dt.time() >= time(9,10) and curr_dt.time() < time(15,31) and curr_dt.minute%5 == 0 and curr_dt.second == 5):
             curr_dt = datetime.now()
             print(curr_dt)
             wl = pd.read_csv('WatchList.csv')
