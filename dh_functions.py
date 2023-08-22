@@ -2,6 +2,7 @@ from dhanhq import dhanhq
 import json
 import pandas as pd 
 import os 
+from log_function import * 
 
 # dhan.get_fund_limits()
 # dh_place_mkt_order('NFO',52337,'buy',50,0)
@@ -81,43 +82,54 @@ def dh_place_mkt_order(exchange,security_id,buy_sell,quantity,sl_price=0):
 # opt=ic_option_chain(ticker='NIFTY', underlying_price=19370, option_type="PE", duration=1).iloc[-3]
 # dh_place_bo_order(exchange='NFO',security_id=61756,buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
 def dh_place_bo_order(exchange,security_id,buy_sell,quantity,sl_point=5,tg_point=20,sl_price=0):
-    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
-    drv_expiry_date=None
-    drv_options_type=None
-    drv_strike_price=None
-    security_id = int(security_id)
-    exchange_segment = dhan.NSE
-    tag = f"{buy_sell}-{security_id}-{quantity}"
-    if exchange=='NFO':
-        instrument = pd.read_csv('dhan.csv')
-        instrument = instrument[instrument['SEM_SMST_SECURITY_ID']==security_id]
-        # lot_size = instrument['SEM_LOT_UNITS'].values[0]
-        drv_expiry_date=instrument['SEM_EXPIRY_DATE'].values[0]
-        drv_options_type='PUT' if instrument['SEM_OPTION_TYPE'].values[0] == 'PE' else 'CALL'
-        drv_strike_price=instrument['SEM_STRIKE_PRICE'].values[0]
-        exchange_segment = dhan.FNO
-    
-    t_type = dhan.BUY if buy_sell == 'buy' else dhan.SELL
-    order_st = dhan.place_order(tag='',
-                                    transaction_type=t_type,
-                                    exchange_segment=exchange_segment,
-                                    product_type=dhan.BO,
-                                    order_type=dhan.MARKET,
-                                    validity='DAY',
-                                    security_id=str(security_id),
-                                    quantity=quantity,
-                                    disclosed_quantity=0,
-                                    price=0,
-                                    trigger_price=0,
-                                    after_market_order=False,
-                                    amo_time='OPEN',
-                                    bo_profit_value=tg_point,
-                                    bo_stop_loss_Value=sl_point,
-                                    drv_expiry_date=drv_expiry_date,
-                                    drv_options_type=drv_options_type,
-                                    drv_strike_price=drv_strike_price  
-                                    )
-    return order_st 
+    try:
+        dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+        drv_expiry_date=None
+        drv_options_type=None
+        drv_strike_price=None   							
+        exchange_segment = dhan.NSE
+        tag_val = f"{buy_sell}-{security_id}-{quantity}"
+        security_id = int(security_id)
+        if exchange=='NFO':
+            instrument = pd.read_csv('dhan.csv')
+            instrument = instrument[instrument['SEM_SMST_SECURITY_ID']==security_id]
+            # lot_size = instrument['SEM_LOT_UNITS'].values[0]
+            drv_expiry_date=instrument['SEM_EXPIRY_DATE'].values[0]
+            drv_options_type='PUT' if instrument['SEM_OPTION_TYPE'].values[0] == 'PE' else 'CALL'
+            drv_strike_price=int(instrument['SEM_STRIKE_PRICE'].values[0])
+            exchange_segment = dhan.FNO
+            
+        t_type = dhan.BUY if buy_sell == 'buy' else dhan.SELL
+        
+        # Below line is only for testing purpose, comment when prod live
+        # order_st = {'status':'success','data':{'orderId':'test_01234567'}}
+        order_st = dhan.place_order(tag=tag_val,
+                                        transaction_type=t_type,
+                                        exchange_segment=exchange_segment,
+                                        product_type=dhan.BO,
+                                        order_type=dhan.MARKET,
+                                        validity='DAY',
+                                        security_id=str(security_id),
+                                        quantity=quantity,
+                                        disclosed_quantity=0,
+                                        price=0,
+                                        trigger_price=0,
+                                        after_market_order=False,
+                                        amo_time='OPEN',
+                                        bo_profit_value=tg_point,
+                                        bo_stop_loss_Value=sl_point,
+                                        drv_expiry_date=drv_expiry_date,
+                                        drv_options_type=drv_options_type,
+                                        drv_strike_price=drv_strike_price  
+                                        )
+
+        # print(order_st)
+        return order_st 
+    except Exception as e:
+        err = str(e)
+        return{'status':'failure','remarks':{'message':err}}
+        write_log('dh_place_bo_order','e',err)
+        # print(f"error - {err}")
 
 # st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
 

@@ -229,6 +229,7 @@ def generate_ema_signal(df):
     df['ema_xover'] = round(df['9-ema'] - df['15-ema'],2)
     df['rsi'] = round(rsi(df,14),2)
     df['signal'] = df.apply(signal, axis=1)
+    df['signal'].fillna(method='ffill', inplace=True)
     df['signal'] = df['signal'].where(df['signal'] != df['signal'].shift())
     df['entry'] = round(df.apply(update_entry, axis=1),2)
     df['active'] = 'N'
@@ -267,22 +268,30 @@ def check_ema_signal(ticker, sig, last_px):
             mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']} -> Active Position Present - Order Not Placed"
 
         if len(orders) >= 0 and pos_actv == 0:
-            if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
+            # if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
+            if len(orders[orders['orderStatus'] == 'TRADED'])>=0:
                 try:
-                    st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
+                    # print(f"security_id={opt['TK']}")
+                    st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=10,tg_point=50,sl_price=0)
+                    # st = dh_place_bo_order_1(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=10,tg_point=20,sl_price=0)
                     tm.sleep(2)
+                    if st['status'] == 'failure':
+                        raise ValueError(f"{st['remarks']['message']}")
                     order_id = st['data']['orderId'] if st['status']=='success' else None
                     order_det = dh_get_order_id(order_id)['data']
-                    mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {order_det['tradingSymbol']}"
-                    write_log('ic_ema_strategy','i',mtext)
+                    mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} | {order_det['tradingSymbol']} | {order_id}"
+                    # write_log('ic_ema_strategy','i',mtext)
                 except Exception as e:
-                    write_log('ic_ema_strategy','e',str(e))
+                    write_log('ic_ema_strategy','e',str(e))                    
                     mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error - {str(e)}"
+                    # print(str(e))
+                    # print(mtext)
             else:
                 mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
 
         send_whatsapp_msg(f"EMA Alert - {sig['datetime']}", mtext)
-        print(f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}")
+        write_log('ic_ema_strategy','i',mtext)
+        # print(f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}")
 
     elif (sig['signal'] == 'red' and last_px < sig['entry'] and sig['entry'] > 0):
         sig['active'] = 'N'
@@ -295,14 +304,19 @@ def check_ema_signal(ticker, sig, last_px):
         if pos_actv > 0:
             mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']} -> Active Position Present - Order Not Placed"
         if len(orders) >= 0 and pos_actv == 0:
-            if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
+            # if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
+            if len(orders[orders['orderStatus'] == 'TRADED'])>=0:
                 try:
-                    st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
+                    # print(f"security_id={opt['TK']}")
+                    st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=10,tg_point=50,sl_price=0)
+                    # st = dh_place_bo_order_1(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=10,tg_point=20,sl_price=0)
                     tm.sleep(2)
+                    if st['status'] == 'failure':
+                        raise ValueError(f"{st['remarks']['message']}")
                     order_id = st['data']['orderId'] if st['status']=='success' else None
                     order_det = dh_get_order_id(order_id)['data']
-                    mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {order_det['tradingSymbol']}"
-                    write_log('ic_ema_strategy','i',mtext)
+                    mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} | {order_det['tradingSymbol']} | {order_id}"
+                    # write_log('ic_ema_strategy','i',mtext)
                 except Exception as e:
                     mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error - {str(e)}"
                     write_log('ic_ema_strategy','e',str(e))
@@ -310,6 +324,7 @@ def check_ema_signal(ticker, sig, last_px):
                 mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
 
         send_whatsapp_msg(f"EMA Alert - {sig['datetime']}", mtext)
+        write_log('ic_ema_strategy','i',mtext)
         print(f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}")
     return {'status':'SUCCESS','data':'Signal Check Complete'}
 
@@ -324,7 +339,7 @@ def main():
                 break
 
             if (now.minute % 5 == 0 and now.second == 5):
-                print('EMA Calculation Start')
+                print(f'EMA Calculation Start - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)
                 if st['status'] == 'FAILURE':
                     send_whatsapp_msg('Failure Alert', 'Tick data not returned')
@@ -369,7 +384,7 @@ def main():
         except Exception as e:
             err = str(e)
             write_log('ic_ema_strategy','e',err)
-            send_whatsapp_msg(f"EMA Failure Alert - {now}", err)
+            send_whatsapp_msg(f"EMA Failure Alert - {now.strftime('%Y-%m-%d %H:%M:%S')}", err)
             pass
 
         tm.sleep(1)
@@ -384,14 +399,15 @@ if __name__ == '__main__':
 # function created for test purpose only
 # change the second interval to 0 (now.second ==5) as tick data should match filter criteria accordingly
 # last_px code update to have a valid matching value for strategy to give positive signals
-def back_test_ema_strategy():
+# test_data = back_test_data()
+def back_test_data():
     dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
     tick_data = pd.DataFrame(dhan.intraday_daily_minute_charts(
         security_id='13',
         exchange_segment='IDX_I',
         instrument_type='EQUITY'
     )['data'])
-
+    
     temp_list = []
     for i in tick_data['start_Time']:
         temp = dhan.convert_to_date_time(i)
@@ -401,6 +417,14 @@ def back_test_ema_strategy():
     ticker='NIFTY'
 
     st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)
+    
+    return ticker, tick_data, st
+
+    
+def back_test_ema_strategy(test_data):
+    ticker = test_data[0]
+    tick_data = test_data[1]
+    st = test_data[2]
 
     i=0
     while i < len(tick_data):
@@ -410,7 +434,7 @@ def back_test_ema_strategy():
                 break
 
             if (now.minute % 5 == 0 and now.second == 0):
-                print('EMA Calculation Start')
+                print(f'EMA Calculation Start - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 # st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)
                 df = st['data'].copy()
 
@@ -454,10 +478,58 @@ def back_test_ema_strategy():
         except Exception as e:
             err = str(e)
             write_log('ic_ema_strategy','e',err)
-            send_whatsapp_msg(f"EMA Failure Alert - {now}", err)
+            send_whatsapp_msg(f"EMA Failure Alert - {now.strftime('%Y-%m-%d %H:%M:%S')}", err)
             pass
 
         tm.sleep(1)
         i=i+1
-    sys.exit()
+    # sys.exit()
 	
+def dh_place_bo_order_1(exchange,security_id,buy_sell,quantity,sl_point=5,tg_point=20,sl_price=0):
+    try:
+        dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+        drv_expiry_date=None
+        drv_options_type=None
+        drv_strike_price=None   
+        exchange_segment = dhan.NSE
+        tag = f"{buy_sell}-{security_id}-{quantity}"
+        security_id = int(security_id)
+        if exchange=='NFO':
+            instrument = pd.read_csv('dhan.csv')
+            instrument = instrument[instrument['SEM_SMST_SECURITY_ID']==security_id]
+            # lot_size = instrument['SEM_LOT_UNITS'].values[0]
+            drv_expiry_date=instrument['SEM_EXPIRY_DATE'].values[0]
+            drv_options_type='PUT' if instrument['SEM_OPTION_TYPE'].values[0] == 'PE' else 'CALL'
+            drv_strike_price=int(instrument['SEM_STRIKE_PRICE'].values[0])
+            exchange_segment = dhan.FNO
+            
+        t_type = dhan.BUY if buy_sell == 'buy' else dhan.SELL
+        
+        # Below line is only for testing purpose, comment when prod live
+        # order_st = {'status':'success','data':{'orderId':'52230822492201'}}
+        order_st = dhan.place_order(tag='',
+                                        transaction_type=t_type,
+                                        exchange_segment=exchange_segment,
+                                        product_type=dhan.BO,
+                                        order_type=dhan.MARKET,
+                                        validity='DAY',
+                                        security_id=str(security_id),
+                                        quantity=quantity,
+                                        disclosed_quantity=0,
+                                        price=0,
+                                        trigger_price=0,
+                                        after_market_order=True,
+                                        amo_time='OPEN',
+                                        bo_profit_value=tg_point,
+                                        bo_stop_loss_Value=sl_point,
+                                        drv_expiry_date=drv_expiry_date,
+                                        drv_options_type=drv_options_type,
+                                        drv_strike_price=drv_strike_price  
+                                        )
+
+        # print(order_st)
+        return order_st 
+    except Exception as e:
+        err = str(e)
+        write_log('dh_place_bo_order','e',err)
+        # print(f"error - {err}")
