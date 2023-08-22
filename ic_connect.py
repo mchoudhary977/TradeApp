@@ -66,4 +66,4 @@ def ic_autologon():
     
     return session_id
     
-# print(icici_autologon())
+print(ic_autologon())
