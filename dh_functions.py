@@ -13,7 +13,7 @@ def dh_get_positions():
     if st['status']=='success':
         if len(st['data']) > 0:
             data = st['data']            
-            df = pd.DataFrame(data)         
+            df = pd.DataFrame(data)   
             df.to_csv('Positions.csv',index=False)
             return {'status':'SUCCESS', 'data':df}
     return {'status':'FAILURE', 'data':'No data returned'}

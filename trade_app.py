@@ -18,9 +18,6 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# instrument_list = pd.read_csv('https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv')
-# instrument_df = instrument_list
-
 # sslify = SSLify(app, permanent=True, keyfile='key.pem', certfile='cert.pem')
 @app.route('/get_watchlist')
 def get_watchlist():
@@ -211,6 +208,11 @@ def get_order_details():
                        ]
             orders = orders[selected_cols]
             orders = orders.sort_values(by=['orderStatus', 'exchangeTime'], ascending=[False, False])
+            orders['#'] = orders.reset_index(drop=True).index + 1
+            # Reorder columns
+            last_column = orders.columns[-1]
+            new_order = [last_column] + [col for col in orders.columns if col != last_column]
+            orders = orders[new_order]
         else:
             no_orders = f'No Orders for the day - {datetime.now().strftime("%B %d, %Y")}'
             orders = pd.DataFrame(columns=[no_orders])
@@ -234,8 +236,16 @@ def get_position_details():
                        'costPrice'
                        ]
             positions = positions[selected_cols]
-            positions['realizedProfit'] = round(positions['daySellValue'] - positions['dayBuyValue'],2)
+            positions['realizedProfit'] = round(positions['daySellValue'] - positions['dayBuyValue'],2)           
             positions = positions.sort_values(by=['positionType', 'productType'], ascending=[False, True])
+            positions['#'] = positions.reset_index(drop=True).index + 1
+            # Reorder columns
+            last_column = positions.columns[-1]
+            new_order = [last_column] + [col for col in positions.columns if col != last_column]
+            positions = positions[new_order]
+            total_value = positions['realizedProfit'].sum()
+            total_row = pd.DataFrame({'tradingSymbol':'Total','realizedProfit': [total_value]}, index=['Total'])
+            positions = pd.concat([positions,total_row])
         else:
             no_positions = f'No Positions for the day - {datetime.now().strftime("%B %d, %Y")}'
             positions = pd.DataFrame(columns=[no_positions])
@@ -248,11 +258,6 @@ def get_position_details():
 
 if __name__ == '__main__':
     # ic_get_watchlist(mode='C')
-    # createICICISession(icici_api)
-    # createAccountFiles()
-    # get_watchList()
-    # updateWL = threading.Thread(target=updateWatchList)
-    # updateWL.start()
     # app.run(ssl_context=('cert.pem', 'key.pem'))
     app.run(host='0.0.0.0')
     # ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
