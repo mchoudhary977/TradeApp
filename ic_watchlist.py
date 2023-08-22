@@ -1,6 +1,6 @@
 from ic_functions import *
 from wa_notifications import * 
-import logging
+from log_function import * 
 import os
 from datetime import datetime, time
 # import datetime as dt
@@ -43,6 +43,8 @@ def on_ticks(ticks):
 
 # Main Function Start
 if __name__ == '__main__':
+    session_id = ic_autologon()
+    write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")
     if os.path.exists('WatchList.csv') == False:
         ic_update_watchlist(mode='C')
     subscription_flag = 'N'
