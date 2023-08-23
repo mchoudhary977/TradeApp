@@ -269,6 +269,7 @@ def check_ema_signal(ticker, sig, last_px):
     msg_text = f"{buy_sell} -> {ticker} -> {stop_loss} - {entry_px} - {target} "
     
     if (signal == 'green' and last_px > entry_px and sig['entry'] > 0) or (signal == 'red' and last_px < entry_px and sig['entry'] > 0):
+        sig['active']=='N'
         opt = ic_option_chain(ticker, underlying_price=last_px, option_type=opt_type, duration=0).iloc[2]
         sec_id = opt['TK']
         sec_name = opt['CD']
