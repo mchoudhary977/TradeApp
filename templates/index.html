@@ -26,7 +26,7 @@
                             <b>{{ result1['SymbolName'][i] }}</b>
                           </div>
                           <div class="col" id="difference{{i}}">
-                            <b style="font-size: 10px;">{{ (result1['PrevClose'][i] - result1['Close'][i]) | round(2) }}</b>
+                            <b style="font-size: 10px;">{{ (result1['Close'][i]) - result1['PrevClose'][i] | round(2) }}</b>
                           </div>
                         </div>
                         <hr>

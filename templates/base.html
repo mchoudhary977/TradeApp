@@ -169,7 +169,7 @@
                                     $.each(watchlist, function(key, value) {
                                         $("#symbol"+key).html("<b>"+value['SymbolName']+"</b>");
                                         $("#candle_time").html(value['CandleTime']);
-                                        var diff = (value['PrevClose'] - value['Close']).toFixed(2);
+                                        var diff = (value['Close'] - value['PrevClose']).toFixed(2);
                                         $("#difference"+key).html('<b style="font-size: 10px;">'+diff+'</b>');             
                                         if (value['Close'] > value['PrevClose']){
                                           $("#close"+key).html("<b style='color: #007500;'>"+"C-"+value['Close']+"</b>");
