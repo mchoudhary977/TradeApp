@@ -334,7 +334,7 @@ def main():
                 break
 
             if (now.minute % 5 == 0 and now.second == 5):
-                write_log('ic_ema_strategy','i',f'EMA Calculation Start - {now.strftime("%Y-%m-%d %H:%M:%S")}')
+                write_log('ic_ema_strategy','i',f'EMA Calculation START - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 print(f'EMA Calculation Start - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)
                 if st['status'] == 'FAILURE':
@@ -384,7 +384,8 @@ def main():
             pass
 
         tm.sleep(1)
-
+        
+    write_log('ic_ema_strategy','i',f'EMA Calculation Process END - {now.strftime("%Y-%m-%d %H:%M:%S")}')
     sys.exit()
 
 if __name__ == '__main__':
