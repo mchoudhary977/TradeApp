@@ -400,6 +400,7 @@ if __name__ == '__main__':
 # change the second interval to 0 (now.second ==5) as tick data should match filter criteria accordingly
 # last_px code update to have a valid matching value for strategy to give positive signals
 # test_data = back_test_data()
+# ic_autologon()
 def back_test_data():
     dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
     tick_data = pd.DataFrame(dhan.intraday_daily_minute_charts(
@@ -419,7 +420,7 @@ def back_test_data():
     st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)
     
     return ticker, tick_data, st
-
+# icici.user_id
     
 def back_test_ema_strategy(test_data):
     ticker = test_data[0]

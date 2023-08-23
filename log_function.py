@@ -4,7 +4,7 @@ import datetime as dt
 log_file = f"logs/trade_app_{dt.datetime.now().strftime('%Y%m%d')}.log"
 # log_file = f"trade_app_{dt.datetime.now().strftime('%Y%m%d')}.log"
 
-logging.basicConfig(filename=log_file,level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename=log_file,level=logging.WARN, format='%(asctime)s - %(levelname)s - %(message)s')
 # logging.basicConfig(filename='mylog.log',level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def write_log(file_name, log_type, log_msg):
