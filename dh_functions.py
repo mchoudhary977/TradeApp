@@ -16,6 +16,8 @@ def dh_get_positions():
             df = pd.DataFrame(data)   
             df.to_csv('Positions.csv',index=False)
             return {'status':'SUCCESS', 'data':df}
+        else:
+            return {'status':'SUCCESS', 'data':''}
     return {'status':'FAILURE', 'data':'No data returned'}
     
 
@@ -28,6 +30,8 @@ def dh_get_orders():
             df = pd.DataFrame(data)
             df.to_csv('Orders.csv',index=False)
             return {'status':'SUCCESS', 'data':df}
+        else:
+            return {'status':'SUCCESS', 'data':''}
     return {'status':'FAILURE', 'data':'No data returned'}
  
 # dh_get_order_id
