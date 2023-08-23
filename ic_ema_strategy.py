@@ -333,6 +333,11 @@ def check_ema_signal(ticker, sig, last_px):
 def main():
     sig = {}
     ticker='NIFTY'
+    st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)
+    if st['status']=='SUCCESS':
+        send_whatsapp_msg('EMA Strategy', 'EMA Strategy Active')
+    else:
+        send_whatsapp_msg('EMA Strategy Failure', 'EMA Strategy Not Started')
     while True:
         try:
             now = datetime.now()
