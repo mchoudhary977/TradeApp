@@ -261,7 +261,10 @@ def ic_option_chain(ticker, underlying_price, duration = 0, num = 7, option_type
     #duration = 0 means the closest expiry, 1 means the next closest and so on
     #num =5 means return 5 option contracts closest to the market
     df_opt_contracts = ic_option_contracts_closest(ticker,duration,option_type)
-    df_opt_contracts.sort_values(by=["STRIKE"],inplace=True, ignore_index=True)
+    if option_type == 'CE':
+        df_opt_contracts.sort_values(by=["STRIKE"],inplace=True, ignore_index=True)
+    else:
+        df_opt_contracts.sort_values(by=["STRIKE"],ascending=[False],inplace=True, ignore_index=True)
     atm_idx = np.array(abs(df_opt_contracts["STRIKE"] - underlying_price)).argmin()
     up = int(num/2)
     dn = num - up

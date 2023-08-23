@@ -17,7 +17,7 @@ def dh_get_positions():
             df.to_csv('Positions.csv',index=False)
             return {'status':'SUCCESS', 'data':df}
         else:
-            return {'status':'SUCCESS', 'data':''}
+            return {'status':'SUCCESS', 'data':None}
     return {'status':'FAILURE', 'data':'No data returned'}
     
 

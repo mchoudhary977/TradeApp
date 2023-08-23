@@ -235,7 +235,7 @@ def generate_ema_signal(df):
     df['entry'] = round(df.apply(update_entry, axis=1),2)
     df['active'] = 'N'
 
-    sig = df.iloc[-1]
+    sig = df.iloc[-1].copy()
 
     # sig = last_row.copy()
     for index,row in df.iloc[::-1].iterrows():
@@ -255,80 +255,68 @@ def generate_ema_signal(df):
                 break
     return sig
 
-# ticker='NIFTY' last_px = 19370
-def check_ema_signal(ticker, sig, last_px):
-    if (sig['signal'] == 'green' and last_px > sig['entry'] and sig['entry'] > 0):
-        sig['active'] = 'N'
-        opt=ic_option_chain(ticker, underlying_price=last_px, option_type="CE", duration=0).iloc[2]
-
-        mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}"
-        orders = pd.DataFrame(dh_get_orders()['data'])
-        pos = pd.DataFrame(dh_get_positions()['data'])
-        pos_actv = len(pos[pos['securityId']==str(opt['TK'])][pos['positionType']!='CLOSED'])
-        if pos_actv > 0:
-            mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']} -> Active Position Present - Order Not Placed"
-
-        if len(orders) >= 0 and pos_actv == 0:
-            # if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
-            if len(orders[orders['orderStatus'] == 'TRADED'])>=0:
-                try:
-                    # print(f"security_id={opt['TK']}")
-                    st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=10,tg_point=50,sl_price=0)
-                    # st = dh_place_bo_order_1(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=10,tg_point=20,sl_price=0)
-                    tm.sleep(2)
-                    if st['status'] == 'failure':
-                        raise ValueError(f"{st['remarks']['message']}")
-                    order_id = st['data']['orderId'] if st['status']=='success' else None
-                    order_det = dh_get_order_id(order_id)['data']
-                    mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} | {order_det['tradingSymbol']} | {order_id}"
-                    # write_log('ic_ema_strategy','i',mtext)
-                except Exception as e:
-                    write_log('ic_ema_strategy','e',str(e))                    
-                    mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error - {str(e)}"
-                    # print(str(e))
-                    # print(mtext)
+# ticker='NIFTY' last_px = 19421
+# signal = 'green' entry_px = 19420 sec_id=61755
+# signal = 'red' entry_px = 19422 
+def check_ema_signal(ticker, sig, last_px): 
+    signal_time = sig['datetime']
+    signal = sig['signal']
+    entry_px = sig['entry']
+    stop_loss = sig['stoploss']
+    target = sig['target']
+    opt_type = 'CE' if signal == 'green' else ('PE' if signal =='red' else None)
+    buy_sell = 'BUY' if signal == 'green' else ('SELL' if signal =='red' else None)
+    msg_text = f"{buy_sell} -> {ticker} -> {stop_loss} - {entry_px} - {target} "
+    
+    if (signal == 'green' and last_px > entry_px and sig['entry'] > 0) or (signal == 'red' and last_px < entry_px and sig['entry'] > 0):
+        opt = ic_option_chain(ticker, underlying_price=last_px, option_type=opt_type, duration=0).iloc[2]
+        sec_id = opt['TK']
+        sec_name = opt['CD']
+        exit_msg = ''
+        exit_flag = 'N'
+        msg_text = msg_text + f"-> {sec_id} || {sec_name} "
+        
+        pos = dh_get_positions()
+        pos = pd.DataFrame(pos['data']) if pos['status'] == 'SUCCESS' and pos['data'] is not None else None
+        
+        if pos is not None and len(pos[pos['securityId']==str(sec_id)][pos['positionType'] !='CLOSED'])>0:
+            exit_flag = 'Y'
+            exit_msg = f"Active Position Present. "
+            
+        orders = dh_get_orders()
+        orders = pd.DataFrame(orders['data']) if orders['status'] == 'SUCCESS' and orders['data'] is not None else None
+        
+        if orders is not None and len(orders[orders['orderStatus'] == 'TRADED'])>=0:
+            exit_flag = 'Y'
+            exit_msg = exit_msg + f"Order Count Exceeded for Today - {len(orders[orders['orderStatus'] == 'TRADED'])}. "
+            
+        if exit_flag == 'Y':
+            msg_text = msg_text + f"-> {exit_msg}"
+            send_whatsapp_msg(f"EMA Alert - {signal_time}", msg_text)
+            write_log('ic_ema_strategy','i',msg_text)
+            return {'status':'SUCCESS','data':exit_msg}
+        
+        try:
+            place_order = dh_place_bo_order(exchange='NFO',security_id=sec_id,buy_sell='buy',quantity=50,sl_point=10,tg_point=50,sl_price=0)
+            tm.sleep(2)
+            if place_order['status'] == 'failure':
+                raise ValueError(f"{place_order['remarks']['message']}")
+            order_id = place_order['data']['orderId'] if place_order['status']=='success' else None
+            order_det = dh_get_order_id(order_id)['data'] if order_id is not None else None
+            
+            if order_dt is not None:
+                msg_text = msg_text + f"-> {order_det['tradingSymbol']} -> {order_id}"
             else:
-                mtext=f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
-
-        send_whatsapp_msg(f"EMA Alert - {sig['datetime']}", mtext)
-        write_log('ic_ema_strategy','i',mtext)
-        # print(f"BUY -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}")
-
-    elif (sig['signal'] == 'red' and last_px < sig['entry'] and sig['entry'] > 0):
-        sig['active'] = 'N'
-        opt=ic_option_chain(ticker, underlying_price=last_px, option_type="PE", duration=0).iloc[-3]
-
-        mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}"
-        orders = pd.DataFrame(dh_get_orders()['data'])
-        pos = pd.DataFrame(dh_get_positions()['data'])
-        pos_actv = len(pos[pos['securityId']==str(opt['TK'])][pos['positionType']!='CLOSED'])
-        if pos_actv > 0:
-            mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']} -> Active Position Present - Order Not Placed"
-        if len(orders) >= 0 and pos_actv == 0:
-            # if len(orders[orders['orderStatus'] == 'TRADED'])/2 < 2.5:
-            if len(orders[orders['orderStatus'] == 'TRADED'])>=0:
-                try:
-                    # print(f"security_id={opt['TK']}")
-                    st = dh_place_bo_order(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=10,tg_point=50,sl_price=0)
-                    # st = dh_place_bo_order_1(exchange='NFO',security_id=opt['TK'],buy_sell='buy',quantity=50,sl_point=10,tg_point=20,sl_price=0)
-                    tm.sleep(2)
-                    if st['status'] == 'failure':
-                        raise ValueError(f"{st['remarks']['message']}")
-                    order_id = st['data']['orderId'] if st['status']=='success' else None
-                    order_det = dh_get_order_id(order_id)['data']
-                    mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} | {order_det['tradingSymbol']} | {order_id}"
-                    # write_log('ic_ema_strategy','i',mtext)
-                except Exception as e:
-                    mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Placement Error - {str(e)}"
-                    write_log('ic_ema_strategy','e',str(e))
-            else:
-                mtext=f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - Order Not Placed as day count exceeded - {len(orders[orders['orderStatus'] == 'TRADED'])}"
-
-        send_whatsapp_msg(f"EMA Alert - {sig['datetime']}", mtext)
-        write_log('ic_ema_strategy','i',mtext)
-        print(f"SELL -> {ticker} -> {sig['stoploss']} - {sig['entry']} - {sig['target']} -> {opt['CD']} - {opt['TK']}")
-    return {'status':'SUCCESS','data':'Signal Check Complete'}
-
+                msg_text = msg_text + f"-> Order ID Not Returned. Please Check!"
+                
+        except Exception as e:
+            err = str(e)
+            msg_text = msg_text + f"-> Order Placement Error - {err}"
+            pass
+        send_whatsapp_msg(f"EMA Alert - {signal_time}", msg_text)
+        write_log('ic_ema_strategy','i',msg_text)
+    else:
+        return {'status':'SUCCESS','data':'Condition Not Matched. Returning...'}
 
 def main():
     sig = {}
