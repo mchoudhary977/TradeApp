@@ -228,6 +228,7 @@ def generate_ema_signal(df):
     df['9-ema'] = round(df['close'].ewm(span=9, adjust=False).mean(),2)
     df['ema_xover'] = round(df['9-ema'] - df['15-ema'],2)
     df['rsi'] = round(rsi(df,14),2)
+    df = df[df['timestamp'] >= pd.Timestamp('09:15:00')]
     df['signal'] = df.apply(signal, axis=1)
     df['signal'].fillna(method='ffill', inplace=True)
     df['signal'] = df['signal'].where(df['signal'] != df['signal'].shift())
@@ -339,6 +340,7 @@ def main():
                 break
 
             if (now.minute % 5 == 0 and now.second == 5):
+                write_log('ic_ema_strategy','i',f'EMA Calculation Start - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 print(f'EMA Calculation Start - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)
                 if st['status'] == 'FAILURE':
@@ -421,7 +423,7 @@ def back_test_data():
     
     return ticker, tick_data, st
 # icici.user_id
-    
+# st['data'] = df.copy()
 def back_test_ema_strategy(test_data):
     ticker = test_data[0]
     tick_data = test_data[1]
@@ -443,7 +445,7 @@ def back_test_ema_strategy(test_data):
                     send_whatsapp_msg('Failure Alert', 'Tick data not returned')
                     continue
                 df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))
-                df = df[df['datetime']<=now]
+                # df = df[df['datetime']<=now]
                 df['timestamp'] = pd.to_datetime(df['datetime'])
                 df = df[df['timestamp'].dt.time >= pd.Timestamp('09:15:00').time()]
 
