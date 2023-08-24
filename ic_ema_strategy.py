@@ -330,7 +330,7 @@ def main():
     while True:
         try:
             now = datetime.now()
-            if now.time() < time(9,0) or now.time() > time(15,10):
+            if now.time() < time(9,15) or now.time() > time(15,10):
                 break
 
             if (now.minute % 5 == 0 and now.second == 5):
@@ -339,6 +339,7 @@ def main():
                 st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)
                 if st['status'] == 'FAILURE':
                     send_whatsapp_msg('Failure Alert', 'Tick data not returned')
+                    session_create = ic_create_session(icici)
                     continue
                 df = st['data'].copy()
                 df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))
