@@ -299,7 +299,7 @@ def check_ema_signal(ticker, sig, last_px):
             return {'status':'SUCCESS','data':exit_msg}
         
         try:
-            place_order = dh_place_bo_order(exchange='NFO',security_id=sec_id,buy_sell='buy',quantity=50,sl_point=10,tg_point=50,sl_price=0)
+            place_order = dh_place_bo_order(exchange='NFO',security_id=sec_id,buy_sell='buy',quantity=50,sl_point=10,tg_point=30,sl_price=0)
             tm.sleep(2)
             if place_order['status'] == 'failure':
                 raise ValueError(f"{place_order['remarks']['message']}")
