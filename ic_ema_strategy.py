@@ -255,7 +255,7 @@ def generate_ema_signal(df):
                 break
     return sig
 
-# ticker='NIFTY' last_px = 19421
+# ticker='NIFTY' last_px = 19386
 # signal = 'green' entry_px = 19420 sec_id=61755
 # signal = 'red' entry_px = 19422 
 def check_ema_signal(ticker, sig, last_px): 
@@ -270,7 +270,8 @@ def check_ema_signal(ticker, sig, last_px):
     
     if (signal == 'green' and last_px > entry_px and sig['entry'] > 0) or (signal == 'red' and last_px < entry_px and sig['entry'] > 0):
         sig['active']=='N'
-        opt = ic_option_chain(ticker, underlying_price=last_px, option_type=opt_type, duration=0).iloc[2]
+        # count changed to 4 due to balance constraints
+        opt = ic_option_chain(ticker, underlying_price=last_px, option_type=opt_type, duration=0).iloc[4]
         sec_id = opt['TK']
         sec_name = opt['CD']
         exit_msg = ''
