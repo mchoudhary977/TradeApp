@@ -288,7 +288,7 @@ def check_ema_signal(ticker, sig, last_px):
         orders = dh_get_orders()
         orders = pd.DataFrame(orders['data']) if orders['status'] == 'SUCCESS' and orders['data'] is not None else None
         
-        if orders is not None and len(orders[orders['orderStatus'] == 'TRADED'])>1:
+        if orders is not None and len(orders[orders['orderStatus'] == 'TRADED'])>2:
             exit_flag = 'Y'
             exit_msg = exit_msg + f"Order Count Exceeded for Today - {len(orders[orders['orderStatus'] == 'TRADED'])}. "
             
