@@ -340,6 +340,7 @@ def main():
                 st=ic_get_sym_detail(symbol=ticker, interval='5minute',duration=4)
                 if st['status'] == 'FAILURE':
                     send_whatsapp_msg('Failure Alert', 'Tick data not returned')
+                    ic_autologon()
                     session_create = ic_create_session(icici)
                     continue
                 df = st['data'].copy()
