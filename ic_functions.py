@@ -230,17 +230,18 @@ def ic_update_watchlist(mode='R'):
 
 
 # function to extract all option contracts for a given ticker 
-def ic_option_contracts(ticker, option_type="CE", exchange="NFO"):
+def ic_option_contracts(ticker="NIFTY", option_type="CE", exchange="NFO"):
     instrument_list = pd.read_csv('icici.csv')
     option_contracts = instrument_list[instrument_list["SC"]==ticker][instrument_list['EC']==exchange][instrument_list['OT']==option_type]
     return option_contracts  # pd.DataFrame(option_contracts)
 
 
 # function to extract the closest expiring option contracts
-def ic_option_contracts_closest(ticker, duration = 0, option_type="CE", exchange="NFO"):
+def ic_option_contracts_closest(ticker="NIFTY", duration = 0, option_type="CE", exchange="NFO"):
     #duration = 0 means the closest expiry, 1 means the next closest and so on
     df_opt_contracts = ic_option_contracts(ticker,option_type)
     df_opt_contracts["time_to_expiry"] = (pd.to_datetime(df_opt_contracts["EXPIRY"]) - dt.datetime.now()).dt.days
+    df_opt_contracts = df_opt_contracts[df_opt_contracts["time_to_expiry"] >= 0]
     # df_opt_contracts["time_to_expiry"] = (pd.to_datetime(df_opt_contracts["EXPIRY"]) - datetime.now()).days
     min_day_count = np.sort(df_opt_contracts["time_to_expiry"].unique())[duration]
     

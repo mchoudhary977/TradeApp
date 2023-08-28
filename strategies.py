@@ -305,18 +305,18 @@ def check_ema_signal(ticker, sig, last_px):
 
         try:
             msg_text = f"{msg_text}-> {sec_name} [{sec_id}]"
-            # place_order = dh_place_bo_order(exchange='NFO',security_id=sec_id,buy_sell='buy',quantity=50,sl_point=10,tg_point=30,sl_price=0)
-            # tm.sleep(2)
-            # if place_order['status'] == 'failure':
-            #     raise ValueError(f"{place_order['remarks']['message']}")
-            # order_id = place_order['data']['orderId'] if place_order['status']=='success' else None
-            # order_det = dh_get_order_id(order_id)['data'] if order_id is not None else None
-
-            # if order_dt is not None:
-            #     msg_text = msg_text + f"-> {order_det['tradingSymbol']} -> {order_id}"
-            # else:
-            #     msg_text = msg_text + f"-> Order ID Not Returned. Please Check!"
-
+            order_type = 'sl'
+            # place_order = dh_post_exchange_order(order_type=order_type,exchange='FNO',security_id=sec_id,buy_sell='buy',quantity=50,sl_price=0,tg_point=10,sl_point=20)
+            
+            # if place_order['status'].lower() == 'failure':
+            #     raise ValueError(f"{place_order['data']['message']}")
+            
+            # order_id = place_order['data']['orderId']
+            # msg_text = msg_text + f"-> {order_det['tradingSymbol']} -> Entry Order: {order_id} "
+            
+            # if order_type == 'sl':
+            #     sl_order_id = place_order['data']['sl_order_id'] if order_type == 'sl' else None
+            #     msg_text = msg_text + f"->StopLoss Order : {sl_order_id}"
         except Exception as e:
             err = str(e)
             msg_text = msg_text + f"-> Order Placement Error - {err}"
