@@ -188,7 +188,7 @@ def dh_place_order(dhan,order_type,exchange,security_id,buy_sell,quantity,sl_pri
                                     disclosed_quantity=0,
                                     price=price,
                                     trigger_price=trigger_price,
-                                    after_market_order=True,
+                                    after_market_order=False,
                                     amo_time='OPEN',
                                     bo_profit_value=tg_point,
                                     bo_stop_loss_Value=sl_point,
