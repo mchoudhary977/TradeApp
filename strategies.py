@@ -335,7 +335,8 @@ def main():
             if now.time() < time(9,15) or now.time() > time(15,10):
                 break
 
-            if (now.minute % 5 == 0 and now.second == 5):
+            if (1==1):
+            # if (now.minute % 5 == 0 and now.second == 5):
                 write_log('ic_ema_strategy','i',f'EMA Calculation START - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 print(f'EMA Calculation Start - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 start_date = (datetime.now() - timedelta(5)).strftime('%Y-%m-%d')
@@ -347,7 +348,7 @@ def main():
                 df.rename(columns={'Open':'open','High':'high','Low':'low','Adj Close':'close','Volume':'volumne'}, inplace=True)
                 df = df[['datetime','open','high','low','close','volumne']].iloc[:-1]
                 # df['datetime'].iloc[0].tz_localize(None)
-                
+                print(df)
                 # df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))
                 # # df = df[df['datetime']<='2023-08-18 13:05:00']
                 # df['timestamp'] = pd.to_datetime(df['datetime'])
