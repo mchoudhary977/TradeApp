@@ -420,11 +420,11 @@ def back_test_data():
         temp_list.append(temp)
     tick_data['Date'] = temp_list
     sig = {}
-    ticker='^NSEI'
+    ticker = {'YF':'^NSEI', 'ICDH':'NIFTY'}
 
     start_date = (datetime.now() - timedelta(5)).strftime('%Y-%m-%d')
     end_date = (datetime.now() + timedelta(1)).strftime('%Y-%m-%d')
-    st = yf.download(ticker, start=start_date, end=end_date, interval="5m")
+    st = yf.download(ticker['YF'], start=start_date, end=end_date, interval="5m")
 
 
 
@@ -451,6 +451,9 @@ def back_test_ema_strategy(test_data):
                 df['datetime'] = df.index.tz_localize(None)
                 df.rename(columns={'Open':'open','High':'high','Low':'low','Adj Close':'close','Volume':'volumne'}, inplace=True)
                 df = df[['datetime','open','high','low','close','volumne']]
+                
+                # df = df[df['datetime'] <= '2023-08-28 14:20:00']
+                df = df[df['datetime'] <= '2023-08-28 09:40:00']
                 # ema strategy signal generation
                 sig = generate_ema_signal(df)
                 if sig['active'] == 'Y':
@@ -465,9 +468,9 @@ def back_test_ema_strategy(test_data):
                 trend_direction = trend(ohlc_df,num_of_candles)
 
                 if cdl_pattern['pattern'] is not None:
-                    msg = f"Symbol : {ticker} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : sideways"
+                    msg = f"Symbol : {ticker['ICDH']} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : sideways"
                     if trend_direction is not None:
-                        msg = f"Symbol : {ticker} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : {trend_direction}"
+                        msg = f"Symbol : {ticker['ICDH']} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : {trend_direction}"
                     send_whatsapp_msg(f'CandleStick Alert - {cdl_pattern["timestamp"]}', msg)
                     print(msg)
 
@@ -479,7 +482,7 @@ def back_test_ema_strategy(test_data):
                 print(f'Checking for active signal - {now}-{last_px}')
                 # stg_file = 'Strategy.csv'
                 # stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
-                check_ema_signal(ticker, sig, last_px)
+                check_ema_signal(ticker['ICDH'], sig, last_px)
         except Exception as e:
             err = str(e)
             write_log('ic_ema_strategy','e',err)
