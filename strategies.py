@@ -366,9 +366,9 @@ def main():
                 trend_direction = trend(ohlc_df,num_of_candles)
 
                 if cdl_pattern['pattern'] is not None:
-                    msg = f"Symbol : {ticker} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : sideways"
+                    msg = f"Symbol : {ticker['ICDH']} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : sideways"
                     if trend_direction is not None:
-                        msg = f"Symbol : {ticker} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : {trend_direction}"
+                        msg = f"Symbol : {ticker['ICDH']} -> Pattern : {cdl_pattern['pattern']} -> Significance : {cdl_pattern['significance']} -> Last {num_of_candles} Candles Trend : {trend_direction}"
                     send_whatsapp_msg(f'CandleStick Alert - {cdl_pattern["timestamp"]}', msg)
                     print(msg)
 
@@ -379,7 +379,7 @@ def main():
 
             if sig['active'] == 'Y':
                 wl = pd.read_csv('WatchList.csv')
-                last_px = wl[wl['Code']==ticker]['Close'].values[0]
+                last_px = wl[wl['Code']==ticker['ICDH']]['Close'].values[0]
                 # stg_file = 'Strategy.csv'
                 # stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
                 # last_px = 19312
