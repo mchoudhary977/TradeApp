@@ -207,6 +207,7 @@ def rsi(df, n):
     rs = u.ewm(com=n,min_periods=n).mean()/d.ewm(com=n,min_periods=n).mean()
     return 100 - 100 / (1+rs)
 
+# row = df.iloc[-1].copy()
 def signal(row):
     ema_xover = row['9-ema'] - row['15-ema']
     ema_signal = 1 if ema_xover > 0 and abs(ema_xover) >= 1 else (-1 if ema_xover < 0 and abs(ema_xover) >= 1 else 0)
@@ -236,6 +237,10 @@ def generate_ema_signal(df):
     df['active'] = 'N'
 
     sig = df.iloc[-1].copy()
+    sig['stoploss'] = 0
+    sig['step'] = 0
+    sig['target'] = 0
+    sig['active'] = 'N'
 
     # sig = last_row.copy()
     for index,row in df.iloc[::-1].iterrows():
@@ -340,7 +345,7 @@ def main():
                 df = st.copy()
                 df['datetime'] = df.index.tz_localize(None)
                 df.rename(columns={'Open':'open','High':'high','Low':'low','Adj Close':'close','Volume':'volumne'}, inplace=True)
-                df = df[['datetime','open','high','low','close','volumne']]
+                df = df[['datetime','open','high','low','close','volumne']].iloc[:-1]
                 # df['datetime'].iloc[0].tz_localize(None)
                 
                 # df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))
