@@ -341,7 +341,11 @@ def main():
                 print(f'EMA Calculation Start - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 start_date = (datetime.now() - timedelta(5)).strftime('%Y-%m-%d')
                 end_date = (datetime.now() + timedelta(1)).strftime('%Y-%m-%d')
-                st = yf.download(ticker, start=start_date, end=end_date, interval="5m")
+                try:
+                    st = yf.download(ticker, start=start_date, end=end_date, interval="5m")
+                except Exception as e:
+                    err = str(e)
+                    print(f"Error Message - {err}")
 
                 df = st.copy()
                 df['datetime'] = df.index.tz_localize(None)
