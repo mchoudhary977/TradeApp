@@ -346,7 +346,7 @@ def main():
                 df.rename(columns={'Open':'open','High':'high','Low':'low','Adj Close':'close','Volume':'volumne'}, inplace=True)
                 df = df[['datetime','open','high','low','close','volumne']].iloc[:-1]
                 # df['datetime'].iloc[0].tz_localize(None)
-                print(df)
+                # print(df)
                 # df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))
                 # # df = df[df['datetime']<='2023-08-18 13:05:00']
                 # df['timestamp'] = pd.to_datetime(df['datetime'])
