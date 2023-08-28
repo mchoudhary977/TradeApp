@@ -20,7 +20,7 @@ def dh_get_positions():
             return {'status':'success', 'data':df}
         else:
             return {'status':'success', 'data':None}
-    return {'status':'failure', 'data':'No data returned'}
+    return {'status':'failure', 'data':None}
     
 
 def dh_get_orders():
@@ -34,7 +34,7 @@ def dh_get_orders():
             return {'status':'success', 'data':df}
         else:
             return {'status':'success', 'data':None}
-    return {'status':'failure', 'data':'No data returned'}
+    return {'status':'failure', 'data':None}
  
 # dh_get_order_id(order_id='252308287831')
 def dh_get_order_id(order_id):

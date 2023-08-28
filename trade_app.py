@@ -199,8 +199,8 @@ def get_order_details():
     resultDict={}
     orders = dh_get_orders()
     no_orders = ''
-    if orders['status'] == 'SUCCESS':
-        if len(orders['data']) > 0:
+    if orders['status'].lower() == 'success':
+        if  orders['data'] is not None:
             orders = orders['data']
             selected_cols = ['orderId', 'tradingSymbol','securityId','orderStatus',
                        'orderType','productType','validity','transactionType',
@@ -227,8 +227,8 @@ def get_order_details():
 def get_position_details():
     resultDict = {}
     positions = dh_get_positions()
-    if positions['status'] == 'SUCCESS':
-        if len(positions['data']) > 0:
+    if positions['status'].lower() == 'success':
+        if positions['data'] is not None:
             positions = positions['data']
             selected_cols = ['tradingSymbol','securityId','positionType',
                        'productType','realizedProfit','buyQty','sellQty',
