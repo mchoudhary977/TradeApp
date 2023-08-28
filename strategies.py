@@ -332,11 +332,10 @@ def main():
     while True:
         try:
             now = datetime.now()
-            if now.time() < time(9,15) or now.time() > time(15,10):
+            if now.time() < time(9,0) or now.time() > time(15,10):
                 break
-
             # if (1==1):
-            if (now.minute % 5 == 0 and now.second == 5):
+            if (now.time > time(9,16) and now.minute % 5 == 0 and now.second == 5):
                 write_log('ic_ema_strategy','i',f'EMA Calculation START - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 print(f'EMA Calculation Start - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 start_date = (datetime.now() - timedelta(5)).strftime('%Y-%m-%d')
