@@ -246,14 +246,14 @@ def generate_ema_signal(df):
     for index,row in df.iloc[::-1].iterrows():
         if sig['signal'] == 'green':
             if row['ema_xover'] < 0:
-                sig['stoploss'] = row['low']
+                sig['stoploss'] = round(row['low'],2)
                 sig['step'] = abs(sig['entry']-sig['stoploss'])
                 sig['target'] = round(sig['entry'] + sig['step'],2)
                 sig['active'] = 'Y'
                 break
         if sig['signal'] == 'red':
             if row['ema_xover'] > 0:
-                sig['stoploss'] = row['high']
+                sig['stoploss'] = round(row['high'],2)
                 sig['step'] = abs(sig['entry']-sig['stoploss'])
                 sig['target'] = round(sig['entry'] - sig['step'],2)
                 sig['active'] = 'Y'
@@ -304,7 +304,7 @@ def check_ema_signal(ticker, sig, last_px):
             return {'status':'SUCCESS','data':exit_msg}
 
         try:
-            send_whatsapp_msg(f"EMA Alert - {signal_time}", f"{msg_text}-> {sec_name} [{sec_id}]")
+            msg_text = f"{msg_text}-> {sec_name} [{sec_id}]"
             # place_order = dh_place_bo_order(exchange='NFO',security_id=sec_id,buy_sell='buy',quantity=50,sl_point=10,tg_point=30,sl_price=0)
             # tm.sleep(2)
             # if place_order['status'] == 'failure':
@@ -328,7 +328,7 @@ def check_ema_signal(ticker, sig, last_px):
 
 def main():
     sig = {}
-    ticker = "^NSEI"
+    ticker = {'YF':'^NSEI', 'ICDH':'NIFTY'}
     while True:
         try:
             now = datetime.now()
@@ -340,7 +340,7 @@ def main():
                 print(f'EMA Calculation Start - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 start_date = (datetime.now() - timedelta(5)).strftime('%Y-%m-%d')
                 end_date = (datetime.now() + timedelta(1)).strftime('%Y-%m-%d')
-                st = yf.download(ticker, start=start_date, end=end_date, interval="5m")
+                st = yf.download(ticker['YF'], start=start_date, end=end_date, interval="5m")
                 df = st.copy()
                 df['datetime'] = df.index.tz_localize(None)
                 df.rename(columns={'Open':'open','High':'high','Low':'low','Adj Close':'close','Volume':'volumne'}, inplace=True)
@@ -382,7 +382,9 @@ def main():
                 last_px = wl[wl['Code']==ticker]['Close'].values[0]
                 # stg_file = 'Strategy.csv'
                 # stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
-                check_ema_signal(ticker, sig, last_px)
+                # last_px = 19312
+                # ticker='NIFTY'
+                check_ema_signal(ticker['ICDH'], sig, last_px)
         except Exception as e:
             err = str(e)
             write_log('ic_ema_strategy','e',err)
