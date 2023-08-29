@@ -329,13 +329,18 @@ def check_ema_signal(ticker, sig, last_px):
 def main():
     sig = {}
     ticker = {'YF':'^NSEI', 'ICDH':'NIFTY'}
+    strategy_notification = 'N'
     while True:
         try:
             now = datetime.now()
             if now.time() < time(9,0) or now.time() > time(15,10):
+                send_whatsapp_msg(f"STRATEGY END - {now.strftime('%Y-%m-%d %H:%M:%S')}", "Strategy Functionality Disabled!!!")
                 break
             # if (1==1):
             if (now.time() > time(9,16) and now.minute % 5 == 0 and now.second == 5):
+                if strategy_notification == 'N':
+                    strategy_notification = 'Y'
+                    send_whatsapp_msg(f"STRATEGY START - {now.strftime('%Y-%m-%d %H:%M:%S')}", "Strategy Functionality Enabled!!!")
                 write_log('ic_ema_strategy','i',f'EMA Calculation START - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 print(f'EMA Calculation Start - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 start_date = (datetime.now() - timedelta(5)).strftime('%Y-%m-%d')
