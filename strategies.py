@@ -5,7 +5,7 @@ ICICIDirect - Implementing real time EMA Strategy
 @author: Mukesh Choudhary
 """
 import yfinance as yf
-# from ic_functions import *
+from ic_functions import *
 from dh_functions import *
 from wa_notifications import *
 from log_function import *
