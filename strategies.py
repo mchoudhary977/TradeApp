@@ -108,7 +108,11 @@ def res_sup(ohlc_df,ohlc_day):
     l_s3=level-s3
     lev_ser = pd.Series([l_p,l_r1,l_r2,l_r3,l_s1,l_s2,l_s3],index=["p","r1","r2","r3","s1","s2","s3"])
     sup = lev_ser[lev_ser>0].idxmin()
-    res = lev_ser[lev_ser<0].idxmax()
+    try:
+        res = lev_ser[lev_ser<0].idxmax()
+    except Exception as e:
+        res = lev_ser[lev_ser>0].idxmax()
+        pass
     return (eval('{}'.format(res)), eval('{}'.format(sup)))
 
 
@@ -350,6 +354,7 @@ def main():
                 df['datetime'] = df.index.tz_localize(None)
                 df.rename(columns={'Open':'open','High':'high','Low':'low','Adj Close':'close','Volume':'volumne'}, inplace=True)
                 df = df[['datetime','open','high','low','close','volumne']].iloc[:-1]
+                # df = df.iloc[:-7]
                 # df['datetime'].iloc[0].tz_localize(None)
                 # print(df)
                 # df['datetime'] = df['datetime'].apply(lambda x: datetime.strptime(x,'%Y-%m-%d %H:%M:%S'))
@@ -387,7 +392,7 @@ def main():
                 last_px = wl[wl['Code']==ticker['ICDH']]['Close'].values[0]
                 # stg_file = 'Strategy.csv'
                 # stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
-                # last_px = 19312
+                # last_px = 19430
                 # ticker='NIFTY'
                 check_ema_signal(ticker['ICDH'], sig, last_px)
         except Exception as e:
