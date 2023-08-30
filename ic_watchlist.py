@@ -84,4 +84,4 @@ if __name__ == '__main__':
                 tm.sleep(60)
         except Exception as e:
             pass
-        tm.sleep(1)
+        # tm.sleep(1)
