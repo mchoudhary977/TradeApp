@@ -277,8 +277,8 @@ def check_ema_signal(ticker, sig, last_px):
     buy_sell = 'BUY' if signal == 'green' else ('SELL' if signal =='red' else None)
     msg_text = f"{buy_sell} -> {ticker} -> {stop_loss} - {entry_px} - {target} "
 
-    if (signal == 'green' and last_px > entry_px and sig['entry'] > 0) or (signal == 'red' and last_px < entry_px and sig['entry'] > 0):
-        sig['active']=='N'
+    if (sig['active']=='Y' and signal == 'green' and last_px > entry_px and sig['entry'] > 0) or (signal == 'red' and last_px < entry_px and sig['entry'] > 0):
+        sig['active']='N'
         # count changed to 4 due to balance constraints
         opt = ic_option_chain(ticker, underlying_price=last_px, option_type=opt_type, duration=0).iloc[4]
         sec_id = opt['TK']
