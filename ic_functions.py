@@ -101,6 +101,7 @@ def ic_create_session(icici):
 
 
 # ICICI TokenLookup
+# symbol_list = ['NIFTY']
 def ic_tokenLookup(symbol_list):
     """Looks up instrument token for a given script from instrument dump"""
     if icici.user_id is None:
