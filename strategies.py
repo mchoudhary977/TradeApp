@@ -353,6 +353,7 @@ def main():
     msg = {'status':'failure', 'remarks':'', 'data':''}
     
     ema_sig = {}
+    sig = {}
     ticker = {'YF':'^NSEI', 'ICDH':'NIFTY'}
     strategy_notification = 'N'
     while True:
@@ -411,7 +412,7 @@ def main():
 
                 # last_px = wl[wl['Code']==ticker]['Close'].values[0]
                 # last_px = 19272
-            if len(sig) == 0:
+            if len(ema_sig) == 0:
                 continue
 
             if ema_sig['active'] == 'Y':
