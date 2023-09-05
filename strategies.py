@@ -371,7 +371,9 @@ def main():
             if (now.time() > time(9,16) and now.minute % 5 == 0 and now.second == 5):
                 if strategy_notification == 'N':
                     strategy_notification = 'Y'
-                    send_whatsapp_msg(f"STRATEGY START - {now.strftime('%Y-%m-%d %H:%M:%S')}", "Strategy Functionality Enabled!!!")
+                    lo = json.load(open('config.json', 'r'))['LIVE_ORDER']
+                    msg = f"Strategy Functionality Enabled with Live Order = {'Yes' if lo=='Y' else 'No'}"
+                    send_whatsapp_msg(f"STRATEGY START - {now.strftime('%Y-%m-%d %H:%M:%S')}", msg)
                 write_log('ic_ema_strategy','i',f'EMA Calculation START - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 print(f'EMA Calculation Start - {now.strftime("%Y-%m-%d %H:%M:%S")}')
                 start_date = (datetime.now() - timedelta(5)).strftime('%Y-%m-%d')

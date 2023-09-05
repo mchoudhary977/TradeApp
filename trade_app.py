@@ -12,6 +12,7 @@ import json
 import ssl
 from trade_modules import *
 from dh_functions import * 
+from wa_notifications import * 
 # from ic_watchlist import ic_get_watchlist
 import os
 
@@ -90,6 +91,8 @@ def submit_form():
     if len(live_order_flag) > 0:
         if live_order_flag =='Y' or live_order_flag =='N':
             json_data["LIVE_ORDER"] = live_order_flag
+            msg = f"Live Order Status Change = {live_order_flag}"
+            send_whatsapp_msg(f"LIVE ORDER - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", msg)
 
     if len(dhan_token) > 0:
         print(f'token dhan - {dhan_token}')
