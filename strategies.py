@@ -18,6 +18,7 @@ from datetime import datetime, time, timedelta
 import os
 import sys
 import numpy as np
+import json
 
 # ohlc_df = doji(ohlc_df)
 def doji(ohlc_df):
@@ -273,6 +274,7 @@ def check_ema_signal(ticker, ema_sig, last_px):
     funct_name = 'check_ema_signal'.upper()
     msg = {'status':'failure', 'remarks':'', 'data':''}
     
+    live_order = json.load(open('config.json', 'r'))['LIVE_ORDER']
     signal_time = ema_sig['datetime']
     signal = ema_sig['signal']
     entry_px = ema_sig['entry']
@@ -314,22 +316,25 @@ def check_ema_signal(ticker, ema_sig, last_px):
             return msg # {'status':'SUCCESS','data':msg['remarks']}
 
         try:
-            trade = dh_post_exchange_order(ord_type='mkt', exchange='FNO', 
-                                       security_id=sec_id, side='buy',
-                                       qty=1, entry_px=0, sl_px=0, trigger_px=0, 
-                                       tg_pts=0, sl_pts=0, 
-                                       amo=False, prod_type='')
-            
-            if trade['status'].lower() == 'success':
-                msg['data'] = msg['data'] + f"=> Order Placed [ OrderId - {trade['data']['orderId']} | OrderStatus - {trade['data']['orderStatus']} ]"
-                msg['status'] = 'success'
-                trade_write = add_trade_details(sec_name, sec_id, side,
-                                                trade['data']['orderId'], 
-                                                trade['data']['orderStatus'], 
-                                                sl_pts=10, tg_pts=10)
-            
+            if live_order == 'Y':
+                trade = dh_post_exchange_order(ord_type='mkt', exchange='FNO', 
+                                           security_id=sec_id, side='buy',
+                                           qty=1, entry_px=0, sl_px=0, trigger_px=0, 
+                                           tg_pts=0, sl_pts=0, 
+                                           amo=False, prod_type='')
+                
+                if trade['status'].lower() == 'success':
+                    msg['data'] = msg['data'] + f"=> Order Placed [ OrderId - {trade['data']['orderId']} | OrderStatus - {trade['data']['orderStatus']} ]"
+                    msg['status'] = 'success'
+                    trade_write = add_trade_details(sec_name, sec_id, side,
+                                                    trade['data']['orderId'], 
+                                                    trade['data']['orderStatus'], 
+                                                    sl_pts=10, tg_pts=10)
+                
+                else:
+                    msg['remarks'] = msg['remarks'] + f"Order Failed - {trade['remarks']}"
             else:
-                msg['remarks'] = msg['remarks'] + f"Order Failed - {trade['remarks']}"
+                msg['data'] = msg['data'] + f"=> Live Order not enabled, place manually!"                    
 
         except Exception as e:
             err = str(e)
