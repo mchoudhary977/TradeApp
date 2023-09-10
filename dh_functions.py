@@ -118,7 +118,7 @@ def dh_get_option_detail(exchange='FNO',security_id=1234):
     return drv_expiry_date, drv_options_type, drv_strike_price, lot_size, sec_name
 
 
-def add_trade_details(trading_symbol, security_id, side, order_id, order_status, sl_pts=0, tg_pts=0):
+def add_trade_details(strategy, trade_symbol, security_id, side, qty, order_id, order_status, trail_pts=0, stop_loss=0, target=0):
     funct_name = 'add_trade_details'.upper()
     create_trade_file = 'N'
     trade_file = 'Trades.csv'
@@ -132,22 +132,29 @@ def add_trade_details(trading_symbol, security_id, side, order_id, order_status,
                 create_trade_file = 'Y'
         
         if create_trade_file == 'Y':
-            trade_cols = ['#','SecurityID','Symbol','Side','LivePrice','PnL','TradeStatus',
-                          'EntryOrderID','EntryPrice','EntryStatus',
-                          'SLOrderID','SLStatus',
-                          'StopLossPoints','StopLossPrice',
-                          'TargetPoints','TargetPrice','LiveFeed',
-                          'Comments','Timestamp']
+            trade_cols = ['#','Date','Strategy','SecID','Symbol','Side','LivePx',
+                          'PnL','Active','Qty','EntryID','EntryPx','EntrySt',
+                          'ExitID','ExitPx','ExitSt',
+                          'TrailPts','StopLoss','Target','LiveFeed','Comments','Timestamp']
+            # trade_cols = ['#','SecurityID','Symbol','Side','LivePrice','PnL','TradeStatus',
+            #               'EntryOrderID','EntryPrice','EntryStatus',
+            #               'SLOrderID','SLStatus',
+            #               'StopLossPoints','StopLossPrice',
+            #               'TargetPoints','TargetPrice','LiveFeed',
+            #               'Comments','Timestamp']
             trade_df = pd.DataFrame(columns=trade_cols)
         else:
             trade_df = pd.read_csv(trade_file)
         
         no_of_trades = len(trade_df)
         
-        new_row = {'#':(no_of_trades+1),'SecurityID':security_id,'Symbol':trading_symbol,
-                   'Side':side.upper(), 'EntryOrderID':order_id, 'EntryStatus':order_status,
-                   'StopLossPoints':sl_pts, 'TargetPoints':tg_pts,'LiveFeed':'N',
-                   'TradeStatus':'Open'.upper()}
+        new_row = {'#':(no_of_trades+1),'Date':datetime.now().strftime('%Y-%m-%d'),
+                   'Strategy':strategy,'SecID':security_id,'Symbol':trade_symbol,
+                   'Side':side.upper(), 'LivePx':0, 'PnL':0, 'Active':'Y',
+                   'Qty': qty, 'EntryID':order_id, 'EntryPx':0, 'EntrySt':order_status,
+                   'ExitID':'XXXX', 'ExitPx':0, 'ExitSt':'PENDING',
+                   'TrailPts': trail_pts, 'StopLoss':stop_loss, 'Target':target,
+                   'LiveFeed':'N','Timestamp':datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         
         trade_df.loc[no_of_trades] = new_row
         
@@ -171,7 +178,7 @@ def dh_post_exchange_order(ord_type='mkt', exchange='FNO', security_id=1234, sid
         exchange_segment = dhan.FNO if exchange == 'FNO' else dhan.NSE
         
         security_id = int(security_id)
-        order_type = dhan.SLM if ord_type=='sl' else dhan.MARKET
+        order_type = dhan.SLM if ord_type=='sl' else (dhan.LIMIT if ord_type=='lmt' else dhan.MARKET)
         product_type = dhan.BO if ord_type == 'bo' else (dhan.CNC if prod_type == 'DAY' else dhan.INTRA)
         t_type = dhan.BUY if side == 'buy' else dhan.SELL
         

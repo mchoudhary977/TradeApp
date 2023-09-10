@@ -284,10 +284,11 @@ def check_ema_signal(ticker, ema_sig, last_px):
     side = 'BUY' if signal == 'green' else ('SELL' if signal =='red' else None)
     msg['data'] = f"{side} -> {ticker} -> {stop_loss} - {entry_px} - {target} "
 
-    if (ema_sig['active']=='Y' and signal == 'green' and last_px > entry_px and ema_sig['entry'] > 0) or (signal == 'red' and last_px < entry_px and ema_sig['entry'] > 0):
+    if ema_sig['active']=='Y' and ((signal == 'green' and last_px > entry_px and ema_sig['entry'] > 0) or (signal == 'red' and last_px < entry_px and ema_sig['entry'] > 0)):
         ema_sig['active']='N'
         # count changed to 4 due to balance constraints
-        opt = ic_option_chain(ticker, underlying_price=last_px, option_type=opt_type, duration=0).iloc[4]
+        opt = ic_option_chain(ticker, underlying_price=last_px, option_type=opt_type, duration=0)
+        opt = opt.iloc[4]
         sec_id = opt['TK']
         sec_name = opt['CD']
         exit_msg = ''
@@ -316,24 +317,24 @@ def check_ema_signal(ticker, ema_sig, last_px):
             return msg # {'status':'SUCCESS','data':msg['remarks']}
 
         try:
+            trade = {}
+            trail_pts = 5
+            qty = 1
+            side = 'buy'
             if live_order == 'Y':
                 trade = dh_post_exchange_order(ord_type='mkt', exchange='FNO', 
-                                           security_id=sec_id, side='buy',
-                                           qty=1, entry_px=0, sl_px=0, trigger_px=0, 
+                                           security_id=sec_id, side=side,
+                                           qty=qty, entry_px=0, sl_px=0, trigger_px=0, 
                                            tg_pts=0, sl_pts=0, 
                                            amo=False, prod_type='')
-                
                 if trade['status'].lower() == 'success':
                     msg['data'] = msg['data'] + f"=> Order Placed [ OrderId - {trade['data']['orderId']} | OrderStatus - {trade['data']['orderStatus']} ]"
                     msg['status'] = 'success'
-                    trade_write = add_trade_details(sec_name, sec_id, side,
-                                                    trade['data']['orderId'], 
-                                                    trade['data']['orderStatus'], 
-                                                    sl_pts=10, tg_pts=10)
-                
+                    
                 else:
                     msg['remarks'] = msg['remarks'] + f"Order Failed - {trade['remarks']}"
             else:
+                msg['status'] = 'success'
                 msg['data'] = msg['data'] + f"=> Live Order not enabled, place manually!"                    
 
         except Exception as e:
@@ -344,6 +345,22 @@ def check_ema_signal(ticker, ema_sig, last_px):
         if msg['status'].lower() == 'success':
             send_whatsapp_msg(f"EMA Alert - {signal_time}", msg['data'])
             write_log('ic_ema_strategy','i',msg['data'])
+            
+            ord_id = f"test_{sec_id}"
+            ord_status = f"pending"
+            if live_order == 'Y':
+                ord_id = trade['data']['orderId']
+                ord_status = trade['data']['orderStatus']
+            
+            
+            trade_write = add_trade_details(strategy = '9-15 EMA',
+                                            trade_symbol = sec_name, 
+                                            security_id = sec_id, 
+                                            side = side, qty = qty, 
+                                            order_id = ord_id, 
+                                            order_status = ord_status,
+                                            trail_pts = trail_pts)
+            
         else:
             send_whatsapp_msg(f"EMA Failure Alert - {signal_time}", f"{msg['data']} => {msg['remarks']}")
             write_log('ic_ema_strategy','i',f"{msg['data']} => {msg['remarks']}")
@@ -427,7 +444,7 @@ def main():
                 last_px = wl[wl['Code']==ticker['ICDH']]['Close'].values[0]
                 # stg_file = 'Strategy.csv'
                 # stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
-                # last_px = 19295
+                # last_px = 19815
                 # ticker='NIFTY'
                 ema_check = check_ema_signal(ticker['ICDH'], ema_sig, last_px)
         except Exception as e:

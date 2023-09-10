@@ -44,8 +44,8 @@ def on_ticks(ticks):
         
     
     if len(tsymbols_df) > 0:
-        tsymbols_df.loc[tsymbols_df['SecurityID'] == ticks['symbol'][4:], 'Timestamp'] = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
-        tsymbols_df.loc[tsymbols_df['SecurityID'] == ticks['symbol'][4:], 'LivePrice'] = ticks['last']
+        tsymbols_df.loc[tsymbols_df['SecID'] == ticks['symbol'][4:], 'Timestamp'] = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
+        tsymbols_df.loc[tsymbols_df['SecID'] == ticks['symbol'][4:], 'LivePx'] = ticks['last']
         # tsymbols_df.loc[tsymbols_df['SecurityID'] == ticks['symbol'][4:], 'Open'] = ticks['open']
         # tsymbols_df.loc[tsymbols_df['SecurityID'] == ticks['symbol'][4:], 'High'] = ticks['high']
         # tsymbols_df.loc[tsymbols_df['SecurityID'] == ticks['symbol'][4:], 'Low'] = ticks['low']
@@ -56,16 +56,19 @@ def ic_subscribe_traded_symbols():
     if os.path.exists(trade_file) == True:
         trade_df = pd.read_csv(trade_file)
         if len(trade_df) > 0:   
-            tsymbols_df = trade_df
-            trade_df = trade_df[trade_df['TradeStatus']=='OPEN'][trade_df['LiveFeed']=='N']
+            tsymbols_df = trade_df         
+            if len(tsymbols_df[tsymbols_df['Active']=='Y'][tsymbols_df['LiveFeed']=='N'])<=0:
+                return {'status':'success','remarks':'','data':'no symbols to subscribe'}
+            # trade_df = trade_df[trade_df['Active']=='Y'][trade_df['LiveFeed']=='N']
             
-            traded_tokens=[]            
-            for index, row in trade_df.iterrows():
-                traded_tokens.append(f"4.1!{row['SecurityID']}") 
-                trade_df.loc[index,'LiveFeed'] = 'Y'
-                print(trade_df.loc[index,'LiveFeed'])
+            traded_tokens=[]
+            
+            for index, row in tsymbols_df.iterrows():
+                if row['LiveFeed'] == 'N':
+                    traded_tokens.append(f"4.1!{row['SecID']}") 
+                    tsymbols_df.loc[index,'LiveFeed'] = 'Y'
+            
             if len(traded_tokens) > 0:
-                trade_df['LiveFeed'] = 'Y'
                 ic_subscribeFeed(traded_tokens)
                 tsymbols_df.to_csv(trade_file,index=False)
                 return {'status':'success','remarks':'','data':'traded symbols subscribed'}
@@ -102,9 +105,10 @@ if __name__ == '__main__':
                         ic_get_watchlist(mode='C')
                 else:
                     livePrices.to_csv('WatchList.csv',index=False)
-                    # ic_subscribe_traded_symbols()
-                    # if len(tsymbols_df) > 0:
-                    #     tsymbols_df.to_csv('Trades.csv',index=False)
+                    if len(tsymbols_df) > 0:
+                        tsymbols_df.to_csv('Trades.csv',index=False)
+                    ic_subscribe_traded_symbols()
+                   
             if (now.time() >= time(15,35) and subscription_flag=='Y'):
                 ic_unsubscribeFeed(tokens['data'])
                 icici.ws_disconnect()

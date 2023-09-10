@@ -32,44 +32,77 @@ def main():
                 break            
             if os.path.exists(trade_file) == True:
                 trade_df = pd.read_csv(trade_file)
-                if len(trade_df) > 0:
-                    trade_df = trade_df[trade_df['TradeStatus']=='OPEN']
-                    for index, row in trade_df.iterrows():
-                        if row['EntryStatus'].lower() == 'traded':
-                            print(trade_df.loc[index,'Symbol'])                       
-                        if str(row['SLOrderID']).lower() == 'nan':
-                            # place sl order 
-                            print(trade_df.loc[index,'Symbol'])  
-                            sec_id = row['SecurityID']
-                            side = 'sell' if row['Side'] == 'BUY' else 'buy'
+                trade_df = trade_df[trade_df['Date']==now.strftime('%Y-%m-%d')]
+                
+                traded_orders_df = trade_df[trade_df['Active']=='Y'][trade_df['EntrySt'] == 'TRADED']
+                pending_orders_df = pd.concat([trade_df[trade_df['Active']=='Y'][trade_df['EntrySt'] == 'TRANSIT'], trade_df[trade_df['Active']=='Y'][trade_df['EntrySt'] == 'PENDING']], ignore_index=True)
+                non_active_orders_df = trade_df[trade_df['Active']=='N']
+                live_order = json.load(open('config.json', 'r'))['LIVE_ORDER']
+                
+                stop_loss = 0
+                target = 0 
+                # traded_orders_df = trade_df
+                # traded_orders_df['EntryPx'] = traded_orders_df['EntryPx'] + 50
+                if len(traded_orders_df) > 0:
+                    for index, row in traded_orders_df.iterrows():  
+                        sec_id = row['SecID']
+                        side = row['Side'].lower()
+                        qty = row['Qty']
+                        live_px = row['LivePx']
+                        trail_pts = row['TrailPts']
+                        if side == 'buy':
+                            stop_loss = (row['EntryPx'] - row['TrailPts']) if row['StopLoss'] == 0 else row['StopLoss']
+                            target = (row['EntryPx'] + row['TrailPts']) if row['Target'] == 0 else row['Target']
+                        
+                        elif side == 'sell':
+                            stop_loss = (row['EntryPx'] + row['TrailPts']) if row['StopLoss'] == 0 else row['StopLoss']
+                            target = (row['EntryPx'] - row['TrailPts']) if row['Target'] == 0 else row['Target']
                             
-                            entry_price = row['EntryPrice']
+                        if stop_loss > 0 and target > 0 and ((side == 'buy' and live_px > 0 and live_px > target) or (side == 'sell' and live_px > 0 and live_px < target)):
+                            target = target + trail_pts if side == 'buy' else target - trail_pts
+                            stop_loss = stop_loss + trail_pts if side == 'buy' else stop_loss - trail_pts
                             
-                            if str(entry_price).lower() == 'nan':
-                                ord_info = dh_get_trades()
-                                ord_info = ord_info['data'] if ord_info['data'] is not None else ''
-                                ord_info = ord_info[ord_info['orderId'] == row['EntryOrderID']]
-                                # ord_info = ord_info[ord_info['orderId'] == '3223090135751']
+                            traded_orders_df.loc[index,'StopLoss'] = stop_loss
+                            traded_orders_df.loc[index,'Target'] = target
+                            
+                            if live_order == 'Y':
+                                if row['ExitID'] == 'XXXX':
+                                    sl_side = 'sell' if side == 'buy' else 'buy'
+                                    sl_trade = dh_post_exchange_order(ord_type='lmt', exchange='FNO',
+                                                               security_id=sec_id, side=sl_side,
+                                                               qty=qty, entry_px=stop_loss, sl_px=0, trigger_px=0, 
+                                                               tg_pts=0, sl_pts=0, 
+                                                               amo=False, prod_type='')
+                                    
+                                    if sl_trade['status'].lower() == 'success':
+                                        traded_orders_df.loc[index,'ExitID'] = sl_trade['data']['orderId']
+                                        traded_orders_df.loc[index,'ExitSt'] = sl_trade['data']['orderStatus']
+                                else:
+                                    sl_order = row['ExitID']
+                                    dh_modify_order(sl_order, stop_loss, qty)
+                            else:
+                                traded_orders_df.loc[index,'ExitID'] = f"test_sl_{sec_id}"
+                        
+                        if stop_loss > 0 and target > 0 and ((side == 'buy' and live_px > 0 and live_px < stop_loss) or (side == 'sell' and live_px > 0 and live_px > stop_loss)):
+                            traded_orders_df.loc[index,'Active'] = 'N'
+                
+                if len(pending_orders_df) > 0:
+                    tm.sleep(20)
+                    order_list = dh_get_orders()
+                    if order_list['status'] == 'success':
+                        order_df = order_list['data']
+                        
+                        for pindex, prow in pending_orders_df.iterrows():
+                            for oindex, orow in order_df.iterrows():
+                                if str(prow['EntryID'])==str(orow['orderId']):
+                                    pending_orders_df.loc[pindex,'EntrySt'] = orow['orderStatus']
                                 
-                                entry_price = ord_info['tradedPrice'].values[0] if len(ord_info)>0 else 0
-                            
-                            if entry_price > 0:
-                                price = entry_price - row['StopLossPoints'] if side == 'sell' else entry_price + row['StopLossPoints']
-                                trigger_price = price + 0.7 if side == 'sell' else price - 0.7
-                                sl_order = dh_post_exchange_order(ord_type='sl', exchange='FNO', 
-                                                       security_id=sec_id, 
-                                                       side='buy',qty=1, entry_px=price, 
-                                                       sl_px=0, trigger_px=trigger_price, 
-                                                       tg_pts=0, sl_pts=0, 
-                                                       amo=False, prod_type='')
-                                
-                                if sl_order['status'].lower() == 'success':
-                                    trade_df.loc[index,'SLOrderID'] = sl_order['data']['orderId']
-                                    trade_df.loc[index,'StopLossPrice'] = price
-                                    trade_df.loc[index,'SLStatus'] = sl_order['data']['orderStatus']
-                        else:
-                            print('compare prices')
-                    trade_df.to_csv(trade_file,index=False)                           
+                                if str(prow['ExitID'])==str(orow['orderId']):
+                                    pending_orders_df.loc[pindex,'ExitSt'] = orow['orderStatus']
+                
+                final_df = pd.concat([traded_orders_df, pending_orders_df, non_active_orders_df], ignore_index=True)
+                final_df.to_csv(trade_file,index=False)
+                        
         except Exception as e:
             err = str(e)
             send_whatsapp_msg(f"Trade Failure Alert - {now.strftime('%Y-%m-%d %H:%M:%S')}", err)
