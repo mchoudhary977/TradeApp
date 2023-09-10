@@ -28,7 +28,7 @@ def main():
     while True:
         try:
             now = datetime.now()
-            if now.time() < time(9,0) or now.time() > time(15,20):
+            if now.time() < time(9,0) or now.time() > time(15,30):
                 break            
             if os.path.exists(trade_file) == True:
                 trade_df = pd.read_csv(trade_file)
