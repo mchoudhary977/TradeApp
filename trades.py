@@ -109,3 +109,7 @@ def main():
             pass
 
         tm.sleep(1)
+        
+if __name__ == '__main__':
+    print('---------------- Start Trade Monitoring ----------------')
+    main()
