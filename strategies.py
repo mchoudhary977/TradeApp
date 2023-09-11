@@ -305,8 +305,10 @@ def check_ema_signal(ticker, ema_sig, last_px):
 
         orders = dh_get_orders()
         orders = pd.DataFrame(orders['data']) if orders['status'].lower() == 'success' and orders['data'] is not None else None
+        
+        allow_order_count = int(json.load(open('config.json', 'r'))['DAILY ORDER COUNT'])
 
-        if orders is not None and len(orders[orders['orderStatus'] == 'TRADED'])>2:
+        if orders is not None and len(orders[orders['orderStatus'] == 'TRADED'])>allow_order_count:
             exit_flag = 'Y'
             msg['remarks'] = msg['remarks'] + f"Order Count = {len(orders[orders['orderStatus'] == 'TRADED'])} | Greater than daily limit - Order Placement Restricted."
 

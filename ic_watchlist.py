@@ -80,9 +80,9 @@ if __name__ == '__main__':
     session_id = ic_autologon()
     write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")
     if os.path.exists('WatchList.csv') == False:
-        ic_update_watchlist(mode='C')
+        ic_update_watchlist(mode='C',num=0)
     subscription_flag = 'N'
-    ic_update_watchlist(mode='C')
+    ic_update_watchlist(mode='C',num=0)
 
     while True:
         now = datetime.now()
