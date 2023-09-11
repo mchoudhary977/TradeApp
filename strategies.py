@@ -288,7 +288,8 @@ def check_ema_signal(ticker, ema_sig, last_px):
         ema_sig['active']='N'
         # count changed to 4 due to balance constraints
         opt = ic_option_chain(ticker, underlying_price=last_px, option_type=opt_type, duration=0)
-        opt = opt.iloc[4]
+        num = json.load(open('config.json', 'r'))[ticker]['OPT#']
+        opt = opt.iloc[num]
         sec_id = opt['TK']
         sec_name = opt['CD']
         exit_msg = ''
