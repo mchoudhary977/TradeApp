@@ -310,7 +310,7 @@ def check_ema_signal(ticker, ema_sig, last_px):
 
         if orders is not None and len(orders[orders['orderStatus'] == 'TRADED'])>allow_order_count:
             exit_flag = 'Y'
-            msg['remarks'] = msg['remarks'] + f"Order Count = {len(orders[orders['orderStatus'] == 'TRADED'])} | Greater than daily limit - Order Placement Restricted."
+            msg['remarks'] = msg['remarks'] + f"Order Count = {len(orders[orders['orderStatus'] == 'TRADED'])} | Greater than daily limit - Order Placement Restricted. [{sec_id}] => {sec_name}"
 
         if exit_flag == 'Y':
             # msg['remarks'] = msg['remarks'] + f"-> {exit_msg}"
