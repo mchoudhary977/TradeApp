@@ -156,7 +156,7 @@ def ic_get_sym_detail(exch_code='NSE',symbol='NIFTY',prod_type='Cash',interval='
     
 
 # Update Watchlist data
-def ic_update_watchlist(mode='R'):
+def ic_update_watchlist(mode='R',num=-1):
     symbol_list = json.load(open('config.json', 'r'))['STOCK_CODES']
     wl_file = 'WatchList.csv'
     ic_instruments = pd.read_csv('icici.csv')
@@ -183,12 +183,12 @@ def ic_update_watchlist(mode='R'):
                 data['date'] = data['datetime']
                 data = data.set_index('datetime')
                 data=data.resample('1D').agg({'date':'last','stock_code':'first','open': 'first','high':'max','low':'min','close':'last'}).dropna()[-2:]
-                sym['Open']=data.iloc[-1]['open']
-                sym['High']=data.iloc[-1]['high']
-                sym['Low']=data.iloc[-1]['low']
-                sym['Close']=data.iloc[-1]['close']
-                sym['PrevClose']=data.iloc[-2]['close']
-                sym['CandleTime']=data.iloc[-1]['date']
+                sym['Open']=data.iloc[num]['open']
+                sym['High']=data.iloc[num]['high']
+                sym['Low']=data.iloc[num]['low']
+                sym['Close']=data.iloc[num]['close']
+                sym['PrevClose']=data.iloc[num-1]['close']
+                sym['CandleTime']=data.iloc[num]['date']
             wl_df = pd.concat([wl_df,sym],ignore_index=True)
         wl_df.to_csv('WatchList.csv',index=False)   
     else:
