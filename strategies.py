@@ -461,7 +461,7 @@ def main():
     write_log('ic_ema_strategy','i',f'EMA Calculation Process END - {now.strftime("%Y-%m-%d %H:%M:%S")}')
     sys.exit()
 
-
+# symbol = 'NIFTY 50' last_px = 20002.3 signal_time=tick_time
 def strat_straddle_buy(symbol,last_px,signal_time):
     try:
         funct_name = 'strat_straddle_buy'.upper()
@@ -470,16 +470,17 @@ def strat_straddle_buy(symbol,last_px,signal_time):
         live_order = json.load(open('config.json', 'r'))['LIVE_ORDER']
         msg['data'] = 'Straddle Strategy'
         if symbol == 'NIFTY 50':
+            ticker = 'NIFTY'
             num = int(json.load(open('config.json', 'r'))[ticker]['OPT#'])
-            call_opt = ic_option_chain(ticker='NIFTY', underlying_price=last_px, option_type='CE', duration=0)
+            call_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='CE', duration=0)
             call_opt = call_opt.iloc[num]
             call_sec_id = call_opt['TK']
             call_sec_name = call_opt['CD']
             
-            put_opt = ic_option_chain(ticker='NIFTY', underlying_price=last_px, option_type='PE', duration=0)
+            put_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='PE', duration=0)
             put_opt = put_opt.iloc[num]
             put_sec_id = put_opt['TK']
-            put_sec_name = call_opt['CD']
+            put_sec_name = put_opt['CD']
             
             trade = {}
             sl_pts = 10
@@ -500,11 +501,11 @@ def strat_straddle_buy(symbol,last_px,signal_time):
                                            amo=False, prod_type='')
                 
                 if call_trade['status'].lower() == 'success':
-                    msg['data'] = msg['data'] + f"=> CALL Order Placed [ OrderId - {call_trade['data']['orderId']} | OrderStatus - {call_trade['data']['orderStatus']} ]"
+                    msg['data'] = msg['data'] + f"=> CALL Order Placed - {call_sec_name} - [ OrderId - {call_trade['data']['orderId']} | OrderStatus - {call_trade['data']['orderStatus']} ]"
                 else:
                     msg['data'] = msg['data'] + f"=> CALL Order Failed - {call_sec_name} - {call_trade['remarks']}"
                 if put_trade['status'].lower() == 'success':
-                    msg['data'] = msg['data'] + f"=> PUT Order Placed [ OrderId - {put_trade['data']['orderId']} | OrderStatus - {put_trade['data']['orderStatus']} ]"
+                    msg['data'] = msg['data'] + f"=> PUT Order Placed - {put_sec_name} - [ OrderId - {put_trade['data']['orderId']} | OrderStatus - {put_trade['data']['orderStatus']} ]"
                 else:
                     msg['data'] = msg['data'] + f"=> {PUT} Order Failed - {put_sec_name} - {put_trade['remarks']}"
                     
