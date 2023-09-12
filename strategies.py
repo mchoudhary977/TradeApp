@@ -273,7 +273,7 @@ def generate_ema_signal(df):
 def check_ema_signal(ticker, ema_sig, last_px):
     funct_name = 'check_ema_signal'.upper()
     msg = {'status':'failure', 'remarks':'', 'data':''}
-    
+
     live_order = json.load(open('config.json', 'r'))['LIVE_ORDER']
     signal_time = ema_sig['datetime']
     signal = ema_sig['signal']
@@ -305,7 +305,7 @@ def check_ema_signal(ticker, ema_sig, last_px):
 
         orders = dh_get_orders()
         orders = pd.DataFrame(orders['data']) if orders['status'].lower() == 'success' and orders['data'] is not None else None
-        
+
         allow_order_count = int(json.load(open('config.json', 'r'))['DAILY ORDER COUNT'])
 
         if orders is not None and len(orders[orders['orderStatus'] == 'TRADED'])>allow_order_count:
@@ -325,58 +325,58 @@ def check_ema_signal(ticker, ema_sig, last_px):
             qty = 1
             side = 'buy'
             if live_order == 'Y':
-                trade = dh_post_exchange_order(ord_type='mkt', exchange='FNO', 
+                trade = dh_post_exchange_order(ord_type='mkt', exchange='FNO',
                                            security_id=sec_id, side=side,
-                                           qty=qty, entry_px=0, sl_px=0, trigger_px=0, 
-                                           tg_pts=0, sl_pts=0, 
+                                           qty=qty, entry_px=0, sl_px=0, trigger_px=0,
+                                           tg_pts=0, sl_pts=0,
                                            amo=False, prod_type='')
                 if trade['status'].lower() == 'success':
                     msg['data'] = msg['data'] + f"=> Order Placed [ OrderId - {trade['data']['orderId']} | OrderStatus - {trade['data']['orderStatus']} ]"
                     msg['status'] = 'success'
-                    
+
                 else:
                     msg['remarks'] = msg['remarks'] + f"Order Failed - {trade['remarks']}"
             else:
                 msg['status'] = 'success'
-                msg['data'] = msg['data'] + f"=> Live Order not enabled, place manually!"                    
+                msg['data'] = msg['data'] + f"=> Live Order not enabled, place manually!"
 
         except Exception as e:
             err = str(e)
             msg['remarks'] = funct_name + ' - ' + msg['remarks'] + f"Order Placement Error - {err}"
             pass
-        
+
         if msg['status'].lower() == 'success':
             send_whatsapp_msg(f"EMA Alert - {signal_time}", msg['data'])
             write_log('ic_ema_strategy','i',msg['data'])
-            
+
             ord_id = f"test_{sec_id}"
             ord_status = f"pending"
             if live_order == 'Y':
                 ord_id = trade['data']['orderId']
                 ord_status = trade['data']['orderStatus']
-            
-            
+
+
             trade_write = add_trade_details(strategy = '9-15 EMA',
-                                            trade_symbol = sec_name, 
-                                            security_id = sec_id, 
-                                            side = side, qty = qty, 
-                                            order_id = ord_id, 
+                                            trade_symbol = sec_name,
+                                            security_id = sec_id,
+                                            side = side, qty = qty,
+                                            order_id = ord_id,
                                             order_status = ord_status,
                                             trail_pts = trail_pts)
-            
+
         else:
             send_whatsapp_msg(f"EMA Failure Alert - {signal_time}", f"{msg['data']} => {msg['remarks']}")
             write_log('ic_ema_strategy','i',f"{msg['data']} => {msg['remarks']}")
-        return msg 
+        return msg
     else:
         msg['status'] = 'success'
         msg['data'] = 'Condition Not Matched. Returning...'
-        return msg 
+        return msg
 
 def main():
     funct_name = 'strategies main'.upper()
     msg = {'status':'failure', 'remarks':'', 'data':''}
-    
+
     ema_sig = {}
     sig = {}
     ticker = {'YF':'^NSEI', 'ICDH':'NIFTY'}
@@ -414,11 +414,11 @@ def main():
                 # ema strategy signal generation
                 sig = generate_ema_signal(df)
                 if len(ema_sig) == 0:
-                    ema_sig = sig 
+                    ema_sig = sig
                 else:
                      if ema_sig['signal'] != sig['signal']:
-                         ema_sig = sig                          
-                    
+                         ema_sig = sig
+
                 if ema_sig['active'] == 'Y':
                     print(ema_sig)
 
@@ -460,6 +460,68 @@ def main():
 
     write_log('ic_ema_strategy','i',f'EMA Calculation Process END - {now.strftime("%Y-%m-%d %H:%M:%S")}')
     sys.exit()
+
+
+def strat_straddle_buy(symbol,last_px,signal_time):
+    try:
+        funct_name = 'strat_straddle_buy'.upper()
+        msg = {'status':'failure', 'remarks':'', 'data':''}
+    
+        live_order = json.load(open('config.json', 'r'))['LIVE_ORDER']
+        msg['data'] = 'Straddle Strategy'
+        if symbol == 'NIFTY 50':
+            num = int(json.load(open('config.json', 'r'))[ticker]['OPT#'])
+            call_opt = ic_option_chain(ticker='NIFTY', underlying_price=last_px, option_type='CE', duration=0)
+            call_opt = call_opt.iloc[num]
+            call_sec_id = call_opt['TK']
+            call_sec_name = call_opt['CD']
+            
+            put_opt = ic_option_chain(ticker='NIFTY', underlying_price=last_px, option_type='PE', duration=0)
+            put_opt = put_opt.iloc[num]
+            put_sec_id = put_opt['TK']
+            put_sec_name = call_opt['CD']
+            
+            trade = {}
+            sl_pts = 10
+            tg_pts = 16
+            qty = 1
+            side = 'buy'
+            
+            if live_order == 'Y':
+                call_trade = dh_post_exchange_order(ord_type='bo', exchange='FNO',
+                                           security_id=call_sec_id, side=side,
+                                           qty=qty, entry_px=0, sl_px=0, trigger_px=0,
+                                           tg_pts=tg_pts, sl_pts=sl_pts,
+                                           amo=False, prod_type='')
+                put_trade = dh_post_exchange_order(ord_type='bo', exchange='FNO',
+                                           security_id=put_sec_id, side=side,
+                                           qty=qty, entry_px=0, sl_px=0, trigger_px=0,
+                                           tg_pts=tg_pts, sl_pts=sl_pts,
+                                           amo=False, prod_type='')
+                
+                if call_trade['status'].lower() == 'success':
+                    msg['data'] = msg['data'] + f"=> CALL Order Placed [ OrderId - {call_trade['data']['orderId']} | OrderStatus - {call_trade['data']['orderStatus']} ]"
+                else:
+                    msg['data'] = msg['data'] + f"=> CALL Order Failed - {call_sec_name} - {call_trade['remarks']}"
+                if put_trade['status'].lower() == 'success':
+                    msg['data'] = msg['data'] + f"=> PUT Order Placed [ OrderId - {put_trade['data']['orderId']} | OrderStatus - {put_trade['data']['orderStatus']} ]"
+                else:
+                    msg['data'] = msg['data'] + f"=> {PUT} Order Failed - {put_sec_name} - {put_trade['remarks']}"
+                    
+                if call_trade['status'].lower() == 'success' and put_trade['status'].lower() == 'success':
+                    msg['status'] = 'success'
+            
+            else:
+                msg['status'] = 'success'
+                msg['data'] = msg['data'] + f"=> Live Order not enabled, place manually! - {call_sec_name} - {put_sec_name}"
+            
+            send_whatsapp_msg(f"Straddle Alert - {signal_time.strftime('%Y-%m-%d %H:%M:%S')}", msg['data'])
+    
+    except Exception as e:
+        err = str(e)
+        msg['remarks'] = funct_name + ' - ' + msg['remarks'] + f"Order Placement Error - {err}"
+        send_whatsapp_msg(f"Straddle Failure Alert - {signal_time.strftime('%Y-%m-%d %H:%M:%S')}", msg['remarks'])
+
 
 if __name__ == '__main__':
     print('---------------- Start EMA Strategy ----------------')
@@ -516,7 +578,7 @@ def back_test_ema_strategy(test_data):
                 df['datetime'] = df.index.tz_localize(None)
                 df.rename(columns={'Open':'open','High':'high','Low':'low','Adj Close':'close','Volume':'volumne'}, inplace=True)
                 df = df[['datetime','open','high','low','close','volumne']]
-                
+
                 # df = df[df['datetime'] <= '2023-08-28 14:20:00']
                 df = df[df['datetime'] <= '2023-08-28 09:40:00']
                 # ema strategy signal generation

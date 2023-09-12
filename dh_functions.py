@@ -136,6 +136,7 @@ def add_trade_details(strategy, trade_symbol, security_id, side, qty, order_id, 
                           'PnL','Active','Qty','EntryID','EntryPx','EntrySt',
                           'ExitID','ExitPx','ExitSt',
                           'TrailPts','StopLoss','Target','LiveFeed','Comments','Timestamp']
+
             # trade_cols = ['#','SecurityID','Symbol','Side','LivePrice','PnL','TradeStatus',
             #               'EntryOrderID','EntryPrice','EntryStatus',
             #               'SLOrderID','SLStatus',
@@ -216,7 +217,6 @@ def dh_post_exchange_order(ord_type='mkt', exchange='FNO', security_id=1234, sid
     except Exception as e:
         err = str(e)
         return {'status':'failure','remarks':f"{funct_name} - {err}",'data':''}
-
 
 # --------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
