@@ -96,27 +96,27 @@ def submit_form():
     if len(live_order_flag) > 0:
         if live_order_flag =='Y' or live_order_flag =='N':
             json_data["LIVE_ORDER"] = live_order_flag
-            msg_body = f"Live Order Status Change = {live_order_flag}. "
+            msg_body = msg_body + f"Live Order Status Change = {live_order_flag}. "
             # msg = f"Live Order Status Change = {live_order_flag}"
             # send_whatsapp_msg(f"LIVE ORDER - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", msg)
     
     if len(nifty_opt_select) > 0:
         json_data["NIFTY"]["OPT#"] = int(nifty_opt_select)
-        msg_body = f"Nifty Option Selected = {nifty_opt_select}. "
+        msg_body = msg_body + f"Nifty Option Selected = {nifty_opt_select}. "
         
     if len(expiry_week_selection) > 0:
         json_data["EXP_WEEK"] = int(expiry_week_selection)
-        msg_body = f"Expiry Week Selected = {expiry_week_selection}. "
+        msg_body = msg_body + f"Expiry Week Selected = {expiry_week_selection}. "
 
     if len(dhan_token) > 0:
         print(f'token dhan - {dhan_token}')
         json_data["DHAN_ACCESS_TK"] = dhan_token
-        msg_body = f"Dhan Token Updated. "
+        msg_body = msg_body + f"Dhan Token Updated. "
 
     if len(wa_token) > 0:
         print(f'token WA - {wa_token}')
         json_data["WA_TKN"] = wa_token
-        msg_body = f"WhatsApp Token Updated. "
+        msg_body = msg_body + f"WhatsApp Token Updated. "
 
     if len(icici_session_id) > 0:
         print("Updating ICICI Session Token Details")

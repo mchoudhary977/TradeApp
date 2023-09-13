@@ -246,18 +246,11 @@
                   <!-- <input type="text" class="form-control" id="floatingInput" name="live_order_flag" placeholder="Live Order Placement"> -->
                   <label for="floatingInput">Live Order</label>
                 </div>
+
+                
                 <div class="form-floating mb-4">
-                  <input type="text" class="form-control" id="floatingInput" name="icici_session_id" placeholder="ICICI Session ID">
-                  <label for="floatingInput">ICICI Session ID</label>
-                    <a href="{{ resultDict['ICICI_SESSION_URL'] }}" target="_blank">Get SessionID</a>
-                </div>
-                <div class="form-floating mb-4">
-                  <input type="text" class="form-control" id="floatingInput" name="dhan_token" placeholder="Dhan Acct Token">
-                  <label for="floatingInput">Dhan Acct Token</label>
-                </div>
-                <div class="form-floating mb-4">
-                  <input type="text" class="form-control" id="floatingInput" name="wa_token" placeholder="Whatsapp Token">
-                  <label for="floatingInput">Whatsapp Token</label>
+                  <input type="text" class="form-control" id="floatingInput" name="daily_order_count" placeholder="Max Allowed Orders">
+                  <label for="floatingInput">Daily Order Count</label>
                 </div>
                 
                  <div class="form-floating mb-4">
@@ -286,6 +279,21 @@
                    <label for="floatingInput">Expiry Week Selection</label>
                  </div>
                  
+                <div class="form-floating mb-4">
+                  <input type="text" class="form-control" id="floatingInput" name="icici_session_id" placeholder="ICICI Session ID">
+                  <label for="floatingInput">ICICI Session ID</label>
+                    <a href="{{ resultDict['ICICI_SESSION_URL'] }}" target="_blank">Get SessionID</a>
+                </div>
+                <div class="form-floating mb-4">
+                  <input type="text" class="form-control" id="floatingInput" name="dhan_token" placeholder="Dhan Acct Token">
+                  <label for="floatingInput">Dhan Acct Token</label>
+                </div>
+                
+                <div class="form-floating mb-4">
+                  <input type="text" class="form-control" id="floatingInput" name="wa_token" placeholder="Whatsapp Token">
+                  <label for="floatingInput">Whatsapp Token</label>
+                </div>          
+                       
                 <div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
                   <div class="btn-group me-2" role="group" aria-label="First group">
                     <button type="#" href="index.html" class="btn btn-outline-secondary">Submit</button>
