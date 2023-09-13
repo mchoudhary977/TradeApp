@@ -78,7 +78,7 @@ def startWebApp():
 
 # Route to handle form submission
 @app.route('/#', methods=['POST'])
-def submit_form():
+def submit_form_1():
     global icici_api,dhan
     icici_session_id = request.form.get('icici_session_id')
     dhan_token = request.form.get('dhan_token')
