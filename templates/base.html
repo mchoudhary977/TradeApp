@@ -250,12 +250,13 @@
                 
                 <div class="form-floating mb-4">
                   <input type="text" class="form-control" id="floatingInput" name="daily_order_count" placeholder="Max Allowed Orders">
-                  <label for="floatingInput">Daily Order Count</label>
+                  <label for="floatingInput">Daily Order Limit</label>
+                  <label for="floatingInput">Default Order Limit : <b>03<b></label>
                 </div>
                 
                  <div class="form-floating mb-4">
                    <select class="form-select" aria-label="Default select example" name="nifty_opt_select">
-                     <option selected>Select Yes to Enable</option>
+                     <option selected>---- Select ----</option>
                      <option value="1">1 - ITM</option>
                      <option value="2">2 - Immediate ITM</option>
                      <option value="3"><b>3 - ATM</b></option>
@@ -264,19 +265,21 @@
                    </select>
                    <!-- <input type="text" class="form-control" id="floatingInput" name="live_order_flag" placeholder="Live Order Placement"> -->
                    <label for="floatingInput">Nifty Option Selection</label>
+                   <label for="floatingInput">Default Option : <b>4 - Immediate OTM<b></label>
                  </div>
                  
                  <div class="form-floating mb-4">
                    <select class="form-select" aria-label="Default select example" name="expiry_week_selection">
-                     <option selected>Select Yes to Enable</option>
+                     <option selected>---- Select ----</option>
                      <option value="0">0 - Curr Week</option>
                      <option value="1">1 - Next Week</option>
                      <option value="2">2 - Next-to-Next</option>
                      <option value="3">3 - 3rd Next Week</option>
                      <option value="4">4 - 4th Next Week</option>
                    </select>
-                   <!-- <input type="text" class="form-control" id="floatingInput" name="live_order_flag" placeholder="Live Order Placement"> -->
                    <label for="floatingInput">Expiry Week Selection</label>
+                   <label for="floatingInput">Default Expiry : <b>0 - Curr Week<b></label>
+                   <!-- <input type="text" class="form-control" id="floatingInput" name="live_order_flag" placeholder="Live Order Placement"> -->
                  </div>
                  
                 <div class="form-floating mb-4">
