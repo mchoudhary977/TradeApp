@@ -220,8 +220,8 @@
                                         <li class="nav-item"><a style="color:white;" href="#holdings">Holdings</a></li>
                                         <li class="nav-item"><a style="color:white;" href="#funds">Funds</a></li>
                                         <!-- <li class="nav-item"><a style="color:white;" href="#social">Contact Us</a></li> -->
-                                        <!--<li class="nav-item"><a style="color:white;" href="#update" onclick="openPopupForm()">Update</a></li> -->
-                                        <li class="nav-item"><a style="color:white;" href="/update_config">Update1</a></li>
+                                        <li class="nav-item"><a style="color:white;" href="#update" onclick="openPopupForm()">Update</a></li> 
+                                        <!-- <li class="nav-item"><a style="color:white;" href="/update_config">Update1</a></li> -->
                                         </ul>
                         </div>
                         </div>
@@ -259,6 +259,33 @@
                   <input type="text" class="form-control" id="floatingInput" name="wa_token" placeholder="Whatsapp Token">
                   <label for="floatingInput">Whatsapp Token</label>
                 </div>
+                
+                 <div class="form-floating mb-4">
+                   <select class="form-select" aria-label="Default select example" name="nifty_opt_select">
+                     <option selected>Select Yes to Enable</option>
+                     <option value="1">1 - ITM</option>
+                     <option value="2">2 - Immediate ITM</option>
+                     <option value="3"><b>3 - ATM</b></option>
+                     <option value="4">4 - Immediate OTM</option>
+                     <option value="5">5 - OTM</option>
+                   </select>
+                   <!-- <input type="text" class="form-control" id="floatingInput" name="live_order_flag" placeholder="Live Order Placement"> -->
+                   <label for="floatingInput">Nifty Option Selection</label>
+                 </div>
+                 
+                 <div class="form-floating mb-4">
+                   <select class="form-select" aria-label="Default select example" name="expiry_week_selection">
+                     <option selected>Select Yes to Enable</option>
+                     <option value="0">0 - Curr Week</option>
+                     <option value="1">1 - Next Week</option>
+                     <option value="2">2 - Next-to-Next</option>
+                     <option value="3">3 - 3rd Next Week</option>
+                     <option value="4">4 - 4th Next Week</option>
+                   </select>
+                   <!-- <input type="text" class="form-control" id="floatingInput" name="live_order_flag" placeholder="Live Order Placement"> -->
+                   <label for="floatingInput">Expiry Week Selection</label>
+                 </div>
+                 
                 <div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
                   <div class="btn-group me-2" role="group" aria-label="First group">
                     <button type="#" href="index.html" class="btn btn-outline-secondary">Submit</button>

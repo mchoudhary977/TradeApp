@@ -78,29 +78,45 @@ def startWebApp():
 
 # Route to handle form submission
 @app.route('/#', methods=['POST'])
-def submit_form_1():
+def submit_form():
     global icici_api,dhan
     icici_session_id = request.form.get('icici_session_id')
     dhan_token = request.form.get('dhan_token')
     wa_token = request.form.get('wa_token')
     live_order_flag = request.form.get('live_order_flag')
-
+    nifty_opt_select = request.form.get('nifty_opt_select')
+    expiry_week_selection = request.form.get('expiry_week_selection')
+    
+    msg_title = f"Configuration Update - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    msg_body = ''
+       
     with open("config.json","r") as f:
         json_data = json.load(f)
 
     if len(live_order_flag) > 0:
         if live_order_flag =='Y' or live_order_flag =='N':
             json_data["LIVE_ORDER"] = live_order_flag
-            msg = f"Live Order Status Change = {live_order_flag}"
-            send_whatsapp_msg(f"LIVE ORDER - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", msg)
+            msg_body = f"Live Order Status Change = {live_order_flag}. "
+            # msg = f"Live Order Status Change = {live_order_flag}"
+            # send_whatsapp_msg(f"LIVE ORDER - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", msg)
+    
+    if len(nifty_opt_select) > 0:
+        json_data["NIFTY"]["OPT#"] = int(nifty_opt_select)
+        msg_body = f"Nifty Option Selected = {nifty_opt_select}. "
+        
+    if len(expiry_week_selection) > 0:
+        json_data["EXP_WEEK"] = int(expiry_week_selection)
+        msg_body = f"Expiry Week Selected = {expiry_week_selection}. "
 
     if len(dhan_token) > 0:
         print(f'token dhan - {dhan_token}')
         json_data["DHAN_ACCESS_TK"] = dhan_token
+        msg_body = f"Dhan Token Updated. "
 
     if len(wa_token) > 0:
         print(f'token WA - {wa_token}')
         json_data["WA_TKN"] = wa_token
+        msg_body = f"WhatsApp Token Updated. "
 
     if len(icici_session_id) > 0:
         print("Updating ICICI Session Token Details")
@@ -111,13 +127,14 @@ def submit_form_1():
 
     with open("config.json", "w") as file:
         json.dump(json_data, file, indent=4)
-
+        
+    send_whatsapp_msg(msg_title, msg_body)
 
     return home()
 
 # Route to handle form submission
 @app.route('/update_config', methods=['POST'])
-def submit_form():
+def submit_form_1():
     global icici_api,dhan
     icici_session_id = request.form.get('icici_session_id')
     dhan_token = request.form.get('dhan_acct_token')
