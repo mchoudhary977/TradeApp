@@ -1,0 +1,86 @@
+{% extends "base.html"%}
+{% block content %}
+    <h1>Update Configuration</h1>
+    <form id="parameterForm">
+      
+        <label for="live_order">Live Order:</label>
+        <!--
+        <select class="form-select" aria-label="Default select example" name="live_order">
+          <option live_order>Select Yes to Enable</option>
+          <option value="Y">Yes</option>
+          <option value="N">No</option>
+        </select>
+        -->
+        <input type="text" class="form-control" id="live_order" name="live_order" placeholder="Live Order Placement">
+        <label for="floatingInput">Y - Yes | N - No</label>
+        <br><br>
+
+        <label for="icici_session_id">ICICI Session ID: </label>
+        <input type="text" id="icici_session_id" name="icici_session_id">
+        <a href="{{ resultDict['ICICI_SESSION_URL'] }}" target="_blank">Get SessionID</a>
+        <br><br>
+        
+        <label for="dhan_acct_token">Dhan Acct Token: </label>
+        <input type="text" id="dhan_acct_token" name="dhan_acct_token">
+        <br><br>
+        
+        <label for="whatsapp_token">Whatsapp Token: </label>
+        <input type="text" id="whatsapp_token" name="whatsapp_token">
+        <br><br>
+        
+        <label for="nifty_opt_select">Nifty Option Selection: </label>
+        <input type="text" id="nifty_opt_select" name="nifty_opt_select">
+        <label for="floatingInput">1 - ITM | 2 - ITM | <b>3 - ATM</b> | 4 - OTM | 5 - OTM</label>
+        <br><br>
+        
+        <!--
+        <select class="form-select" aria-label="Default select example" name="option_selection">
+          <option nifty_opt_select>--NA--</option>
+          <option value="1">1 - ITM</option>
+          <option value="2">2 - Immediate ITM</option>
+          <option value="3">3 - ATM</option>
+          <option value="4">4 - Immediate OTM</option>
+          <option value="5">5 - OTM</option>
+        </select>
+        -->
+        
+        <label for="expiry_week_selection">Expiry Week Selection: </label>
+        <input type="text" id="expiry_week_selection" name="expiry_week_selection" placeholder="Expiry Week">
+        <label for="floatingInput">0 - Curr Week, 1 - Next Week, 2 - Next-to-Next, ....</label>
+        <br><br>
+
+        
+        <input type="button" value="Update Parameters" onclick="updateParameters()">
+        <button type="#" href="index.html" class="btn btn-outline-secondary">Submit</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        function updateParameters() {
+            // Get the parameter values from the form
+            const param1Value = document.getElementById("live_order").value;
+            const param2Value = document.getElementById("icici_session_id").value;
+            const param3Value = document.getElementById("dhan_acct_token").value;
+            const param4Value = document.getElementById("whatsapp_token").value;
+            const param5Value = document.getElementById("nifty_opt_select").value;
+            const param6Value = document.getElementById("expiry_week_selection").value;
+            
+            
+
+            // Perform any necessary updates or processing here
+            // For this example, we'll just display the updated values
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `
+                <p>Updated Live Order Flag: <b>${param1Value}</b></p>
+                <p>Updated ICICI Seesion ID: <b>${param2Value}</b></p>
+                <p>Updated Dhan Acct Token: <b>${param3Value}</b></p>
+                <p>Updated WhatsApp Token: <b>${param4Value}</b></p>
+                <p>Updated Nifty Option Selected: <b>${param5Value}</b></p>
+                <p>Updated Expiry Week Selected: <b>${param6Value}</b></p>
+                
+            `;
+        }
+    </script>
+    
+{% endblock %}

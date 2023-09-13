@@ -287,7 +287,8 @@ def check_ema_signal(ticker, ema_sig, last_px):
     if ema_sig['active']=='Y' and ((signal == 'green' and last_px > entry_px and ema_sig['entry'] > 0) or (signal == 'red' and last_px < entry_px and ema_sig['entry'] > 0)):
         ema_sig['active']='N'
         # count changed to 4 due to balance constraints
-        opt = ic_option_chain(ticker, underlying_price=last_px, option_type=opt_type, duration=0)
+        exp_week = int(json.load(open('config.json', 'r'))['EXP_WEEK'])
+        opt = ic_option_chain(ticker, underlying_price=last_px, option_type=opt_type, duration=exp_week)
         num = int(json.load(open('config.json', 'r'))[ticker]['OPT#'])
         opt = opt.iloc[num]
         sec_id = opt['TK']
@@ -472,12 +473,13 @@ def strat_straddle_buy(symbol,last_px,signal_time):
         if symbol == 'NIFTY 50':
             ticker = 'NIFTY'
             num = int(json.load(open('config.json', 'r'))[ticker]['OPT#'])
-            call_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='CE', duration=0)
+            exp_week = int(json.load(open('config.json', 'r'))['EXP_WEEK'])
+            call_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='CE', duration=exp_week)
             call_opt = call_opt.iloc[num]
             call_sec_id = call_opt['TK']
             call_sec_name = call_opt['CD']
             
-            put_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='PE', duration=0)
+            put_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='PE', duration=exp_week)
             put_opt = put_opt.iloc[num]
             put_sec_id = put_opt['TK']
             put_sec_name = put_opt['CD']
