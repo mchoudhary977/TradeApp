@@ -86,6 +86,7 @@ def submit_form():
     live_order_flag = request.form.get('live_order_flag')
     nifty_opt_select = request.form.get('nifty_opt_select')
     expiry_week_selection = request.form.get('expiry_week_selection')
+    daily_order_count = request.form.get('daily_order_count')
     
     msg_title = f"Configuration Update - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     msg_body = ''
@@ -100,6 +101,10 @@ def submit_form():
             # msg = f"Live Order Status Change = {live_order_flag}"
             # send_whatsapp_msg(f"LIVE ORDER - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", msg)
     
+    if len(daily_order_count) > 0:
+        json_data["DAILY_ORDER_COUNT"] = int(daily_order_count)
+        msg_body = msg_body + f"Daily Order Limit = {daily_order_count}. "
+        
     if len(nifty_opt_select) > 0:
         json_data["NIFTY"]["OPT#"] = int(nifty_opt_select)
         msg_body = msg_body + f"Nifty Option Selected = {nifty_opt_select}. "
