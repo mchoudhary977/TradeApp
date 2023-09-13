@@ -170,7 +170,7 @@
                                         $("#symbol"+key).html("<b>"+value['SymbolName']+"</b>");
                                         $("#candle_time").html(value['CandleTime']);
                                         var diff = (value['Close'] - value['PrevClose']).toFixed(2);
-                                        $("#difference"+key).html('<b style="font-size: 10px;">'+diff+'</b>');             
+                                        $("#difference"+key).html('<b style="font-size: 10px;">'+diff+'</b>');
                                         if (value['Close'] > value['PrevClose']){
                                           $("#close"+key).html("<b style='color: #007500;'>"+"C-"+value['Close']+"</b>");
                                           $("#open"+key).html("<b style='color: #007500;'>"+"O-"+value['Open']+"</b>");
@@ -190,6 +190,17 @@
                         }, 1000); // Refresh every 1 second (1000 milliseconds)
                       }
                     });
+                    // Dynamically adjust form width based on window size
+                    function adjustFormWidth() {
+                            const form = document.getElementById("parameterForm");
+                            const windowWidth = window.innerWidth;
+                            const newWidth = windowWidth * 0.8; // 80% of the window width
+                            form.style.width = newWidth + "px";
+                    }
+
+                    // Call the function initially and whenever the window is resized
+                    window.addEventListener("resize", adjustFormWidth);
+                    adjustFormWidth();
                 </script>
 </head>
 <body>
@@ -220,7 +231,7 @@
                                         <li class="nav-item"><a style="color:white;" href="#holdings">Holdings</a></li>
                                         <li class="nav-item"><a style="color:white;" href="#funds">Funds</a></li>
                                         <!-- <li class="nav-item"><a style="color:white;" href="#social">Contact Us</a></li> -->
-                                        <li class="nav-item"><a style="color:white;" href="#update" onclick="openPopupForm()">Update</a></li> 
+                                        <li class="nav-item"><a style="color:white;" href="#update" onclick="openPopupForm()">Update</a></li>
                                         <!-- <li class="nav-item"><a style="color:white;" href="/update_config">Update1</a></li> -->
                                         </ul>
                         </div>
@@ -234,7 +245,7 @@
       {% endblock %}
     </div>
 
-      <div id="popupForm" class="popup-form" style="z-index:10;">
+      <div id="popupForm" class="popup-form" style="z-index:10; width:70%; max-width: 100%; margin:0 auto; padding:20px;">
               <h3>Configuration Update</h3>
               <form action="{{ url_for('submit_form') }}" method="POST">
                 <div class="form-floating mb-4">
@@ -247,13 +258,13 @@
                   <label for="floatingInput">Live Order</label>
                 </div>
 
-                
+
                 <div class="form-floating mb-4">
                   <input type="text" class="form-control" id="floatingInput" name="daily_order_count" placeholder="Max Allowed Orders">
                   <label for="floatingInput">Daily Order Limit</label>
                   <p>Default Order Limit : <b>03</b></p>
                 </div>
-                
+
                  <div class="form-floating mb-4">
                    <select class="form-select" aria-label="Default select example" name="nifty_opt_select">
                      <option selected>---- Select ----</option>
@@ -267,7 +278,7 @@
                    <label for="floatingInput">Nifty Option Selection</label>
                    <p>Default Option : <b>4 - Immediate OTM</b></p>
                  </div>
-                 
+
                  <div class="form-floating mb-4">
                    <select class="form-select" aria-label="Default select example" name="expiry_week_selection">
                      <option selected>---- Select ----</option>
@@ -281,7 +292,7 @@
                    <p>Default Expiry : <b>0 - Curr Week</b></p>
                    <!-- <input type="text" class="form-control" id="floatingInput" name="live_order_flag" placeholder="Live Order Placement"> -->
                  </div>
-                 
+
                 <div class="form-floating mb-4">
                   <input type="text" class="form-control" id="floatingInput" name="icici_session_id" placeholder="ICICI Session ID">
                   <label for="floatingInput">ICICI Session ID</label>
@@ -291,12 +302,12 @@
                   <input type="text" class="form-control" id="floatingInput" name="dhan_token" placeholder="Dhan Acct Token">
                   <label for="floatingInput">Dhan Acct Token</label>
                 </div>
-                
+
                 <div class="form-floating mb-4">
                   <input type="text" class="form-control" id="floatingInput" name="wa_token" placeholder="Whatsapp Token">
                   <label for="floatingInput">Whatsapp Token</label>
-                </div>          
-                       
+                </div>
+
                 <div class="btn-toolbar mb-3" role="toolbar" aria-label="Toolbar with button groups">
                   <div class="btn-group me-2" role="group" aria-label="First group">
                     <button type="#" href="index.html" class="btn btn-outline-secondary">Submit</button>
