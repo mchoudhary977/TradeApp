@@ -297,28 +297,29 @@ def check_ema_signal(ticker, ema_sig, last_px):
         exit_flag = 'N'
         msg['data'] = msg['data'] + f"-> [{sec_id}] {sec_name} "
 
-        pos = dh_get_positions()
-        pos = pd.DataFrame(pos['data']) if pos['status'].lower() == 'success' and pos['data'] is not None else None
-
-        if pos is not None and len(pos[pos['securityId']==str(sec_id)][pos['positionType'] !='CLOSED'])>0:
-            exit_flag = 'Y'
-            msg['remarks'] = f"Active Position Present. "
-
-        orders = dh_get_orders()
-        orders = pd.DataFrame(orders['data']) if orders['status'].lower() == 'success' and orders['data'] is not None else None
-
-        allow_order_count = int(json.load(open('config.json', 'r'))['DAILY ORDER COUNT'])
-
-        if orders is not None and len(orders[orders['orderStatus'] == 'TRADED'])>allow_order_count:
-            exit_flag = 'Y'
-            msg['remarks'] = msg['remarks'] + f"Order Count = {len(orders[orders['orderStatus'] == 'TRADED'])} | Greater than daily limit - Order Placement Restricted. [{sec_id}] => {sec_name}"
-
-        if exit_flag == 'Y':
-            # msg['remarks'] = msg['remarks'] + f"-> {exit_msg}"
-            send_whatsapp_msg(f"EMA Alert - {signal_time}", msg['remarks'])
-            write_log('ic_ema_strategy','i',msg['remarks'])
-            # msg['status'] = 'success'
-            return msg # {'status':'SUCCESS','data':msg['remarks']}
+        if live_order == 'Y':
+            pos = dh_get_positions()
+            pos = pd.DataFrame(pos['data']) if pos['status'].lower() == 'success' and pos['data'] is not None else None
+    
+            if pos is not None and len(pos[pos['securityId']==str(sec_id)][pos['positionType'] !='CLOSED'])>0:
+                exit_flag = 'Y'
+                msg['remarks'] = f"Active Position Present. "
+    
+            orders = dh_get_orders()
+            orders = pd.DataFrame(orders['data']) if orders['status'].lower() == 'success' and orders['data'] is not None else None
+    
+            allow_order_count = int(json.load(open('config.json', 'r'))['DAILY ORDER COUNT'])
+    
+            if orders is not None and len(orders[orders['orderStatus'] == 'TRADED'])>allow_order_count:
+                exit_flag = 'Y'
+                msg['remarks'] = msg['remarks'] + f"Order Count = {len(orders[orders['orderStatus'] == 'TRADED'])} | Greater than daily limit - Order Placement Restricted. [{sec_id}] => {sec_name}"
+    
+            if exit_flag == 'Y':
+                # msg['remarks'] = msg['remarks'] + f"-> {exit_msg}"
+                send_whatsapp_msg(f"EMA Alert - {signal_time}", msg['remarks'])
+                write_log('ic_ema_strategy','i',msg['remarks'])
+                # msg['status'] = 'success'
+                return msg # {'status':'SUCCESS','data':msg['remarks']}
 
         try:
             trade = {}
