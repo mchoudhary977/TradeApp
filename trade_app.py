@@ -110,21 +110,27 @@ def submit_form():
             msg_body = msg_body + f"Daily Order Limit = {daily_order_count}. "
             
         if len(nifty_opt_select) > 0:
-            json_data["NIFTY"]["OPT#"] = int(nifty_opt_select)
-            msg_body = msg_body + f"Nifty Option Selected = {nifty_opt_select}. "
-        
+            if nifty_opt_select.upper().find("SELECT") != -1:
+                print('select present')
+            else:
+                json_data["NIFTY"]["OPT#"] = int(nifty_opt_select)
+                msg_body = msg_body + f"Nifty Option Selected = {nifty_opt_select}. "
+
         if len(nifty_call_select) > 0:
             json_data["NIFTY"]["CALL_STRIKE"] = int(nifty_call_select)
-            msg_body = msg_body + f"NIFTY CALL STRIKE Selected = {nifty_opt_select}. "
+            msg_body = msg_body + f"NIFTY CALL STRIKE Selected = {nifty_call_select}. "
             
         if len(nifty_put_select) > 0:
             json_data["NIFTY"]["PUT_STRIKE"] = int(nifty_put_select)
-            msg_body = msg_body + f"NIFTY PUT STRIKE Selected = {nifty_opt_select}. "
+            msg_body = msg_body + f"NIFTY PUT STRIKE Selected = {nifty_put_select}. "
             
         if len(expiry_week_selection) > 0:
-            json_data["EXP_WEEK"] = int(expiry_week_selection)
-            msg_body = msg_body + f"Expiry Week Selected = {expiry_week_selection}. "
-    
+            if expiry_week_selection.upper().find("SELECT") != -1:
+                print('select present')
+            else:
+                json_data["EXP_WEEK"] = int(expiry_week_selection)
+                msg_body = msg_body + f"Expiry Week Selected = {expiry_week_selection}. "
+
         if len(dhan_token) > 0:
             print(f'token dhan - {dhan_token}')
             json_data["DHAN_ACCESS_TK"] = dhan_token
