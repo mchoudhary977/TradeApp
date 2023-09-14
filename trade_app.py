@@ -157,6 +157,15 @@ def submit_form():
     except Exception as e:
         return str(e)
 
+
+# Route to handle form submission
+@app.route('/config')
+def config_data():
+    with open("config.json","r") as f:
+        json_data = json.load(f)
+    return json_data
+    
+    
 # Route to handle form submission
 @app.route('/update_config', methods=['POST'])
 def submit_form_1():
