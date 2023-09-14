@@ -115,11 +115,11 @@ def submit_form():
         
         if len(nifty_call_select) > 0:
             json_data["NIFTY"]["CALL_STRIKE"] = int(nifty_call_select)
-            msg_body = f"NIFTY CALL STRIKE Selected = {nifty_opt_select}. "
+            msg_body = msg_body + f"NIFTY CALL STRIKE Selected = {nifty_opt_select}. "
             
         if len(nifty_put_select) > 0:
             json_data["NIFTY"]["PUT_STRIKE"] = int(nifty_put_select)
-            msg_body = f"NIFTY PUT STRIKE Selected = {nifty_opt_select}. "
+            msg_body = msg_body + f"NIFTY PUT STRIKE Selected = {nifty_opt_select}. "
             
         if len(expiry_week_selection) > 0:
             json_data["EXP_WEEK"] = int(expiry_week_selection)
