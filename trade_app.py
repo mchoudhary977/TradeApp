@@ -225,7 +225,7 @@ def submit_form_1():
     send_whatsapp_msg(msg_title, msg_body)
 
 
-    return home()
+    return config_data()
 
 
 @app.route('/admin')
