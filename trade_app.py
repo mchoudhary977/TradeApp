@@ -163,6 +163,10 @@ def submit_form():
 def config_data():
     with open("config.json","r") as f:
         json_data = json.load(f)
+    
+    selected_keys = ['LIVE_ORDER','DAILY_ORDER_COUNT','EXP_WEEK','NIFTY',
+                     'CNXBAN','NIFFIN','STOCK_CODES']    
+    json_data = {key: json_data[key] for key in selected_keys}
     return json_data
     
     
