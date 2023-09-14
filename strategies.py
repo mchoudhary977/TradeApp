@@ -449,7 +449,7 @@ def main():
                 last_px = wl[wl['Code']==ticker['ICDH']]['Close'].values[0]
                 # stg_file = 'Strategy.csv'
                 # stg_df = pd.read_csv(stg_file) if os.path.exists(stg_file) else pd.DataFrame()
-                # last_px = 19815
+                # last_px = 20137
                 # ticker='NIFTY'
                 ema_check = check_ema_signal(ticker['ICDH'], ema_sig, last_px)
         except Exception as e:
@@ -463,7 +463,7 @@ def main():
     write_log('ic_ema_strategy','i',f'EMA Calculation Process END - {now.strftime("%Y-%m-%d %H:%M:%S")}')
     sys.exit()
 
-# symbol = 'NIFTY 50' last_px = 20002.3 signal_time=tick_time
+# symbol = 'NIFTY 50' last_px = 20103 signal_time=tick_time exp_week=1
 def strat_straddle_buy(symbol,last_px,signal_time):
     try:
         funct_name = 'strat_straddle_buy'.upper()
@@ -475,13 +475,17 @@ def strat_straddle_buy(symbol,last_px,signal_time):
             ticker = 'NIFTY'
             num = int(json.load(open('config.json', 'r'))[ticker]['OPT#'])
             exp_week = int(json.load(open('config.json', 'r'))['EXP_WEEK'])
+            call_strike = int(json.load(open('config.json', 'r'))[ticker]['CALL_STRIKE'])
             call_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='CE', duration=exp_week)
-            call_opt = call_opt.iloc[num]
+            call_opt = call_opt[call_opt['STRIKE'] == call_strike]
+            # call_opt = call_opt.iloc[num]
             call_sec_id = call_opt['TK']
             call_sec_name = call_opt['CD']
             
+            put_strike = int(json.load(open('config.json', 'r'))[ticker]['PUT_STRIKE'])
             put_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='PE', duration=exp_week)
-            put_opt = put_opt.iloc[num]
+            put_opt = put_opt[put_opt['STRIKE'] == put_strike]
+            # put_opt = put_opt.iloc[num]
             put_sec_id = put_opt['TK']
             put_sec_name = put_opt['CD']
             

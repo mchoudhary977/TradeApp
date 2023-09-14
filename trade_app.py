@@ -148,6 +148,9 @@ def submit_form_1():
     nifty_opt_select = request.form.get('nifty_opt_select')
     expiry_week_selection = request.form.get('expiry_week_selection')
     
+    nifty_call_select = request.form.get('nifty_call_select')
+    nifty_put_select = request.form.get('nifty_put_select')
+    
     msg_title = f"Configuration Update - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     msg_body = ''
 
@@ -163,6 +166,14 @@ def submit_form_1():
     if len(nifty_opt_select) > 0:
         json_data["NIFTY"]["OPT#"] = int(nifty_opt_select)
         msg_body = f"Nifty Option Selected = {nifty_opt_select}. "
+        
+    if len(nifty_call_select) > 0:
+        json_data["NIFTY"]["CALL_STRIKE"] = int(nifty_call_select)
+        msg_body = f"NIFTY CALL STRIKE Selected = {nifty_opt_select}. "
+        
+    if len(nifty_put_select) > 0:
+        json_data["NIFTY"]["PUT_STRIKE"] = int(nifty_put_select)
+        msg_body = f"NIFTY PUT STRIKE Selected = {nifty_opt_select}. "
         
     if len(expiry_week_selection) > 0:
         json_data["EXP_WEEK"] = int(expiry_week_selection)

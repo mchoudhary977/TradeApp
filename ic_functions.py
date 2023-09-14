@@ -241,7 +241,7 @@ def ic_option_contracts(ticker="NIFTY", option_type="CE", exchange="NFO"):
 def ic_option_contracts_closest(ticker="NIFTY", duration = 0, option_type="CE", exchange="NFO"):
     #duration = 0 means the closest expiry, 1 means the next closest and so on
     df_opt_contracts = ic_option_contracts(ticker,option_type)
-    df_opt_contracts["time_to_expiry"] = (pd.to_datetime(df_opt_contracts["EXPIRY"]) - dt.datetime.now()).dt.days
+    df_opt_contracts["time_to_expiry"] = (pd.to_datetime(df_opt_contracts["EXPIRY"]) - np.datetime64(dt.datetime.now().date())).dt.days
     df_opt_contracts = df_opt_contracts[df_opt_contracts["time_to_expiry"] >= 0]
     # df_opt_contracts["time_to_expiry"] = (pd.to_datetime(df_opt_contracts["EXPIRY"]) - datetime.now()).days
     min_day_count = np.sort(df_opt_contracts["time_to_expiry"].unique())[duration]
