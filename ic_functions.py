@@ -259,7 +259,7 @@ def ic_option_contracts_atm(ticker, underlying_price, duration = 0, option_type=
 # atm_contract = ic_option_contracts_atm("CNXBAN",underlying_price=43946, duration=1)
 
 #function to extract n closest options to the underlying price
-def ic_option_chain(ticker, underlying_price, duration = 0, num = 7, option_type="CE", exchange="NFO"):
+def ic_option_chain(ticker, underlying_price, duration = 0, num = 11, option_type="CE", exchange="NFO"):
     #duration = 0 means the closest expiry, 1 means the next closest and so on
     #num =5 means return 5 option contracts closest to the market
     df_opt_contracts = ic_option_contracts_closest(ticker,duration,option_type)
