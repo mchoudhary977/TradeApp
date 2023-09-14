@@ -153,7 +153,7 @@ def submit_form():
             
         send_whatsapp_msg(msg_title, msg_body)
     
-        return home()
+        return config_data()
     except Exception as e:
         return str(e)
 
@@ -225,7 +225,7 @@ def submit_form_1():
     send_whatsapp_msg(msg_title, msg_body)
 
 
-    return config_data()
+    return home()
 
 
 @app.route('/admin')
