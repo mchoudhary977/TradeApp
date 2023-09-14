@@ -88,6 +88,9 @@ def submit_form():
         nifty_opt_select = request.form.get('nifty_opt_select')
         expiry_week_selection = request.form.get('expiry_week_selection')
         daily_order_count = request.form.get('daily_order_count')
+    
+        nifty_call_select = request.form.get('nifty_call_select')
+        nifty_put_select = request.form.get('nifty_put_select')      
         
         msg_title = f"Configuration Update - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         msg_body = ''
@@ -158,9 +161,6 @@ def submit_form_1():
     live_order = request.form.get('live_order')
     nifty_opt_select = request.form.get('nifty_opt_select')
     expiry_week_selection = request.form.get('expiry_week_selection')
-    
-    nifty_call_select = request.form.get('nifty_call_select')
-    nifty_put_select = request.form.get('nifty_put_select')
     
     msg_title = f"Configuration Update - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     msg_body = ''
