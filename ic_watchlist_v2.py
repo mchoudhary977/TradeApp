@@ -38,7 +38,7 @@ def get_option_list(ticker, underlying_px):
             # filtered_dates.append(date.astype('datetime64[D]').astype(str))
             filtered_dates.append(str(date.date()))
     filtered_dates = filtered_dates[:2]
-    print(filtered_dates)
+    # print(filtered_dates)
     
     oc_df = oc_df[oc_df['EXPIRY'].isin(filtered_dates)]
     
@@ -547,10 +547,13 @@ def main():
     try:  
     
         token_list = []
-        if os.path.exists(watchlist_file) == False:
+        wl_df = pd.DataFrame()
+        try:
+            if os.path.exists(watchlist_file) == False:
+                ic_update_watchlist(mode='C',num=0)
+            wl_df = pd.read_csv(watchlist_file)
+        except pd.errors.EmptyDataError:
             ic_update_watchlist(mode='C',num=0)
-        subscription_flag = 'N'
-        now = datetime.now()
         wl_df = pd.read_csv(watchlist_file)
         
         if len(pd.read_csv(watchlist_file)) > 0:
@@ -756,5 +759,5 @@ def test_function():
         pass
     
 if __name__ == '__main__':
-    test1()
-    # main()
+    # test1()
+    main()
