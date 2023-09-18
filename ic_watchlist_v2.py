@@ -460,6 +460,7 @@ def ic_unsubscribeFeed(tokens):
 # ticks = {'ltt':'Mon Sep 12 09:17:00 2023','symbol':'4.1!NIFTY 50'}
 # On Ticks function
 def on_ticks(ticks):
+    print(ticks)
     # print(f'{ticks["symbol"]}-{ticks["last"]}')
     global options_df
     global livePrices
