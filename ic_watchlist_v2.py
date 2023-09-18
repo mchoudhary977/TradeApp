@@ -543,16 +543,7 @@ def main():
     # write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")  
     print("Watchlist Live Started")
     try:  
-        print("In TRY Block") 
-        print('watchlist length')
-        # print(len(pd.read_csv(watchlist_file)))
-        wl1 = pd.read_csv(watchlist_file)
-        if wl1.empty:
-            print('csv is empty')
-        else:
-            print('csv contains data')
-            
-            
+    
         token_list = []
         if os.path.exists(watchlist_file) == False:
             ic_update_watchlist(mode='C',num=0)
@@ -566,14 +557,12 @@ def main():
                     wl_df.at[index, 'PrevClose'] = row['Close']
                 token_list.append(f"4.1!{row['Token']}")
             # wl_df.to_csv(watchlist_file, index=False)
-        print("wl_df") 
-        print(wl_df) 
+
         # ticker_dict = {'NIFTY':0.0, 'CNXBAN':0.0}    # TEST LINE, UNCOMMENT BELOW IN PROD
         ticker_dict = {'NIFTY':0.0, 'CNXBAN':0.0, 'NIFFIN':0.0}
         for key,value in ticker_dict.items():
             ticker_dict[key] = wl_df[wl_df['Code']==key]['Close'].values[0]
-        print("ticker_dict") 
-        print(ticker_dict)    
+ 
         
         for key,value in ticker_dict.items():
             options_df = pd.concat([options_df,get_option_list(key, value)])
@@ -582,11 +571,9 @@ def main():
         for index,row in options_df.iterrows():
             token_list.append(f"4.1!{row['CALL_TK']}")
             token_list.append(f"4.1!{row['PUT_TK']}")
-        print(token_list)
                    
         while True:
             now = datetime.now()
-            print(now)
             if now.time() < time(9,0) or now.time() > time(15,40):
                 break
             
@@ -630,6 +617,94 @@ def main():
         pass
 
 
+def test1():
+    global options_df
+    # session_id = ic_autologon()
+    # write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")  
+    print("Watchlist Live Started") 
+    print("In TRY Block") 
+    print('watchlist length')
+    # print(len(pd.read_csv(watchlist_file)))
+    wl1 = pd.read_csv('WatchList.csv')
+    if wl1.empty:
+        print('csv is empty')
+    else:
+        print('csv contains data')
+        
+        
+    token_list = []
+    if os.path.exists(watchlist_file) == False:
+        ic_update_watchlist(mode='C',num=0)
+    subscription_flag = 'N'
+    now = datetime.now()
+    wl_df = pd.read_csv(watchlist_file)
+    
+    if len(pd.read_csv(watchlist_file)) > 0:
+        for index,row in wl_df.iterrows():
+            if now.date() > datetime.strptime(row['CandleTime'], '%Y-%m-%d %H:%M:%S').date():
+                wl_df.at[index, 'PrevClose'] = row['Close']
+            token_list.append(f"4.1!{row['Token']}")
+        # wl_df.to_csv(watchlist_file, index=False)
+    print("wl_df") 
+    print(wl_df) 
+    # ticker_dict = {'NIFTY':0.0, 'CNXBAN':0.0}    # TEST LINE, UNCOMMENT BELOW IN PROD
+    ticker_dict = {'NIFTY':0.0, 'CNXBAN':0.0, 'NIFFIN':0.0}
+    for key,value in ticker_dict.items():
+        ticker_dict[key] = wl_df[wl_df['Code']==key]['Close'].values[0]
+    print("ticker_dict") 
+    print(ticker_dict)    
+    
+    for key,value in ticker_dict.items():
+        options_df = pd.concat([options_df,get_option_list(key, value)])
+        # options_df = pd.concat([options_df,get_pcr_details(key,get_option_list(key, value))])
+        
+    for index,row in options_df.iterrows():
+        token_list.append(f"4.1!{row['CALL_TK']}")
+        token_list.append(f"4.1!{row['PUT_TK']}")
+    print(token_list)
+               
+    while True:
+        now = datetime.now()
+        print(now)
+        if now.time() < time(9,0) or now.time() > time(15,40):
+            break
+        
+        if (now.time() >= time(9,14) and now.time() < time(15,35,0)):
+            if subscription_flag=='N':
+                if os.path.exists(watchlist_file):
+                    print('Subscribed')
+                    icici.ws_connect()
+                    icici.on_ticks = on_ticks
+                    wl_df = pd.read_csv(watchlist_file)
+                    livePrices = wl_df
+                    
+                    ic_subscribeFeed(token_list)
+                    subscription_flag = 'Y'
+                    send_whatsapp_msg('Feed Alert','Market Live Feed Started!')
+                    
+                else:
+                    ic_get_watchlist(mode='C')
+            else:
+                livePrices.to_csv(watchlist_file, index=False)
+                options_df.to_csv(options_file, index=False)
+                strat_trades_df.to_csv(trade_file, index=False)
+                # if len(tsymbols_df) > 0:
+                #     tsymbols_df.to_csv('Trades.csv',index=False)
+                # ic_subscribe_traded_symbols()
+               
+        if (now.time() >= time(15,35) and subscription_flag=='Y'):
+            ic_unsubscribeFeed(token_list)
+            icici.ws_disconnect()
+            subscription_flag='N'
+            send_whatsapp_msg('Feed Alert','Market Live Feed Stopped!')
+            break
+
+        if subscription_flag == 'Y':
+            tm.sleep(1)
+        else:
+            tm.sleep(60)
+                
+    
 def test_function():
     global options_df
     try:     
@@ -676,4 +751,5 @@ def test_function():
         pass
     
 if __name__ == '__main__':
-    main()
+    test1()
+    # main()
