@@ -544,14 +544,15 @@ def main():
     print("Watchlist Live Started")
     try:  
         print("In TRY Block") 
+        print('watchlist length')
+        print(len(pd.read_csv(watchlist_file)))
         token_list = []
         if os.path.exists(watchlist_file) == False:
             ic_update_watchlist(mode='C',num=0)
         subscription_flag = 'N'
         now = datetime.now()
         wl_df = pd.read_csv(watchlist_file)
-        print('watchlist length')
-        print(len(pd.read_csv(watchlist_file)))
+        
         if len(pd.read_csv(watchlist_file)) > 0:
             for index,row in wl_df.iterrows():
                 if now.date() > datetime.strptime(row['CandleTime'], '%Y-%m-%d %H:%M:%S').date():
