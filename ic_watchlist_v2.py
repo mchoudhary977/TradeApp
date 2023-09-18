@@ -545,11 +545,14 @@ def main():
     try:  
         print("In TRY Block") 
         print('watchlist length')
-        print(len(pd.read_csv(watchlist_file)))
-        if pd.read_csv(watchlist_file).empty:
+        # print(len(pd.read_csv(watchlist_file)))
+        wl1 = pd.read_csv(watchlist_file)
+        if wl1.empty:
             print('csv is empty')
         else:
             print('csv contains data')
+            
+            
         token_list = []
         if os.path.exists(watchlist_file) == False:
             ic_update_watchlist(mode='C',num=0)
