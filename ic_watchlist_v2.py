@@ -550,6 +550,8 @@ def main():
         subscription_flag = 'N'
         now = datetime.now()
         wl_df = pd.read_csv(watchlist_file)
+        print('watchlist length')
+        print(len(pd.read_csv(watchlist_file)))
         if len(pd.read_csv(watchlist_file)) > 0:
             for index,row in wl_df.iterrows():
                 if now.date() > datetime.strptime(row['CandleTime'], '%Y-%m-%d %H:%M:%S').date():
