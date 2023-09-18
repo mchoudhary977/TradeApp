@@ -466,6 +466,8 @@ def on_ticks(ticks):
     
     tick_time = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
     tick_symbol = ticks['symbol'][4:]
+    
+    print(f"OnTicks => TickSymbol - {tick_symbol} | TickTime - {tick_time} | Price - {ticks['last']}")
 
     if len(livePrices) > 0:
         livePrices.loc[livePrices['Token'] == ticks['symbol'][4:], 'CandleTime'] = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
