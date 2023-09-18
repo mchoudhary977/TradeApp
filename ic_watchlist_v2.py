@@ -541,9 +541,9 @@ def ic_subscribe_traded_symbols():
 # Main Function Start
 def main():
     global options_df
-    # session_id = ic_autologon()
-    # write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")  
-    print("Watchlist Live Started")
+    session_id = ic_autologon()
+    write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")  
+    # print("Watchlist Live Started")
     try:  
         now = datetime.now()
         subscription_flag = 'N'
@@ -619,7 +619,7 @@ def main():
                 tm.sleep(60)
                 
     except Exception as e:
-        print(str(e))
+        write_log('ic_watchlist','e',f"{str(e)}")  
         pass
 
 
