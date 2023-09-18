@@ -540,7 +540,7 @@ def ic_subscribe_traded_symbols():
 def main():
     global options_df
     # session_id = ic_autologon()
-    write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")  
+    # write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")  
     print("Watchlist Live Started")
     try:     
         token_list = []
