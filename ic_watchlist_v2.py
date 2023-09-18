@@ -36,8 +36,9 @@ def get_option_list(ticker, underlying_px):
     for date in sorted(pd.to_datetime(oc_df['EXPIRY']).unique()):
         print((date - np.datetime64(dt.datetime.now().date())))
         print(type((date - np.datetime64(dt.datetime.now().date()))))
-        if (date - np.datetime64(dt.datetime.now().date())) >= pd.Timedelta(days=0):
-            filtered_dates.append(date.astype('datetime64[D]').astype(str))
+        if (date - np.datetime64(dt.datetime.now().date())) >= pd.Timedelta(days=0):           
+            # filtered_dates.append(date.astype('datetime64[D]').astype(str))
+            filtered_dates.append(str(date.date()))
     filtered_dates = filtered_dates[:2]
     
     oc_df = oc_df[oc_df['EXPIRY'].isin(filtered_dates)]
