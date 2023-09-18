@@ -616,6 +616,7 @@ def main():
                 tm.sleep(60)
                 
     except Exception as e:
+        print(str(e))
         pass
 
 
