@@ -546,6 +546,7 @@ def main():
     print("Watchlist Live Started")
     try:  
         now = datetime.now()
+        subscription_flag = 'N'
         token_list = []
         wl_df = pd.DataFrame()
         try:
