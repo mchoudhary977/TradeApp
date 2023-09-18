@@ -625,7 +625,11 @@ def test1():
     print("In TRY Block") 
     print('watchlist length')
     # print(len(pd.read_csv(watchlist_file)))
-    wl1 = pd.read_csv('WatchList.csv')
+    try:
+        wl1 = pd.read_csv(watchlist_file)
+    except pd.errors.EmptyDataError:
+        print('CSV File is empty')
+        
     if wl1.empty:
         print('csv is empty')
     else:
