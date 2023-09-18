@@ -555,12 +555,13 @@ def main():
                     wl_df.at[index, 'PrevClose'] = row['Close']
                 token_list.append(f"4.1!{row['Token']}")
             # wl_df.to_csv(watchlist_file, index=False)
-        
+        print(wl_df) 
         # ticker_dict = {'NIFTY':0.0, 'CNXBAN':0.0}    # TEST LINE, UNCOMMENT BELOW IN PROD
         ticker_dict = {'NIFTY':0.0, 'CNXBAN':0.0, 'NIFFIN':0.0}
         for key,value in ticker_dict.items():
             ticker_dict[key] = wl_df[wl_df['Code']==key]['Close'].values[0]
-            
+        print(ticker_dict)    
+        
         for key,value in ticker_dict.items():
             options_df = pd.concat([options_df,get_option_list(key, value)])
             # options_df = pd.concat([options_df,get_pcr_details(key,get_option_list(key, value))])
