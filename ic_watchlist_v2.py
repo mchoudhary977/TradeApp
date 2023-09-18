@@ -481,15 +481,17 @@ def on_ticks(ticks):
                    'Open': ticks['open'], 'High': ticks['high'], 'Low': ticks['low']}
         livePrices=pd.DataFrame(new_row, index = [0])
      
-    if len(options_df) > 0:
-        options_df.loc[options_df['CALL_TK'] == ticks['symbol'][4:], 'CALL_CandleTime'] = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
-        options_df.loc[options_df['PUT_TK'] == ticks['symbol'][4:], 'PUT_CandleTime'] = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
-        options_df.loc[options_df['CALL_TK'] == ticks['symbol'][4:], 'CALL_PX'] = ticks['last']
-        options_df.loc[options_df['PUT_TK'] == ticks['symbol'][4:], 'PUT_PX'] = ticks['last']
+    # -------Commented options data, need to test and enable below code
+    # if len(options_df) > 0:
+    #     options_df.loc[options_df['CALL_TK'] == ticks['symbol'][4:], 'CALL_CandleTime'] = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
+    #     options_df.loc[options_df['PUT_TK'] == ticks['symbol'][4:], 'PUT_CandleTime'] = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
+    #     options_df.loc[options_df['CALL_TK'] == ticks['symbol'][4:], 'CALL_PX'] = ticks['last']
+    #     options_df.loc[options_df['PUT_TK'] == ticks['symbol'][4:], 'PUT_PX'] = ticks['last']
     
-    if len(strat_trades_df) > 0:
-        strat_trades_df.loc[strat_trades_df['DervID'] == ticks['symbol'][4:], 'DervPx'] = ticks['last']
-        
+    # if len(strat_trades_df) > 0:
+    #     strat_trades_df.loc[strat_trades_df['DervID'] == ticks['symbol'][4:], 'DervPx'] = ticks['last']
+    # -------Commented options data, need to test and enable below code
+    
     # Straddle buy strategy for Nifty to initiate at 9:17 AM
     if tick_symbol == 'NIFTY 50':
         if tick_time.hour == 9 and tick_time.minute == 17 and tick_time.second == 0:
@@ -576,11 +578,13 @@ def main():
         for key,value in ticker_dict.items():
             options_df = pd.concat([options_df,get_option_list(key, value)])
             # options_df = pd.concat([options_df,get_pcr_details(key,get_option_list(key, value))])
-            
-        for index,row in options_df.iterrows():
-            token_list.append(f"4.1!{row['CALL_TK']}")
-            token_list.append(f"4.1!{row['PUT_TK']}")
-                   
+        
+        # ----------------- START - Uncomment for Options subscription--------------
+        # for index,row in options_df.iterrows():
+        #     token_list.append(f"4.1!{row['CALL_TK']}")
+        #     token_list.append(f"4.1!{row['PUT_TK']}")
+        # ----------------- END - Uncomment for Options subscription--------------
+        
         while True:
             now = datetime.now()
             if now.time() < time(9,0) or now.time() > time(15,40):
