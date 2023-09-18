@@ -542,7 +542,8 @@ def main():
     # session_id = ic_autologon()
     # write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")  
     print("Watchlist Live Started")
-    try:     
+    try:  
+        print("In TRY Block") 
         token_list = []
         if os.path.exists(watchlist_file) == False:
             ic_update_watchlist(mode='C',num=0)
@@ -555,11 +556,13 @@ def main():
                     wl_df.at[index, 'PrevClose'] = row['Close']
                 token_list.append(f"4.1!{row['Token']}")
             # wl_df.to_csv(watchlist_file, index=False)
+        print("wl_df") 
         print(wl_df) 
         # ticker_dict = {'NIFTY':0.0, 'CNXBAN':0.0}    # TEST LINE, UNCOMMENT BELOW IN PROD
         ticker_dict = {'NIFTY':0.0, 'CNXBAN':0.0, 'NIFFIN':0.0}
         for key,value in ticker_dict.items():
             ticker_dict[key] = wl_df[wl_df['Code']==key]['Close'].values[0]
+        print("ticker_dict") 
         print(ticker_dict)    
         
         for key,value in ticker_dict.items():
