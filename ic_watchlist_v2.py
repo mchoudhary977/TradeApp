@@ -627,23 +627,13 @@ def test1():
     print('watchlist length')
     # print(len(pd.read_csv(watchlist_file)))
     
-    if os.path.exists(watchlist_file) == False:
-        ic_update_watchlist(mode='C',num=0)
-    
+    wl_df = pd.DataFrame()
     try:
-        wl1 = pd.read_csv(watchlist_file)
+        if os.path.exists(wl_file) == False:
+            ic_update_watchlist(mode='C',num=0)
+        wl_df = pd.read_csv(wl_file)
     except pd.errors.EmptyDataError:
-        print('CSV File is empty')
         ic_update_watchlist(mode='C',num=0)
-    
-    wl1 = pd.read_csv(watchlist_file)
-    print(wl1)
-        
-    if wl1.empty:
-        print('csv is empty')
-    else:
-        print('csv contains data')
-        
         
     token_list = []
     if os.path.exists(watchlist_file) == False:

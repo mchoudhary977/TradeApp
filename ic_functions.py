@@ -162,7 +162,16 @@ def ic_update_watchlist(mode='R',num=-1):
     ic_instruments = pd.read_csv('icici.csv')
     wl_cols= ['SymbolName','ExchangeCode','Segment','Token','Code','LotSize',
               'Open','High','Low','Close','PrevClose','CandleTime']
-    wl_df = pd.read_csv(wl_file) if os.path.exists(wl_file) else pd.DataFrame(columns=wl_cols)
+    
+    wl_df = pd.DataFrame(columns=wl_cols)
+    try:
+        if os.path.exists(wl_file):
+            wl_df = pd.read_csv(wl_file)
+    except pd.errors.EmptyDataError:
+        wl_df = pd.DataFrame(columns=wl_cols)
+            
+    # wl_df = pd.read_csv(wl_file) if os.path.exists(wl_file) else pd.DataFrame(columns=wl_cols)
+    
     if mode == 'C' or len(wl_df)==0:
         wl_df = pd.DataFrame(columns=wl_cols)
         for sym in symbol_list:
