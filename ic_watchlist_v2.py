@@ -619,8 +619,9 @@ def main():
 
 def test1():
     global options_df
-    # session_id = ic_autologon()
-    # write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")  
+    session_id = ic_autologon()
+    write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")  
+    print(f"session_id - {session_id}")
     print("Watchlist Live Started") 
     print("In TRY Block") 
     print('watchlist length')
