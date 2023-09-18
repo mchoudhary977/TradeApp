@@ -32,8 +32,10 @@ def get_option_list(ticker, underlying_px):
     instrument_list = pd.read_csv(icici_scrips)
     oc_df = instrument_list[instrument_list["SC"]==ticker][instrument_list['EC']==exchange][instrument_list['DRV']=='OPT']
     
-    filtered_dates = []
+    filtered_dates = []    
     for date in sorted(pd.to_datetime(oc_df['EXPIRY']).unique()):
+        print((date - np.datetime64(dt.datetime.now().date())))
+        print(type((date - np.datetime64(dt.datetime.now().date()))))
         if (date - np.datetime64(dt.datetime.now().date())) >= 0:
             filtered_dates.append(date.astype('datetime64[D]').astype(str))
     filtered_dates = filtered_dates[:2]
@@ -665,7 +667,7 @@ def test1():
         token_list.append(f"4.1!{row['CALL_TK']}")
         token_list.append(f"4.1!{row['PUT_TK']}")
     print(token_list)
-               
+    return        
     while True:
         now = datetime.now()
         print(now)
