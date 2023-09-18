@@ -426,19 +426,20 @@ def generate_ema_signal(symbol, tf):
 def check_strategies(symbol, last_px, time_stamp):
     global strat_trades_df
     
-    condition = (strat_trades_df['Symbol']==symbol) & (strat_trades_df['Active']=='Y')
-    
-    for index, row in strat_trades_df[condition].iterrows():
-        if time_stamp < row['ExpirationTime'] and row['Status'].isspace() == True:
-            if row['Entry'] > 0 and ((row['Signal'] == 'red' and last_px < row['Entry']) or (row['Signal'] == 'green' and last_px > row['Entry'])):
-                strat_trades_df.loc[index,'Status'] = 'PENDING'
-                # place_strategy_order(index, symbol, last_px, row)     #TEST LINE, UNCOMMENT BELOW 2 LINES IN PROD
-                order_th = Thread(target=place_strategy_order,args=(index, symbol, last_px, row))                  
-                order_th.start()       
-                
-        elif time_stamp >= row['ExpirationTime'] and row['Status'].isspace() == True:
-            strat_trades_df.loc[index,'Active'] = 'N'
-            strat_trades_df.loc[index,'Status'] = 'INACTIVE'
+    if len(strat_trades_df) > 0:
+        condition = (strat_trades_df['Symbol']==symbol) & (strat_trades_df['Active']=='Y')
+        
+        for index, row in strat_trades_df[condition].iterrows():
+            if time_stamp < row['ExpirationTime'] and row['Status'].isspace() == True:
+                if row['Entry'] > 0 and ((row['Signal'] == 'red' and last_px < row['Entry']) or (row['Signal'] == 'green' and last_px > row['Entry'])):
+                    strat_trades_df.loc[index,'Status'] = 'PENDING'
+                    # place_strategy_order(index, symbol, last_px, row)     #TEST LINE, UNCOMMENT BELOW 2 LINES IN PROD
+                    order_th = Thread(target=place_strategy_order,args=(index, symbol, last_px, row))                  
+                    order_th.start()       
+                    
+            elif time_stamp >= row['ExpirationTime'] and row['Status'].isspace() == True:
+                strat_trades_df.loc[index,'Active'] = 'N'
+                strat_trades_df.loc[index,'Status'] = 'INACTIVE'
 
                        
                        
