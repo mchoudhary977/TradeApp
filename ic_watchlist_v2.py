@@ -629,9 +629,9 @@ def test1():
     
     wl_df = pd.DataFrame()
     try:
-        if os.path.exists(wl_file) == False:
+        if os.path.exists(watchlist_file) == False:
             ic_update_watchlist(mode='C',num=0)
-        wl_df = pd.read_csv(wl_file)
+        wl_df = pd.read_csv(watchlist_file)
     except pd.errors.EmptyDataError:
         ic_update_watchlist(mode='C',num=0)
         
