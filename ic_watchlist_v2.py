@@ -545,7 +545,7 @@ def main():
     # write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")  
     print("Watchlist Live Started")
     try:  
-    
+        now = datetime.now()
         token_list = []
         wl_df = pd.DataFrame()
         try:
