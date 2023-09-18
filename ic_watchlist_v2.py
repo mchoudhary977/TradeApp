@@ -541,6 +541,7 @@ def main():
     global options_df
     session_id = ic_autologon()
     write_log('ic_watchlist','i',f"ICICI Session ID - {session_id}")  
+    print("Watchlist Live Started")
     try:     
         token_list = []
         if os.path.exists(watchlist_file) == False:
@@ -567,10 +568,11 @@ def main():
         for index,row in options_df.iterrows():
             token_list.append(f"4.1!{row['CALL_TK']}")
             token_list.append(f"4.1!{row['PUT_TK']}")
+        print(token_list)
                    
         while True:
             now = datetime.now()
-            
+            print(now)
             if now.time() < time(9,0) or now.time() > time(15,40):
                 break
             
