@@ -625,10 +625,18 @@ def test1():
     print("In TRY Block") 
     print('watchlist length')
     # print(len(pd.read_csv(watchlist_file)))
+    
+    if os.path.exists(watchlist_file) == False:
+        ic_update_watchlist(mode='C',num=0)
+    
     try:
         wl1 = pd.read_csv(watchlist_file)
     except pd.errors.EmptyDataError:
         print('CSV File is empty')
+        ic_update_watchlist(mode='C',num=0)
+    
+    wl1 = pd.read_csv(watchlist_file)
+    print(wl1)
         
     if wl1.empty:
         print('csv is empty')
