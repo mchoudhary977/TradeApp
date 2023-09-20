@@ -300,20 +300,20 @@ def check_ema_signal(ticker, ema_sig, last_px):
         if live_order == 'Y':
             pos = dh_get_positions()
             pos = pd.DataFrame(pos['data']) if pos['status'].lower() == 'success' and pos['data'] is not None else None
-    
+
             if pos is not None and len(pos[pos['securityId']==str(sec_id)][pos['positionType'] !='CLOSED'])>0:
                 exit_flag = 'Y'
                 msg['remarks'] = f"Active Position Present. "
-    
+
             orders = dh_get_orders()
             orders = pd.DataFrame(orders['data']) if orders['status'].lower() == 'success' and orders['data'] is not None else None
-    
+
             allow_order_count = int(json.load(open('config.json', 'r'))['DAILY ORDER COUNT'])
-    
+
             if orders is not None and len(orders[orders['orderStatus'] == 'TRADED'])>allow_order_count:
                 exit_flag = 'Y'
                 msg['remarks'] = msg['remarks'] + f"Order Count = {len(orders[orders['orderStatus'] == 'TRADED'])} | Greater than daily limit - Order Placement Restricted. [{sec_id}] => {sec_name}"
-    
+
             if exit_flag == 'Y':
                 # msg['remarks'] = msg['remarks'] + f"-> {exit_msg}"
                 send_whatsapp_msg(f"EMA Alert - {signal_time}", msg['remarks'])
@@ -468,7 +468,7 @@ def strat_straddle_buy(symbol,last_px,signal_time):
     try:
         funct_name = 'strat_straddle_buy'.upper()
         msg = {'status':'failure', 'remarks':'', 'data':''}
-    
+
         live_order = json.load(open('config.json', 'r'))['LIVE_ORDER']
         msg['data'] = 'Straddle Strategy'
         if symbol == 'NIFTY 50':
@@ -481,20 +481,20 @@ def strat_straddle_buy(symbol,last_px,signal_time):
             # call_opt = call_opt.iloc[num]
             call_sec_id = call_opt['TK']
             call_sec_name = call_opt['CD']
-            
+
             put_strike = int(json.load(open('config.json', 'r'))[ticker]['PUT_STRIKE'])
             put_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='PE', duration=exp_week)
             put_opt = put_opt[put_opt['STRIKE'] == put_strike]
             # put_opt = put_opt.iloc[num]
             put_sec_id = put_opt['TK']
             put_sec_name = put_opt['CD']
-            
+
             trade = {}
             sl_pts = 10
-            tg_pts = 16
+            tg_pts = 16.5
             qty = 1
             side = 'buy'
-            
+
             if live_order == 'Y':
                 call_trade = dh_post_exchange_order(ord_type='bo', exchange='FNO',
                                            security_id=call_sec_id, side=side,
@@ -506,7 +506,7 @@ def strat_straddle_buy(symbol,last_px,signal_time):
                                            qty=qty, entry_px=0, sl_px=0, trigger_px=0,
                                            tg_pts=tg_pts, sl_pts=sl_pts,
                                            amo=False, prod_type='')
-                
+
                 if call_trade['status'].lower() == 'success':
                     msg['data'] = msg['data'] + f"=> CALL Order Placed - {call_sec_name} - [ OrderId - {call_trade['data']['orderId']} | OrderStatus - {call_trade['data']['orderStatus']} ]"
                 else:
@@ -515,16 +515,16 @@ def strat_straddle_buy(symbol,last_px,signal_time):
                     msg['data'] = msg['data'] + f"=> PUT Order Placed - {put_sec_name} - [ OrderId - {put_trade['data']['orderId']} | OrderStatus - {put_trade['data']['orderStatus']} ]"
                 else:
                     msg['data'] = msg['data'] + f"=> {PUT} Order Failed - {put_sec_name} - {put_trade['remarks']}"
-                    
+
                 if call_trade['status'].lower() == 'success' and put_trade['status'].lower() == 'success':
                     msg['status'] = 'success'
-            
+
             else:
                 msg['status'] = 'success'
                 msg['data'] = msg['data'] + f"=> Live Order not enabled, place manually! - {call_sec_name} - {put_sec_name}"
-            
+
             send_whatsapp_msg(f"Straddle Alert - {signal_time.strftime('%Y-%m-%d %H:%M:%S')}", msg['data'])
-    
+
     except Exception as e:
         err = str(e)
         msg['remarks'] = funct_name + ' - ' + msg['remarks'] + f"Order Placement Error - {err}"
