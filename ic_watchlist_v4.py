@@ -550,10 +550,10 @@ def on_ticks(ticks):
     
     # tick_symbol = 'NIFTY 50' tick_px = 20192.85
     if tick_symbol in ['NIFTY 50','NIFTY BANK','NIFTY FIN SERVICE']:
-        if tick_time.second == 10:
-            print('Check option levels')
-            option_check_thread = Thread(target=check_option_list,args=(tick_symbol,tick_px))
-            option_check_thread.start()
+        # if tick_time.second == 10:
+        #     print('Check option levels')
+        #     option_check_thread = Thread(target=check_option_list,args=(tick_symbol,tick_px))
+        #     option_check_thread.start()
     
         if tick_symbol == 'NIFTY 50':
             # print(f"{tick_symbol} - {tick_time} - {ticks['close']} - {ticks['last']}")
@@ -611,12 +611,12 @@ def main():
                     livePrices.at[index, 'PrevClose'] = row['Close']
                 token_list.append(f"4.1!{row['Token']}")
         
-        ticker_dict = {'NIFTY':0.0, 'CNXBAN':0.0, 'NIFFIN':0.0}
-        for key,value in ticker_dict.items():
-            ticker_dict[key] = livePrices[livePrices['Code']==key]['Close'].values[0]
+        # ticker_dict = {'NIFTY':0.0, 'CNXBAN':0.0, 'NIFFIN':0.0}
+        # for key,value in ticker_dict.items():
+        #     ticker_dict[key] = livePrices[livePrices['Code']==key]['Close'].values[0]
         
-        for key,value in ticker_dict.items():
-            options_df = pd.concat([options_df,get_option_list(key, value)])
+        # for key,value in ticker_dict.items():
+        #     options_df = pd.concat([options_df,get_option_list(key, value)])
         
         while True:
             now = datetime.now()
