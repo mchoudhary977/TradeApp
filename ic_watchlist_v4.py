@@ -43,8 +43,8 @@ def get_option_list(ticker, underlying_px):
     filtered_dates = []    
     for date in sorted(pd.to_datetime(oc_df['EXPIRY']).unique()):
         if (date - np.datetime64(dt.datetime.now().date())) >= pd.Timedelta(days=0):           
-            filtered_dates.append(date.astype('datetime64[D]').astype(str))
-            # filtered_dates.append(str(date.date()))
+            # filtered_dates.append(date.astype('datetime64[D]').astype(str))
+            filtered_dates.append(str(date.date()))
     filtered_dates = filtered_dates[:2]
     # print(filtered_dates)
     oc_df = oc_df[oc_df['EXPIRY'].isin(filtered_dates)]
@@ -527,7 +527,7 @@ def on_ticks(ticks):
     tick_px = ticks['last']
     
     
-    print(f"{tick_symbol} - {tick_time} - {ticks['close']} - {ticks['last']}")
+    # print(f"{tick_symbol} - {tick_time} - {ticks['close']} - {ticks['last']}")
     if len(livePrices) > 0:
         livePrices.loc[livePrices['Token'] == tick_symbol, 'CandleTime'] = tick_time
         livePrices.loc[livePrices['Token'] == tick_symbol, 'Close'] = tick_px
@@ -541,31 +541,31 @@ def on_ticks(ticks):
                     'Open': ticks['open'], 'High': ticks['high'], 'Low': ticks['low']}
         livePrices=pd.DataFrame(new_row, index = [0])
     
-    # if len(options_df) > 0:
-    #     options_df.loc[options_df['CALL_TK'] == tick_symbol, 'CALL_CandleTime'] = tick_time
-    #     options_df.loc[options_df['PUT_TK'] == tick_symbol, 'PUT_CandleTime'] = tick_time
-    #     options_df.loc[options_df['CALL_TK'] == tick_symbol, 'CALL_PX'] = tick_px
-    #     options_df.loc[options_df['PUT_TK'] == tick_symbol, 'PUT_PX'] = tick_px
+    if len(options_df) > 0:
+        options_df.loc[options_df['CALL_TK'] == tick_symbol, 'CALL_CandleTime'] = tick_time
+        options_df.loc[options_df['PUT_TK'] == tick_symbol, 'PUT_CandleTime'] = tick_time
+        options_df.loc[options_df['CALL_TK'] == tick_symbol, 'CALL_PX'] = tick_px
+        options_df.loc[options_df['PUT_TK'] == tick_symbol, 'PUT_PX'] = tick_px
     
     # tick_symbol = 'NIFTY 50' tick_px = 20192.85
-    # if tick_symbol in ['NIFTY 50','NIFTY BANK','NIFTY FIN SERVICE']:
-    #     if tick_time.second == 10:
-    #         print('Check option levels')
-    #         option_check_thread = Thread(target=check_option_list,args=(tick_symbol,tick_px))
-    #         option_check_thread.start()
+    if tick_symbol in ['NIFTY 50','NIFTY BANK','NIFTY FIN SERVICE']:
+        if tick_time.second == 10:
+            print('Check option levels')
+            option_check_thread = Thread(target=check_option_list,args=(tick_symbol,tick_px))
+            option_check_thread.start()
     
-    #     if tick_symbol == 'NIFTY 50':
+        if tick_symbol == 'NIFTY 50':
             
-    #         if tick_time.hour == 9 and tick_time.minute == 17 and tick_time.second == 0:
-    #             print('Straddle Initiating')
-    #             straddle_thread = Thread(target=strat_straddle_buy,args=(tick_symbol,tick_px,tick_time))
-    #             straddle_thread.start()   
+            if tick_time.hour == 9 and tick_time.minute == 17 and tick_time.second == 0:
+                print('Straddle Initiating')
+                straddle_thread = Thread(target=strat_straddle_buy,args=(tick_symbol,tick_px,tick_time))
+                straddle_thread.start()   
         
-    #         strat_ema_tf = int(json.load(open('config.json', 'r'))['STRAT_EMA_TF'])
-    #         if tick_time.minute % strat_ema_tf == 0 and tick_time.second == 5:
-    #             print(f"EMA Strategy Execution - Timeframe - {strat_ema_tf}")
-    #             ema_strat_thread = Thread(target=generate_ema_signal,args=(tick_symbol, strat_ema_tf)) 
-    #             ema_strat_thread.start()
+            strat_ema_tf = int(json.load(open('config.json', 'r'))['STRAT_EMA_TF'])
+            if tick_time.minute % strat_ema_tf == 0 and tick_time.second == 5:
+                print(f"EMA Strategy Execution - Timeframe - {strat_ema_tf}")
+                ema_strat_thread = Thread(target=generate_ema_signal,args=(tick_symbol, strat_ema_tf)) 
+                ema_strat_thread.start()
                 
     #         if tick_time.minute % 5 == 0 and tick_time.second == 5:
     #             print('Calculate PCRs')
