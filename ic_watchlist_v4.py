@@ -180,6 +180,7 @@ def update_pcr():
 # symbol = 'NIFTY BANK' price = 45900.85
 def check_option_list(symbol, price):
     global options_df, livePrices, token_list
+    now = datetime.now()
     
     strike_step = sorted(options_df[(options_df['SYM_TK'] == symbol) & (options_df['STRIKE'] > price)]['STRIKE'].unique())[:2]
     strike_step = int(strike_step[1] - strike_step[0])
@@ -206,10 +207,10 @@ def check_option_list(symbol, price):
             token_list.remove(i)
             
     if len(list_to_subscribe) > 0:
-        print(f"Subscribe - {list_to_subscribe}")
+        print(f"{now.strftime('%Y-%m-%d %H:%M:%S')} - INFO - Options Subscribed - {list_to_subscribe}")
         ic_subscribeFeed(list_to_subscribe)
     if len(list_to_unsubscribe) > 0:
-        print(f"Unsubscribe - {list_to_unsubscribe}")
+        print(f"{now.strftime('%Y-%m-%d %H:%M:%S')} - INFO - Options UnSubscribed - {list_to_subscribe}")
         ic_unsubscribeFeed(list_to_unsubscribe)
 
 def generate_ema_signal(symbol, tf):
@@ -527,7 +528,7 @@ def on_ticks(ticks):
     tick_px = ticks['last']
     
     
-    print(f"{tick_symbol} - {tick_time} - {ticks['close']} - {ticks['last']}")
+    # print(f"{tick_symbol} - {tick_time} - {ticks['close']} - {ticks['last']}")
     if len(livePrices) > 0:
         livePrices.loc[livePrices['Token'] == tick_symbol, 'CandleTime'] = tick_time
         livePrices.loc[livePrices['Token'] == tick_symbol, 'Close'] = tick_px
@@ -541,18 +542,18 @@ def on_ticks(ticks):
                     'Open': ticks['open'], 'High': ticks['high'], 'Low': ticks['low']}
         livePrices=pd.DataFrame(new_row, index = [0])
     
-    # if len(options_df) > 0:
-    #     options_df.loc[options_df['CALL_TK'] == tick_symbol, 'CALL_CandleTime'] = tick_time
-    #     options_df.loc[options_df['PUT_TK'] == tick_symbol, 'PUT_CandleTime'] = tick_time
-    #     options_df.loc[options_df['CALL_TK'] == tick_symbol, 'CALL_PX'] = tick_px
-    #     options_df.loc[options_df['PUT_TK'] == tick_symbol, 'PUT_PX'] = tick_px
+    if len(options_df) > 0:
+        options_df.loc[options_df['CALL_TK'] == tick_symbol, 'CALL_CandleTime'] = tick_time
+        options_df.loc[options_df['PUT_TK'] == tick_symbol, 'PUT_CandleTime'] = tick_time
+        options_df.loc[options_df['CALL_TK'] == tick_symbol, 'CALL_PX'] = tick_px
+        options_df.loc[options_df['PUT_TK'] == tick_symbol, 'PUT_PX'] = tick_px
     
-    # # tick_symbol = 'NIFTY 50' tick_px = 20192.85
-    # if tick_symbol in ['NIFTY 50','NIFTY BANK','NIFTY FIN SERVICE']:
-    #     if tick_time.second == 10:
-    #         print('Check option levels')
-    #         option_check_thread = Thread(target=check_option_list,args=(tick_symbol,tick_px))
-    #         option_check_thread.start()
+    # tick_symbol = 'NIFTY 50' tick_px = 20192.85
+    if tick_symbol in ['NIFTY 50','NIFTY BANK','NIFTY FIN SERVICE']:
+        if tick_time.second == 10:
+            print('Check option levels')
+            option_check_thread = Thread(target=check_option_list,args=(tick_symbol,tick_px))
+            option_check_thread.start()
     
     #     if tick_symbol == 'NIFTY 50':
             
@@ -579,23 +580,22 @@ def on_ticks(ticks):
             
 def main():
     global options_df, livePrices, token_list, sio
+    now = datetime.now()
+    print(f"{now.strftime('%Y-%m-%d %H:%M:%S')} - INFO - Live Market Feed Process Start")
+    
     try:  
+        subscription_flag = 'N'
         data = ic_get_session_details()
         session_key = data['Success']['session_token']
     
         user_id, session_token = base64.b64decode(session_key.encode('ascii')).decode('ascii').split(":")
-        
-          
         
         auth = {"user": user_id, "token": session_token} 
         sio.connect("https://livestream.icicidirect.com", headers={"User-Agent":"python-socketio[client]/socket"}, 
                         auth=auth, transports="websocket", wait_timeout=3)
         channel_name = 'stock'
         tux_to_user_value = dict()
-        
-        now = datetime.now()
-        subscription_flag = 'N'
-        
+  
         try:
             if os.path.exists(watchlist_file) == False:
                 ic_update_watchlist(mode='C',num=0)
@@ -610,12 +610,12 @@ def main():
                     livePrices.at[index, 'PrevClose'] = row['Close']
                 token_list.append(f"4.1!{row['Token']}")
         
-        # ticker_dict = {'NIFTY':0.0, 'CNXBAN':0.0, 'NIFFIN':0.0}
-        # for key,value in ticker_dict.items():
-        #     ticker_dict[key] = livePrices[livePrices['Code']==key]['Close'].values[0]
+        ticker_dict = {'NIFTY':0.0, 'CNXBAN':0.0, 'NIFFIN':0.0}
+        for key,value in ticker_dict.items():
+            ticker_dict[key] = livePrices[livePrices['Code']==key]['Close'].values[0]
         
-        # for key,value in ticker_dict.items():
-        #     options_df = pd.concat([options_df,get_option_list(key, value)])
+        for key,value in ticker_dict.items():
+            options_df = pd.concat([options_df,get_option_list(key, value)])
         
         while True:
             now = datetime.now()
@@ -625,8 +625,8 @@ def main():
             if (now.time() >= time(9,14) and now.time() < time(15,35,0)):
                 if subscription_flag=='N':
                     if os.path.exists(watchlist_file):
-                        print('Subscribed')
                         # icici.user_id()
+                        print(f"{now.strftime('%Y-%m-%d %H:%M:%S')} - INFO - Symbols Subscribed - {token_list}")
                         sio.on(channel_name, on_ticks)
                         ic_subscribeFeed(token_list)
                         subscription_flag = 'Y'
@@ -640,6 +640,7 @@ def main():
                     strat_trades_df.to_csv(trade_file, index=False)
                    
             if (now.time() >= time(15,35) and subscription_flag=='Y'):
+                print(f"{now.strftime('%Y-%m-%d %H:%M:%S')} - INFO - Symbols UnSubscribed - {token_list}")
                 ic_unsubscribeFeed(token_list)
                 sio.emit("disconnect", "transport close")
                 subscription_flag='N'
@@ -653,7 +654,7 @@ def main():
     
     except Exception as e:
         err = str(e)
-        print(f"Live Streaming Error - {err}")
+        print(f"{now.strftime('%Y-%m-%d %H:%M:%S')} - ERROR - Live Stream Error - {err}")
         write_log('ic_watchlist','e',f"{err}")  
         pass
 
