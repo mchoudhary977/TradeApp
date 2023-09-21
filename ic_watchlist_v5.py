@@ -334,8 +334,8 @@ def generate_ema_signal(symbol, tf):
         pass
 
 # ticks = {'ltt':'Mon Sep 20 15:20:10 2023','symbol':'4.1!NIFTY 50', 'last':19967}
-# tick_time = datetime.strptime('Mon Sep 20 15:02:10 2023'[4:25], "%b %d %H:%M:%S %Y")
-# last_px = 19884.35
+# tick_time = datetime.strptime('Mon Sep 20 15:22:10 2023'[4:25], "%b %d %H:%M:%S %Y")
+# last_px = 19897.35
 # ema_signal['active'] = 'Y'
 # check_ema_signal,args=(tick_symbol, tick_px, tick_time)) 
 def check_ema_signal(symbol, last_px, tick_time):
@@ -406,16 +406,16 @@ def check_ema_signal(symbol, last_px, tick_time):
             qty = 1
             side = 'buy'
             if live_order == 'Y':
-                # trade = dh_post_exchange_order(ord_type='bo', exchange='FNO',
-                #                             security_id=sec_id, side=side,
-                #                             qty=qty, entry_px=0, sl_px=0, trigger_px=0,
-                #                             tg_pts=tg_pts, sl_pts=sl_pts,
-                #                             amo=True, prod_type='')
-                trade = dh_post_exchange_order(ord_type='mkt', exchange='FNO',
+                trade = dh_post_exchange_order(ord_type='bo', exchange='FNO',
                                             security_id=sec_id, side=side,
                                             qty=qty, entry_px=0, sl_px=0, trigger_px=0,
-                                            tg_pts=0, sl_pts=0,
-                                            amo=True, prod_type='')
+                                            tg_pts=tg_pts, sl_pts=sl_pts,
+                                            amo=False, prod_type='')
+                # trade = dh_post_exchange_order(ord_type='mkt', exchange='FNO',
+                #                             security_id=sec_id, side=side,
+                #                             qty=qty, entry_px=0, sl_px=0, trigger_px=0,
+                #                             tg_pts=0, sl_pts=0,
+                #                             amo=False, prod_type='')
                 if trade['status'].lower() == 'success':
                     msg['data'] = msg['data'] + f"=> Order Placed [ OrderId - {trade['data']['orderId']} | OrderStatus - {trade['data']['orderStatus']} ]"
                     msg['status'] = 'success'
@@ -472,6 +472,123 @@ def check_ema_signal(symbol, last_px, tick_time):
         msg['status'] = 'success'
         msg['data'] = 'Condition Not Matched. Returning...'
         return msg
+
+# ticks = {'ltt':'Mon Sep 21 09:17:00 2023','symbol':'4.1!NIFTY 50', 'last': 19825.35}
+# symbol = 'NIFTY 50' last_px = 19825.35 signal_time = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
+def strat_straddle_buy(symbol,last_px,signal_time):
+    global livePrices, options_df, strat_trades_df, token_list, icici_scrips, watchlist_file, options_file, oi_pcr_file, trade_file, ema_signal
+    now = datetime.now()
+    try:
+        funct_name = 'strat_straddle_buy'.upper()
+        msg = {'status':'failure', 'remarks':'', 'data':''}
+
+        live_order = json.load(open('config.json', 'r'))['LIVE_ORDER']
+        msg['data'] = 'Straddle Strategy'
+        if symbol == 'NIFTY 50':
+            ticker = 'NIFTY'
+            num = int(json.load(open('config.json', 'r'))[symbol]['OPT#'])
+            exp_week = int(json.load(open('config.json', 'r'))['EXP_WEEK'])
+            call_strike = int(json.load(open('config.json', 'r'))[symbol]['CALL_STRIKE'])
+            call_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='CE', duration=exp_week)
+            call_opt = call_opt[call_opt['STRIKE'] == call_strike]
+            # call_opt = call_opt.iloc[num]
+            call_sec_id = call_opt['TK']
+            call_sec_name = call_opt['CD']
+
+            put_strike = int(json.load(open('config.json', 'r'))[symbol]['PUT_STRIKE'])
+            put_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='PE', duration=exp_week)
+            put_opt = put_opt[put_opt['STRIKE'] == put_strike]
+            # put_opt = put_opt.iloc[num]
+            put_sec_id = put_opt['TK']
+            put_sec_name = put_opt['CD']
+
+            trade = {}
+            sl_pts = 10
+            tg_pts = 16.5
+            qty = 1
+            side = 'buy'
+
+            if live_order == 'Y':
+                ord_type = 'bo'
+                call_trade = dh_post_exchange_order(ord_type=ord_type, exchange='FNO',
+                                           security_id=call_sec_id, side=side,
+                                           qty=qty, entry_px=0, sl_px=0, trigger_px=0,
+                                           tg_pts=tg_pts, sl_pts=sl_pts,
+                                           amo=False, prod_type='')
+                put_trade = dh_post_exchange_order(ord_type=ord_type, exchange='FNO',
+                                           security_id=put_sec_id, side=side,
+                                           qty=qty, entry_px=0, sl_px=0, trigger_px=0,
+                                           tg_pts=tg_pts, sl_pts=sl_pts,
+                                           amo=False, prod_type='')
+
+                if call_trade['status'].lower() == 'success':
+                    signal_row = {'Strategy':'Straddle CALL',
+                                  'Symbol': symbol,
+                                  'Signal': 'green',
+                                  'Entry': last_px,
+                                  'SymSL': 0.0,
+                                  'Qty': 1,
+                                  'DervName': call_sec_name.values[0],
+                                  'DervID': call_sec_id.values[0],
+                                  'DervPx': 0.0,
+                                  'EntryID': call_trade['data']['orderId'],
+                                  'EntryPx': 0.0,
+                                  'DervSL': 0.0,
+                                  'ExitID': ' ',
+                                  'ExitPx': 0.0,
+                                  'PnL': 0.0,
+                                  'CreationTime': now.strftime('%Y-%m-%d %H:%M:%S'), 
+                                  'ExpirationTime': 'NA',
+                                  'Active': 'Y',
+                                  'Status': ' '
+                                  }
+                    # print(signal_row)
+                    
+                    strat_trades_df = pd.concat([strat_trades_df,pd.DataFrame(signal_row, index=[0])], ignore_index=True)
+                    msg['data'] = msg['data'] + f"=> CALL Order Placed - {call_sec_name} - [ OrderId - {call_trade['data']['orderId']} | OrderStatus - {call_trade['data']['orderStatus']} ] "
+                else:
+                    msg['data'] = msg['data'] + f"=> CALL Order Failed - {call_sec_name} - {call_trade['remarks']} "
+                if put_trade['status'].lower() == 'success':
+                    signal_row = {'Strategy':'Straddle PUT',
+                                  'Symbol': symbol,
+                                  'Signal': 'green',
+                                  'Entry': last_px,
+                                  'SymSL': 0.0,
+                                  'Qty': 1,
+                                  'DervName': put_sec_name.values[0],
+                                  'DervID': put_sec_id.values[0],
+                                  'DervPx': 0.0,
+                                  'EntryID': put_trade['data']['orderId'],
+                                  'EntryPx': 0.0,
+                                  'DervSL': 0.0,
+                                  'ExitID': ' ',
+                                  'ExitPx': 0.0,
+                                  'PnL': 0.0,
+                                  'CreationTime': now.strftime('%Y-%m-%d %H:%M:%S'), 
+                                  'ExpirationTime': 'NA',
+                                  'Active': 'Y',
+                                  'Status': ' '
+                                  }    
+                    # print(signal_row)
+                    strat_trades_df = pd.concat([strat_trades_df,pd.DataFrame(signal_row, index=[0])], ignore_index=True)
+                    msg['data'] = msg['data'] + f"=> PUT Order Placed - {put_sec_name} - [ OrderId - {put_trade['data']['orderId']} | OrderStatus - {put_trade['data']['orderStatus']} ] "
+                else:
+                    msg['data'] = msg['data'] + f"=> {PUT} Order Failed - {put_sec_name} - {put_trade['remarks']} "
+
+                if call_trade['status'].lower() == 'success' and put_trade['status'].lower() == 'success':
+                    msg['status'] = 'success'
+
+            else:
+                msg['status'] = 'success'
+                msg['data'] = msg['data'] + f"=> Live Order not enabled, place manually! - {call_sec_name} - {put_sec_name} "
+
+            send_whatsapp_msg(f"Straddle Alert - {signal_time.strftime('%Y-%m-%d %H:%M:%S')}", msg['data'])
+
+    except Exception as e:
+        err = str(e)
+        # print(err)
+        msg['remarks'] = funct_name + ' - ' + msg['remarks'] + f"Order Placement Error - {err} "
+        send_whatsapp_msg(f"Straddle Failure Alert - {signal_time.strftime('%Y-%m-%d %H:%M:%S')}", msg['remarks'])
     
 # Subscribe ICICI Tokens
 def ic_subscribeFeed(tokens):
@@ -486,7 +603,7 @@ def ic_unsubscribeFeed(tokens):
         # st=icici.unsubscribe_feeds(token)
         print(st)
 
-# ticks = {'ltt':'Mon Sep 20 15:22:00 2023','symbol':'4.1!NIFTY 50', 'last': 19910.35}
+# ticks = {'ltt':'Mon Sep 21 09:17:00 2023','symbol':'4.1!NIFTY 50', 'last': 19825.35}
 # On Ticks function
 def on_ticks(ticks):
     global livePrices, options_df, strat_trades_df, token_list, icici_scrips, watchlist_file, options_file, oi_pcr_file, trade_file, ema_signal
