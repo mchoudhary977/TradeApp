@@ -368,8 +368,9 @@ def check_ema_signal(symbol, last_px, tick_time):
         opt = ic_option_chain(ticker, underlying_price=last_px, option_type=opt_type, duration=exp_week)
         num = int(json.load(open('config.json', 'r'))[symbol]['OPT#'])
         opt = opt.iloc[num]
-        sec_id = opt['TK']
-        sec_name = opt['CD']
+        sec_id = opt['TK'].values[0]
+        sec_name = opt['CD'].values[0]
+        lot_size = opt['LS'].values[0]
         exit_msg = ''
         exit_flag = 'N'
         msg['data'] = msg['data'] + f"-> [{sec_id}] {sec_name} "
@@ -447,7 +448,7 @@ def check_ema_signal(symbol, last_px, tick_time):
                           'Signal': ema_signal['signal'],
                           'Entry': ema_signal['entry'],
                           'SymSL': round(ema_signal['low'],2) if ema_signal['signal'] == 'green' else round(ema_signal['high'],2),
-                          'Qty': 1,
+                          'Qty': (qty * lot_size),
                           'DervName': sec_name,
                           'DervID': sec_id,
                           'DervPx': 0.0,
@@ -473,8 +474,32 @@ def check_ema_signal(symbol, last_px, tick_time):
         msg['data'] = 'Condition Not Matched. Returning...'
         return msg
 
-# ticks = {'ltt':'Mon Sep 21 09:17:00 2023','symbol':'4.1!NIFTY 50', 'last': 19825.35}
-# symbol = 'NIFTY 50' last_px = 19825.35 signal_time = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
+def get_entry_option(ticker, underlying_price, option_type):
+    global livePrices, options_df, strat_trades_df, token_list, icici_scrips, watchlist_file, options_file, oi_pcr_file, trade_file, ema_signal
+    now = datetime.now() # - timedelta(1)
+    exp_week = int(json.load(open('config.json', 'r'))['EXP_WEEK'])
+    custom_strike = json.load(open('config.json', 'r'))['CUST_STRIKE']
+    opt = ic_option_chain(ticker, underlying_price=last_px, option_type=option_type, duration=exp_week)
+    atm_strike = opt[opt['ATM']=='Y']['STRIKE'].values[0]
+    lot_size = opt['LS'].values[0]
+    exp_date = datetime.strptime(opt['EXPIRY'].values[0], '%Y-%m-%d')
+    business_days = 0
+    while now <= exp_date:
+        # Check if the current day is not a weekend day
+        if now.weekday() not in [5,6]:
+            business_days += 1
+        now += timedelta(days=1)
+    
+    sel_strike = (atm_strike + (lot_size * int(business_days/2))) if option_type == 'CE' else (atm_strike - (lot_size * int(business_days/2)))
+    
+    if custom_strike == 'Y':
+        sel_strike = int(json.load(open('config.json', 'r'))[symbol]['CALL_STRIKE']) if option_type == 'CE' else int(json.load(open('config.json', 'r'))[symbol]['PUT_STRIKE'])
+    
+    return opt[opt['STRIKE']==sel_strike]
+
+
+# ticks = {'ltt':'Sat Sep 23 09:17:00 2023','symbol':'4.1!NIFTY 50', 'last': 19825.35}
+# symbol = 'NIFTY 50' last_px = 19674.25 signal_time = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
 def strat_straddle_buy(symbol,last_px,signal_time):
     global livePrices, options_df, strat_trades_df, token_list, icici_scrips, watchlist_file, options_file, oi_pcr_file, trade_file, ema_signal
     now = datetime.now()
@@ -486,21 +511,15 @@ def strat_straddle_buy(symbol,last_px,signal_time):
         msg['data'] = 'Straddle Strategy'
         if symbol == 'NIFTY 50':
             ticker = 'NIFTY'
-            num = int(json.load(open('config.json', 'r'))[symbol]['OPT#'])
-            exp_week = int(json.load(open('config.json', 'r'))['EXP_WEEK'])
-            call_strike = int(json.load(open('config.json', 'r'))[symbol]['CALL_STRIKE'])
-            call_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='CE', duration=exp_week)
-            call_opt = call_opt[call_opt['STRIKE'] == call_strike]
-            # call_opt = call_opt.iloc[num]
-            call_sec_id = call_opt['TK']
-            call_sec_name = call_opt['CD']
+            call_opt = get_entry_option(ticker, underlying_price=last_px, option_type='CE')
+            call_sec_id = call_opt['TK'].values[0]
+            call_sec_name = call_opt['CD'].values[0]
+            
+            lot_size = call_opt['LS'].values[0]
 
-            put_strike = int(json.load(open('config.json', 'r'))[symbol]['PUT_STRIKE'])
-            put_opt = ic_option_chain(ticker, underlying_price=last_px, option_type='PE', duration=exp_week)
-            put_opt = put_opt[put_opt['STRIKE'] == put_strike]
-            # put_opt = put_opt.iloc[num]
-            put_sec_id = put_opt['TK']
-            put_sec_name = put_opt['CD']
+            put_opt = get_entry_option(ticker, underlying_price=last_px, option_type='PE')
+            put_sec_id = put_opt['TK'].values[0]
+            put_sec_name = put_opt['CD'].values[0]
 
             trade = {}
             sl_pts = 10
@@ -510,26 +529,27 @@ def strat_straddle_buy(symbol,last_px,signal_time):
 
             if live_order == 'Y':
                 ord_type = 'bo'
+                amo = False
                 call_trade = dh_post_exchange_order(ord_type=ord_type, exchange='FNO',
                                            security_id=call_sec_id, side=side,
                                            qty=qty, entry_px=0, sl_px=0, trigger_px=0,
                                            tg_pts=tg_pts, sl_pts=sl_pts,
-                                           amo=False, prod_type='')
+                                           amo=amo, prod_type='')
                 put_trade = dh_post_exchange_order(ord_type=ord_type, exchange='FNO',
                                            security_id=put_sec_id, side=side,
                                            qty=qty, entry_px=0, sl_px=0, trigger_px=0,
                                            tg_pts=tg_pts, sl_pts=sl_pts,
-                                           amo=False, prod_type='')
+                                           amo=amo, prod_type='')
 
                 if call_trade['status'].lower() == 'success':
-                    signal_row = {'Strategy':'Straddle CALL',
+                    signal_row = {'Strategy':'Straddle',
                                   'Symbol': symbol,
                                   'Signal': 'green',
                                   'Entry': last_px,
                                   'SymSL': 0.0,
-                                  'Qty': 1,
-                                  'DervName': call_sec_name.values[0],
-                                  'DervID': call_sec_id.values[0],
+                                  'Qty': (qty * lot_size),
+                                  'DervName': call_sec_name,
+                                  'DervID': call_sec_id,
                                   'DervPx': 0.0,
                                   'EntryID': call_trade['data']['orderId'],
                                   'EntryPx': 0.0,
@@ -545,18 +565,18 @@ def strat_straddle_buy(symbol,last_px,signal_time):
                     # print(signal_row)
                     
                     strat_trades_df = pd.concat([strat_trades_df,pd.DataFrame(signal_row, index=[0])], ignore_index=True)
-                    msg['data'] = msg['data'] + f"=> CALL Order Placed - {call_sec_name} - [ OrderId - {call_trade['data']['orderId']} | OrderStatus - {call_trade['data']['orderStatus']} ] "
+                    msg['data'] = msg['data'] + f" => CALL Order Placed - {call_sec_name} - [ OrderId - {call_trade['data']['orderId']} | OrderStatus - {call_trade['data']['orderStatus']} ] "
                 else:
-                    msg['data'] = msg['data'] + f"=> CALL Order Failed - {call_sec_name} - {call_trade['remarks']} "
+                    msg['data'] = msg['data'] + f" => CALL Order Failed - {call_sec_name} - {call_trade['remarks']} "
                 if put_trade['status'].lower() == 'success':
-                    signal_row = {'Strategy':'Straddle PUT',
+                    signal_row = {'Strategy':'Straddle',
                                   'Symbol': symbol,
-                                  'Signal': 'green',
+                                  'Signal': 'red',
                                   'Entry': last_px,
                                   'SymSL': 0.0,
-                                  'Qty': 1,
-                                  'DervName': put_sec_name.values[0],
-                                  'DervID': put_sec_id.values[0],
+                                  'Qty': (qty * lot_size),
+                                  'DervName': put_sec_name,
+                                  'DervID': put_sec_id,
                                   'DervPx': 0.0,
                                   'EntryID': put_trade['data']['orderId'],
                                   'EntryPx': 0.0,
@@ -573,7 +593,7 @@ def strat_straddle_buy(symbol,last_px,signal_time):
                     strat_trades_df = pd.concat([strat_trades_df,pd.DataFrame(signal_row, index=[0])], ignore_index=True)
                     msg['data'] = msg['data'] + f"=> PUT Order Placed - {put_sec_name} - [ OrderId - {put_trade['data']['orderId']} | OrderStatus - {put_trade['data']['orderStatus']} ] "
                 else:
-                    msg['data'] = msg['data'] + f"=> {PUT} Order Failed - {put_sec_name} - {put_trade['remarks']} "
+                    msg['data'] = msg['data'] + f"=> PUT Order Failed - {put_sec_name} - {put_trade['remarks']} "
 
                 if call_trade['status'].lower() == 'success' and put_trade['status'].lower() == 'success':
                     msg['status'] = 'success'
@@ -589,7 +609,35 @@ def strat_straddle_buy(symbol,last_px,signal_time):
         # print(err)
         msg['remarks'] = funct_name + ' - ' + msg['remarks'] + f"Order Placement Error - {err} "
         send_whatsapp_msg(f"Straddle Failure Alert - {signal_time.strftime('%Y-%m-%d %H:%M:%S')}", msg['remarks'])
+
     
+def check_strategy(tick_time):
+    global livePrices, options_df, strat_trades_df, token_list, icici_scrips, watchlist_file, options_file, oi_pcr_file, trade_file, ema_signal
+    now = datetime.now()
+    
+    if (len(strat_trades_df[strat_trades_df['EntryPx'] <= 0][strat_trades_df['Active']=='Y']) > 0) or (len(strat_trades_df[strat_trades_df['Active']=='Y']) > 0 and tick_time.minute % 5 == 0 and tick_time.second == 10):
+        tm.sleep(2)
+        od = dh_get_orders()['data']
+        od = od[od['orderStatus']=='TRADED']
+        
+        if len(od) > 0:
+            for index,row in strat_trades_df.iterrows():          
+                if len(od[od['orderId'] == row['EntryID']]) > 0:
+                    strat_trades_df.loc[index,'EntryPx'] = od[od['orderId'] == row['EntryID']]['price'].values[0]
+                    print(od[od['orderId'] == row['EntryID']]['price'].values[0])
+                if len(od[od['orderId'] == row['ExitID']]) > 0:
+                    strat_trades_df.loc[index,'ExitPx'] = od[od['orderId'] == row['ExitID']]['price'].values[0]
+                    print(od[od['orderId'] == row['ExitID']]['price'].values[0])
+    
+    # check straddle strategy
+    straddle_df = strat_trades_df[strat_trades_df['Strategy']=='Straddle'][strat_trades_df['Active']=='Y']   
+    pnl = 0
+    for index,row in straddle_df.iterrows():
+        if row['DervPx'] > 0:
+            pnl = pnl + (row['DervPx'] - row['EntryPx']) * row['Qty']            
+    if pnl > 325:
+        print('Update Order')
+      
 # Subscribe ICICI Tokens
 def ic_subscribeFeed(tokens):
     for token in tokens:
@@ -631,7 +679,7 @@ def on_ticks(ticks):
     if tick_symbol in ['NIFTY 50','NIFTY BANK','NIFTY FIN SERVICE']:
         if tick_symbol == 'NIFTY 50':
             # Straddle buy strategy for Nifty to initiate at 9:17 AM
-            if tick_time.hour == 9 and tick_time.minute == 17 and tick_time.second == 0:
+            if tick_time.hour == 9 and tick_time.minute == 16 and tick_time.second == 0:
                 # print('Straddle Initiating')
                 straddle_thread = Thread(target=strat_straddle_buy,args=(tick_symbol,tick_px,tick_time))
                 straddle_thread.start()  
@@ -644,6 +692,9 @@ def on_ticks(ticks):
             
             monitor_ema_thread = Thread(target=check_ema_signal,args=(tick_symbol, tick_px, tick_time)) 
             monitor_ema_thread.start()
+            
+            monitor_thread = Thread(target=check_strategy,args=(tick_time))
+            monitor_thread.start()
     
     if len(strat_trades_df) > 0:
         strat_trades_df.low[strat_trades_df['DervID'] == tick_symbol, 'DervPx'] = tick_px
