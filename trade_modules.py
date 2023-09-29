@@ -17,7 +17,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from pyotp import TOTP
 import subprocess
 import sqlite3
-import platform 
+import platform
 import os
 
 # Global Variables
@@ -35,60 +35,60 @@ icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY
 # icici = BreezeConnect(api_key = getConfig('ICICI_API_KEY'))
 livePrices = pd.DataFrame()
 
-# ICICI Auto Logon 
+# ICICI Auto Logon
 def icici_autologon():
     # icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
     icici_session_url = json.load(open('config.json', 'r'))['ICICI_SESSION_URL']
-    
+
     service = webdriver.chrome.service.Service('./chromedriver.exe' if platform.system()=='Windows' else './chromedriver')
     service.start()
-    
+
     options = webdriver.ChromeOptions()
     options.add_argument("--headless=new")
-    
+
     driver = webdriver.Chrome(options=options)
     driver.get(icici_session_url)
     driver.implicitly_wait(10)
     username = driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[1]/input')
     password = driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[3]/div/input')
-    
+
     icici_uname = json.load(open('config.json', 'r'))['ICICI_USER_NAME']
     icici_pwd = json.load(open('config.json', 'r'))['ICICI_PWD']
     username.send_keys(icici_uname)
     password.send_keys(icici_pwd)
-    
+
     driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[4]/div/input').click()
     driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[5]/input').click()
-    
+
     tm.sleep(10)
     totp = TOTP(json.load(open('config.json', 'r'))['ICICI_GOOGLE_AUTHENTICATOR'])
     token = totp.now()
-    
+
     t1 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[1]/input')
     t2 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[2]/input')
     t3 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[3]/input')
     t4 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[4]/input')
     t5 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[5]/input')
     t6 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[6]/input')
-    
+
     t1.send_keys(token[0])
     t2.send_keys(token[1])
     t3.send_keys(token[2])
     t4.send_keys(token[3])
     t5.send_keys(token[4])
     t6.send_keys(token[5])
-    
+
     driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[4]/input[1]').click()
-    
+
     tm.sleep(10)
-    
+
     session_id = driver.current_url.split('apisession=')[1]
     json_data = json.load(open('config.json', 'r'))
     json_data['ICICI_API_SESSION'] = session_id
     with open('config.json', 'w') as the_file:
         json.dump(json_data, the_file, indent=4)
     driver.quit()
-    
+
     return session_id
 
 # Create ICICI Session Function
@@ -114,7 +114,7 @@ def createICICISession(icici):
                 # subprocess.call([script_path])
                 st=createICICISession(icici)
                 return st
-                
+
             else:
                 return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {str(e)} - Update ICICI Session Token - {getConfig("ICICI_SESSION_URL")}'}
             # send_whatsapp_msg(mtitle='ERROR',mtext=f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - Update ICICI Session Token - {readConfig("ICICI_SESSION_URL")}')
@@ -368,10 +368,10 @@ def send_whatsapp_msg(mtitle='TRADE-APP', mtext='Welcome to TradeApp!'):
 
 def ic_get_sym_price(symbol,exchange_code='NSE',interval = "1minute",product_type="Cash"):
     instrument_df = pd.read_csv('icici.csv')
-    sym = instrument_df[instrument_df['CD']==symbol][['NS','EC','SG','TK','CD','LS']]  
+    sym = instrument_df[instrument_df['CD']==symbol][['NS','EC','SG','TK','CD','LS']]
     sym.rename(columns={'NS':'SymbolName','EC':'ExchangeCode','SG':'Segment',
-                        'TK':'Token','CD':'Code','LS':'LotSize'}, inplace=True) 
-    
+                        'TK':'Token','CD':'Code','LS':'LotSize'}, inplace=True)
+
     if icici.user_id is None:
         st = createICICISession(icici)
         if st['status'] != 'SUCCESS':
@@ -388,7 +388,7 @@ def ic_get_sym_price(symbol,exchange_code='NSE',interval = "1minute",product_typ
     from_date = from_date.strftime('%Y-%m-%d')+'T00:00:00.000Z'
     to_date = datetime.now().strftime('%Y-%m-%d')+'T23:59:59.000Z'
     change = 'N'
-    i=0   
+    i=0
 
     response = icici.get_historical_data_v2(interval=interval,
                  from_date= from_date,
@@ -405,9 +405,10 @@ def ic_get_sym_price(symbol,exchange_code='NSE',interval = "1minute",product_typ
             data['datetime'] = data['datetime'].apply(lambda x: dt.datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
             max_timestamp = data.groupby(data['datetime'].dt.date)['datetime'].max()[-2]
             data = data[data['datetime']>=max_timestamp]
-            
+
             data = data.set_index('datetime')
-            data=data.resample('1D').agg({'date':'last','stock_code':'first','open': 'first','high':'max','low':'min','close':'last'}).dropna()               
+            data=data.resample('1D').agg({'date':'last','stock_code':'first','open': 'first','high':'max','low':'min','close':'last'}).dropna()
+
             sym['Open']=data.iloc[-1]['open']
             sym['High']=data.iloc[-1]['high']
             sym['Low']=data.iloc[-1]['low']
@@ -442,18 +443,18 @@ def ic_get_watchlist(mode='R'):
         for symbol in symbol_list:
             sym=ic_get_sym_price(symbol)
             wl_df = pd.concat([wl_df,sym],ignore_index=True)
-        wl_df.to_csv('WatchList.csv',index=False)       
-            
+        wl_df.to_csv('WatchList.csv',index=False)
+
     elif mode == 'I':  # Insert
         wl_df = pd.read_csv('WatchList.csv')
         wl = list(wl_df['Code'].values)
         inserted_symbols = [element for element in symbol_list if element not in wl]
-        
+
         if len(inserted_symbols) > 0:
             for i in inserted_symbols:
                 sym=ic_get_sym_price(symbol)
                 wl_df = pd.concat([wl_df,sym],ignore_index=True)
-            wl_df.to_csv('WatchList.csv',index=False) 
+            wl_df.to_csv('WatchList.csv',index=False)
     elif mode == 'D':  # Delete
         wl_df = pd.read_csv('WatchList.csv')
         wl = list(wl_df['Code'].values)
@@ -465,13 +466,13 @@ def ic_get_watchlist(mode='R'):
         if os.path.exists('WatchList.csv'):
             wl_df = pd.read_csv('WatchList.csv')
         else:
-            wl_df = get_watchlist('C')  
+            wl_df = get_watchlist('C')
         wl_df = wl_df.to_dict(orient='records')
     elif mode == 'N':  # NormalRead
         if os.path.exists('WatchList.csv'):
             wl_df = pd.read_csv('WatchList.csv')
         else:
-            wl_df = get_watchlist('C')  
+            wl_df = get_watchlist('C')
     resultDict['WatchList-DF'] = wl_df
     return resultDict
 

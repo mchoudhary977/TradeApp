@@ -54,7 +54,7 @@ def get_data():
         if os.path.exists(trade_file) == True:
             wl = pd.read_csv(watchlist_file)
     except pd.errors.EmptyDataError:
-        wl = pd.DataFrame(columns=['Error in getting Watchlist, please check!'])    
+        wl = pd.DataFrame(columns=['Error in getting Watchlist, please check!'])
     resultDict['WatchList'] = wl
 
     # Trades Details
@@ -66,7 +66,7 @@ def get_data():
             trades = t1 if len(t1) > 0 else pd.DataFrame(columns=['No Trades for the day!'])
     except pd.errors.EmptyDataError:
         trades = pd.DataFrame(columns=['No Trades for the day!'])
-        
+
     trades = trades.to_html(index=False)
     trades = trades.replace('<table border="1" class="dataframe">','<table border="1" class="dataframe" style="border-collapse: collapse; width: 100%;">')
     trades = trades.replace('<thead>','<thead style="background-color: #00008B; color: white;">')
@@ -74,7 +74,7 @@ def get_data():
     trades = trades.replace("<th>",'<th style="border: 1px solid black; width: 100%; white-space: nowrap;">')
     trades = trades.replace("<td>",'<td style="border: 1px solid black; width: 100%; white-space: nowrap;">')
     resultDict['Trades'] = trades
-    
+
     resultDict['Positions'] = get_position_details()
     # trade = resultDict['Trades'].to_html(index=False)
 
@@ -378,7 +378,7 @@ def get_order_details():
     orders = orders.replace("<td>",'<td style="border: 1px solid black; width: 100%; white-space: nowrap;">')
 
     resultDict['Orders'] = orders
-    
+
     return render_template('orders.html', tdate=datetime.now().strftime("%B %d, %Y %H:%M"),
                            resultDict=resultDict)
 
@@ -413,7 +413,7 @@ def get_position_details():
     else:
         no_positions = 'Position Information Not Returned...'
         positions = pd.DataFrame(columns=[no_positions])
-    
+
     positions = positions.to_html(index=False)
     positions = positions.replace('<table border="1" class="dataframe">','<table border="1" class="dataframe" style="border-collapse: collapse; width: 100%;">')
     positions = positions.replace('<thead>','<thead style="background-color: #00008B; color: white;">')
@@ -422,7 +422,7 @@ def get_position_details():
     positions = positions.replace("<td>",'<td style="border: 1px solid black; width: 100%; white-space: nowrap;">')
 
     # resultDict['Positions'] = positions
-    
+
     return positions
     # return render_template('positions.html', tdate=datetime.now().strftime("%B %d, %Y %H:%M"),
     #                        resultDict=resultDict)

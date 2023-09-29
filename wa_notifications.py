@@ -1,4 +1,4 @@
-import json 
+import json
 import requests
 import http.client
 
@@ -10,10 +10,10 @@ def send_whatsapp_msg(mtitle='TRADE-APP', mtext='Welcome to TradeApp!'):
         'Authorization': tkn,
         'Content-Type': 'application/json'
     }
-    # phone_list = ['919673843177','917721841919']
-    phone_list = ['919673843177']
+    phone_list = ['919673843177','917721841919']
+    # phone_list = ['919673843177']
     # payload = {"messaging_product"1: "whatsapp", "to": "919673843177", "type": "template", "template": { "name": "hello_world", "language": { "code": "en_US" } } }
-    
+
     for i in phone_list:
         payload = {
             "messaging_product":"whatsapp",
@@ -47,10 +47,10 @@ def send_whatsapp_msg(mtitle='TRADE-APP', mtext='Welcome to TradeApp!'):
                     ]
                 }
             }
-    
+
         # Send the POST request
         response = requests.post(url, headers=headers, json=payload)
-    
+
         # Check the response
         if response.status_code != 200:
             return {'status':'ERROR','msg':f"{i} - {response.text}"}

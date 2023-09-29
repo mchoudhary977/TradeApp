@@ -1,5 +1,5 @@
 import logging
-import datetime as dt 
+import datetime as dt
 
 log_file = f"logs/trade_app_{dt.datetime.now().strftime('%Y%m%d')}.log"
 # log_file = f"trade_app_{dt.datetime.now().strftime('%Y%m%d')}.log"
@@ -9,7 +9,7 @@ logging.basicConfig(filename=log_file,level=logging.WARN, format='%(asctime)s - 
 
 def printLog(log_type, log_msg):
     now = dt.datetime.now()
-    log = 'INFO' if log_type == 'i' else ('ERROR' if log_type == 'e' else 'DEBUG')    
+    log = 'INFO' if log_type == 'i' else ('ERROR' if log_type == 'e' else 'DEBUG')
     print(f"{now.strftime('%Y-%m-%d %H:%M:%S')} - {log} - {log_msg}")
     message = f"{log_msg}"
     if log_type == 'd':
@@ -22,6 +22,6 @@ def printLog(log_type, log_msg):
         logging.error(message)
     elif log_type == 'c':
         logging.critical(message)
-    
-        
+
+
 # write_log('abc.xy','i','logging error')

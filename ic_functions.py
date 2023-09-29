@@ -10,71 +10,71 @@ from selenium.webdriver.common.by import By
 # from selenium.webdriver.support.ui import WebDriverWait
 from pyotp import TOTP
 import json
-import platform 
+import platform
 import time as tm
 import datetime as dt
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
-import os 
+import os
 
 icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
 
 
-# ICICI Auto Logon 
+# ICICI Auto Logon
 def ic_autologon():
     # icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
     icici_session_url = json.load(open('config.json', 'r'))['ICICI_SESSION_URL']
-    
+
     service = webdriver.chrome.service.Service('./chromedriver.exe' if platform.system()=='Windows' else './chromedriver')
     service.start()
-    
+
     options = webdriver.ChromeOptions()
     options.add_argument("--headless=new")
-    
+
     driver = webdriver.Chrome(options=options)
     driver.get(icici_session_url)
     driver.implicitly_wait(10)
     username = driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[1]/input')
     password = driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[3]/div/input')
-    
+
     icici_uname = json.load(open('config.json', 'r'))['ICICI_USER_NAME']
     icici_pwd = json.load(open('config.json', 'r'))['ICICI_PWD']
     username.send_keys(icici_uname)
     password.send_keys(icici_pwd)
-    
+
     driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[4]/div/input').click()
     driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[5]/input').click()
-    
+
     tm.sleep(10)
     totp = TOTP(json.load(open('config.json', 'r'))['ICICI_GOOGLE_AUTHENTICATOR'])
     token = totp.now()
-    
+
     t1 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[1]/input')
     t2 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[2]/input')
     t3 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[3]/input')
     t4 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[4]/input')
     t5 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[5]/input')
     t6 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[6]/input')
-    
+
     t1.send_keys(token[0])
     t2.send_keys(token[1])
     t3.send_keys(token[2])
     t4.send_keys(token[3])
     t5.send_keys(token[4])
     t6.send_keys(token[5])
-    
+
     driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[4]/input[1]').click()
-    
+
     tm.sleep(10)
-    
+
     session_id = driver.current_url.split('apisession=')[1]
     json_data = json.load(open('config.json', 'r'))
     json_data['ICICI_API_SESSION'] = session_id
     with open('config.json', 'w') as the_file:
         json.dump(json_data, the_file, indent=4)
     driver.quit()
-    
+
     return session_id
 
 
@@ -107,14 +107,14 @@ def ic_tokenLookup(symbol_list):
     if icici.user_id is None:
         st = ic_create_session(icici)
         if st['status'] != 'SUCCESS':
-            return{'status':'FAILURE','data':'Session Initiation Failed'} 
+            return{'status':'FAILURE','data':'Session Initiation Failed'}
     token_list = []
     for symbol in symbol_list:
         token_list.append(icici.get_names('NSE',symbol)['isec_token_level1'])
         # token_list.append(int(instrument_df[instrument_df.tradingsymbol==symbol].instrument_token.values[0]))
-    return{'status':'SUCCESS','data':token_list} 
-     
-        
+    return{'status':'SUCCESS','data':token_list}
+
+
 # Get Symbol Data From ICICI API - ic_get_sym_detail()
 def ic_get_sym_detail(exch_code='NSE',symbol='NIFTY',prod_type='Cash',interval='5minute',
                       duration=2):
@@ -123,7 +123,7 @@ def ic_get_sym_detail(exch_code='NSE',symbol='NIFTY',prod_type='Cash',interval='
             st = ic_create_session(icici)
             if st['status'] != 'SUCCESS':
                 raise ValueError(st['data'])
-        i=0 
+        i=0
         holiday_list = json.load(open('config.json', 'r'))['HOLIDAY_LIST']
         fdate=(datetime.now()-timedelta(duration))
         tdate=(datetime.now()-timedelta(0))
@@ -144,7 +144,7 @@ def ic_get_sym_detail(exch_code='NSE',symbol='NIFTY',prod_type='Cash',interval='
                 return {"status": "SUCCESS", "data": df_tick}
         else:
             return {"status": "FAILURE", "data": "Data Not Returned"}
-                        
+
     except Exception as e:
         err = str(e)
         if 'AUTH' in str(e).upper():
@@ -152,8 +152,8 @@ def ic_get_sym_detail(exch_code='NSE',symbol='NIFTY',prod_type='Cash',interval='
             return st
         return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {err}'}
         print(f'iciciGetSymDetail :: {err}')
-        return {"status": "FAILURE", "data": err} 
-    
+        return {"status": "FAILURE", "data": err}
+
 
 # Update Watchlist data
 def ic_update_watchlist(mode='R',num=-1):
@@ -162,21 +162,21 @@ def ic_update_watchlist(mode='R',num=-1):
     ic_instruments = pd.read_csv('icici.csv')
     wl_cols= ['SymbolName','ExchangeCode','Segment','Token','Code','LotSize',
               'Open','High','Low','Close','PrevClose','CandleTime']
-    
+
     wl_df = pd.DataFrame(columns=wl_cols)
     try:
         if os.path.exists(wl_file):
             wl_df = pd.read_csv(wl_file)
     except pd.errors.EmptyDataError:
         wl_df = pd.DataFrame(columns=wl_cols)
-            
+
     # wl_df = pd.read_csv(wl_file) if os.path.exists(wl_file) else pd.DataFrame(columns=wl_cols)
-    
+
     if mode == 'C' or len(wl_df)==0:
         wl_df = pd.DataFrame(columns=wl_cols)
         for sym in symbol_list:
-            response = ic_get_sym_detail(symbol=sym,interval='5minute',duration=5)           
-            sym = ic_instruments[ic_instruments['CD']==sym][['NS','EC','SG','TK','CD','LS']] 
+            response = ic_get_sym_detail(symbol=sym,interval='5minute',duration=5)
+            sym = ic_instruments[ic_instruments['CD']==sym][['NS','EC','SG','TK','CD','LS']]
             sym.rename(columns={'NS':'SymbolName','EC':'ExchangeCode','SG':'Segment',
                                 'TK':'Token','CD':'Code','LS':'LotSize'}, inplace=True)
             sym['Open']=0
@@ -185,7 +185,7 @@ def ic_update_watchlist(mode='R',num=-1):
             sym['Close']=0
             sym['PrevClose']=0
             sym['CandleTime']=datetime.now()
-            
+
             if response['status']=='SUCCESS':
                 data = pd.DataFrame(response['data'])
                 data['datetime'] = data['datetime'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
@@ -199,15 +199,15 @@ def ic_update_watchlist(mode='R',num=-1):
                 sym['PrevClose']=data.iloc[num-1]['close']
                 sym['CandleTime']=data.iloc[num]['date']
             wl_df = pd.concat([wl_df,sym],ignore_index=True)
-        wl_df.to_csv('WatchList.csv',index=False)   
+        wl_df.to_csv('WatchList.csv',index=False)
     else:
         inserted_symbols = [element for element in symbol_list if element not in wl_df]
         deleted_symbols = [element for element in wl_df if element not in symbol_list]
-        
+
         if len(inserted_symbols) > 0:
             for sym in inserted_symbols:
-                response = ic_get_sym_detail(symbol=sym,interval='5minute')           
-                sym = ic_instruments[ic_instruments['CD']==sym][['NS','EC','SG','TK','CD','LS']] 
+                response = ic_get_sym_detail(symbol=sym,interval='5minute')
+                sym = ic_instruments[ic_instruments['CD']==sym][['NS','EC','SG','TK','CD','LS']]
                 sym.rename(columns={'NS':'SymbolName','EC':'ExchangeCode','SG':'Segment',
                                     'TK':'Token','CD':'Code','LS':'LotSize'}, inplace=True)
                 sym['Open']=0
@@ -216,7 +216,7 @@ def ic_update_watchlist(mode='R',num=-1):
                 sym['Close']=0
                 sym['PrevClose']=0
                 sym['CandleTime']=datetime.now()
-                
+
                 if response['status']=='SUCCESS':
                     data = pd.DataFrame(response['data'])
                     data['datetime'] = data['datetime'].apply(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S"))
@@ -230,16 +230,16 @@ def ic_update_watchlist(mode='R',num=-1):
                     sym['PrevClose']=data.iloc[-2]['close']
                     sym['CandleTime']=data.iloc[-1]['date']
                 wl_df = pd.concat([wl_df,sym],ignore_index=True)
-            wl_df.to_csv('WatchList.csv',index=False) 
-            
+            wl_df.to_csv('WatchList.csv',index=False)
+
         if len(deleted_symbols) > 0:
             wl_df = wl_df[~wl_df['Code'].isin(deleted_symbols)]
             wl_df.to_csv('WatchList.csv',index=False)
-    return {"status": "SUCCESS", "data": wl_df} 
+    return {"status": "SUCCESS", "data": wl_df}
 
 
 
-# function to extract all option contracts for a given ticker 
+# function to extract all option contracts for a given ticker
 def ic_option_contracts(ticker="NIFTY", option_type="CE", exchange="NFO"):
     instrument_list = pd.read_csv('icici.csv')
     option_contracts = instrument_list[instrument_list["SC"]==ticker][instrument_list['EC']==exchange][instrument_list['OT']==option_type]
@@ -254,7 +254,7 @@ def ic_option_contracts_closest(ticker="NIFTY", duration = 0, option_type="CE", 
     df_opt_contracts = df_opt_contracts[df_opt_contracts["time_to_expiry"] >= 0]
     # df_opt_contracts["time_to_expiry"] = (pd.to_datetime(df_opt_contracts["EXPIRY"]) - datetime.now()).days
     min_day_count = np.sort(df_opt_contracts["time_to_expiry"].unique())[duration]
-    
+
     return (df_opt_contracts[df_opt_contracts["time_to_expiry"] == min_day_count]).reset_index(drop=True)
 
 # df_opt_contracts = ic_option_contracts_closest("CNXBAN",1)
@@ -282,7 +282,7 @@ def ic_option_chain(ticker, underlying_price, duration = 0, num = 11, option_typ
     up = int(num/2)
     dn = num - up
     return df_opt_contracts.iloc[atm_idx-up:atm_idx+dn]
-    
+
 # opt_chain = ic_option_chain("CNXBAN", underlying_price=43946, duration=0,option_type="PE")
 
 # ticker='CNXBAN'
