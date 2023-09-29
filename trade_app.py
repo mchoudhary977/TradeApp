@@ -11,13 +11,23 @@ import subprocess
 import json
 import ssl
 from trade_modules import *
-from dh_functions import * 
-from wa_notifications import * 
+from dh_functions import *
+from wa_notifications import *
+from log_function import *
+
 # from ic_watchlist import ic_get_watchlist
 import os
 
 app = Flask(__name__)
 CORS(app)
+
+# ------------------------- TradeApp Files --------------------------------
+icici_scrips = 'icici.csv'
+watchlist_file = 'WatchList.csv'
+options_file = 'Options.csv'
+oi_pcr_file = 'OIPCR.csv'
+coi_pcr_file = 'COIPCR.csv'
+trade_file = 'Trades.csv'
 
 # sslify = SSLify(app, permanent=True, keyfile='key.pem', certfile='cert.pem')
 @app.route('/get_watchlist')
@@ -25,8 +35,8 @@ def get_watchlist():
     resultDict = {}
     resultDict['WatchList']=pd.read_csv('WatchList.csv')
     resultDict['WatchList'] = resultDict['WatchList'].to_dict(orient='records')
-    return resultDict  
-        
+    return resultDict
+
 @app.route('/')
 def home():
     resultDict = get_data()
@@ -39,9 +49,34 @@ def get_data():
     curr_dt = datetime.now()
     resultDict = {}
     data_list = ['WatchList','Funds','Positions','Orders','Holdings','Strategy','PCR']
-    resultDict['WatchList'] = pd.DataFrame(columns=['No Stocks in Watchlist'])
-    if os.path.exists('WatchList.csv'):
-        resultDict['WatchList'] = pd.read_csv('WatchList.csv')
+    wl = pd.DataFrame(columns=['No Stocks in Watchlist'])
+    try:
+        if os.path.exists(trade_file) == True:
+            wl = pd.read_csv(watchlist_file)
+    except pd.errors.EmptyDataError:
+        wl = pd.DataFrame(columns=['Error in getting Watchlist, please check!'])    
+    resultDict['WatchList'] = wl
+
+    # Trades Details
+    trades = pd.DataFrame(columns=['No Trades for the day!'])
+    try:
+        if os.path.exists(trade_file) == True:
+            trades = pd.read_csv(trade_file)
+            t1 = trades[trades['CreationTime'] >= f"{curr_dt.strftime('%Y-%m-%d')} 00:00:00"]
+            trades = t1 if len(t1) > 0 else pd.DataFrame(columns=['No Trades for the day!'])
+    except pd.errors.EmptyDataError:
+        trades = pd.DataFrame(columns=['No Trades for the day!'])
+        
+    trades = trades.to_html(index=False)
+    trades = trades.replace('<table border="1" class="dataframe">','<table border="1" class="dataframe" style="border-collapse: collapse; width: 100%;">')
+    trades = trades.replace('<thead>','<thead style="background-color: #00008B; color: white;">')
+    trades = trades.replace("text-align: right;","text-align: center; border: 1px solid white;")
+    trades = trades.replace("<th>",'<th style="border: 1px solid black; width: 100%; white-space: nowrap;">')
+    trades = trades.replace("<td>",'<td style="border: 1px solid black; width: 100%; white-space: nowrap;">')
+    resultDict['Trades'] = trades
+    
+    resultDict['Positions'] = get_position_details()
+    # trade = resultDict['Trades'].to_html(index=False)
 
     oipcr = pd.read_csv('OIPCR.csv')
     unique_symbols = oipcr['SymbolCode'].unique()
@@ -56,7 +91,7 @@ def get_data():
     for i in unique_symbols:
         spot_px = wl.loc[wl['Code']==i].sort_values(by=['CandleTime'], ascending=[False]).head(1)['Close'].item()
         # spot_px = wl.loc[wl['Code']==i].sort_values(by=['Date'], ascending=[False]).head(1)['Close'].item()
-        print(spot_px)
+        printLog('i',spot_px)
         strike_step = 100 if i == 'CNXBAN' else 50
         atm_strike = int(round(spot_px/50,0)*50) if i != 'CNXBAN' else int(round(spot_px/100,0)*100)
         strike_begin = atm_strike - (2*strike_step)
@@ -68,7 +103,7 @@ def get_data():
     resultDict['ICICI_SESSION_URL'] = getConfig('ICICI_SESSION_URL')
 
     return resultDict
-    
+
 @app.route('/restart')
 def startWebApp():
     script_path = '/home/ubuntu/webApp/startWebApp.sh'
@@ -88,27 +123,27 @@ def submit_form():
         nifty_opt_select = request.form.get('nifty_opt_select')
         expiry_week_selection = request.form.get('expiry_week_selection')
         daily_order_count = request.form.get('daily_order_count')
-    
+
         nifty_call_select = request.form.get('nifty_call_select')
-        nifty_put_select = request.form.get('nifty_put_select')      
-        
+        nifty_put_select = request.form.get('nifty_put_select')
+
         msg_title = f"Configuration Update - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         msg_body = ''
-           
+
         with open("config.json","r") as f:
             json_data = json.load(f)
-    
+
         if len(live_order_flag) > 0:
             if live_order_flag =='Y' or live_order_flag =='N':
                 json_data["LIVE_ORDER"] = live_order_flag
                 msg_body = msg_body + f"Live Order Status Change = {live_order_flag}. "
                 # msg = f"Live Order Status Change = {live_order_flag}"
                 # send_whatsapp_msg(f"LIVE ORDER - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", msg)
-        
+
         if len(daily_order_count) > 0:
             json_data["DAILY_ORDER_COUNT"] = int(daily_order_count)
             msg_body = msg_body + f"Daily Order Limit = {daily_order_count}. "
-            
+
         if len(nifty_opt_select) > 0:
             if nifty_opt_select.upper().find("SELECT") != -1:
                 print('select present')
@@ -119,11 +154,11 @@ def submit_form():
         if len(nifty_call_select) > 0:
             json_data["NIFTY"]["CALL_STRIKE"] = int(nifty_call_select)
             msg_body = msg_body + f"NIFTY CALL STRIKE Selected = {nifty_call_select}. "
-            
+
         if len(nifty_put_select) > 0:
             json_data["NIFTY"]["PUT_STRIKE"] = int(nifty_put_select)
             msg_body = msg_body + f"NIFTY PUT STRIKE Selected = {nifty_put_select}. "
-            
+
         if len(expiry_week_selection) > 0:
             if expiry_week_selection.upper().find("SELECT") != -1:
                 print('select present')
@@ -135,24 +170,24 @@ def submit_form():
             print(f'token dhan - {dhan_token}')
             json_data["DHAN_ACCESS_TK"] = dhan_token
             msg_body = msg_body + f"Dhan Token Updated. "
-    
+
         if len(wa_token) > 0:
             print(f'token WA - {wa_token}')
             json_data["WA_TKN"] = wa_token
             msg_body = msg_body + f"WhatsApp Token Updated. "
-    
+
         if len(icici_session_id) > 0:
             print("Updating ICICI Session Token Details")
             # st = iciciUpdSessToken(icici_session_id)
             st = icici_upd_sess_config(icici_session_id)
             if st['status'] == 'SUCCESS':
                 startWebApp()
-    
+
         with open("config.json", "w") as file:
             json.dump(json_data, file, indent=4)
-            
+
         send_whatsapp_msg(msg_title, msg_body)
-    
+
         return config_data()
     except Exception as e:
         return str(e)
@@ -163,13 +198,13 @@ def submit_form():
 def config_data():
     with open("config.json","r") as f:
         json_data = json.load(f)
-    
+
     selected_keys = ['LIVE_ORDER','DAILY_ORDER_COUNT','EXP_WEEK','NIFTY',
-                     'CNXBAN','NIFFIN','STOCK_CODES']    
+                     'CNXBAN','NIFFIN','STOCK_CODES']
     json_data = {key: json_data[key] for key in selected_keys}
     return json_data
-    
-    
+
+
 # Route to handle form submission
 @app.route('/update_config', methods=['POST'])
 def submit_form_1():
@@ -180,7 +215,7 @@ def submit_form_1():
     live_order = request.form.get('live_order')
     nifty_opt_select = request.form.get('nifty_opt_select')
     expiry_week_selection = request.form.get('expiry_week_selection')
-    
+
     msg_title = f"Configuration Update - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     msg_body = ''
 
@@ -196,13 +231,13 @@ def submit_form_1():
     if len(nifty_opt_select) > 0:
         json_data["NIFTY"]["OPT#"] = int(nifty_opt_select)
         msg_body = f"Nifty Option Selected = {nifty_opt_select}. "
-        
-    
-        
+
+
+
     if len(expiry_week_selection) > 0:
         json_data["EXP_WEEK"] = int(expiry_week_selection)
         msg_body = f"Expiry Week Selected = {expiry_week_selection}. "
-   
+
     if len(dhan_token) > 0:
         print(f'token dhan - {dhan_token}')
         json_data["DHAN_ACCESS_TK"] = dhan_token
@@ -221,7 +256,7 @@ def submit_form_1():
 
     with open("config.json", "w") as file:
         json.dump(json_data, file, indent=4)
-        
+
     send_whatsapp_msg(msg_title, msg_body)
 
 
@@ -335,10 +370,18 @@ def get_order_details():
     else:
         no_orders = 'Order Information Not Returned...'
         orders = pd.DataFrame(columns=[no_orders])
-    resultDict['Orders'] = orders.to_html(index=False)
+    orders = orders.to_html(index=False)
+    orders = orders.replace('<table border="1" class="dataframe">','<table border="1" class="dataframe" style="border-collapse: collapse; width: 100%;">')
+    orders = orders.replace('<thead>','<thead style="background-color: #00008B; color: white;">')
+    orders = orders.replace("text-align: right;","text-align: center; border: 1px solid white;")
+    orders = orders.replace("<th>",'<th style="border: 1px solid black; width: 100%; white-space: nowrap;">')
+    orders = orders.replace("<td>",'<td style="border: 1px solid black; width: 100%; white-space: nowrap;">')
+
+    resultDict['Orders'] = orders
+    
     return render_template('orders.html', tdate=datetime.now().strftime("%B %d, %Y %H:%M"),
                            resultDict=resultDict)
-    
+
 @app.route('/positions')
 def get_position_details():
     resultDict = {}
@@ -352,9 +395,10 @@ def get_position_details():
                        'costPrice'
                        ]
             positions = positions[selected_cols]
-            positions['realizedProfit'] = round(positions['daySellValue'] - positions['dayBuyValue'],2)           
+            positions['realizedProfit'] = round(positions['daySellValue'] - positions['dayBuyValue'],2)
             positions = positions.sort_values(by=['positionType', 'productType'], ascending=[False, True])
             positions['#'] = positions.reset_index(drop=True).index + 1
+            positions['#'] = positions['#'].astype(int)
             # Reorder columns
             last_column = positions.columns[-1]
             new_order = [last_column] + [col for col in positions.columns if col != last_column]
@@ -369,9 +413,19 @@ def get_position_details():
     else:
         no_positions = 'Position Information Not Returned...'
         positions = pd.DataFrame(columns=[no_positions])
-    resultDict['Positions'] = positions.to_html(index=False)
-    return render_template('positions.html', tdate=datetime.now().strftime("%B %d, %Y %H:%M"),
-                           resultDict=resultDict)
+    
+    positions = positions.to_html(index=False)
+    positions = positions.replace('<table border="1" class="dataframe">','<table border="1" class="dataframe" style="border-collapse: collapse; width: 100%;">')
+    positions = positions.replace('<thead>','<thead style="background-color: #00008B; color: white;">')
+    positions = positions.replace("text-align: right;","text-align: center; border: 1px solid white;")
+    positions = positions.replace("<th>",'<th style="border: 1px solid black; width: 100%; white-space: nowrap;">')
+    positions = positions.replace("<td>",'<td style="border: 1px solid black; width: 100%; white-space: nowrap;">')
+
+    # resultDict['Positions'] = positions
+    
+    return positions
+    # return render_template('positions.html', tdate=datetime.now().strftime("%B %d, %Y %H:%M"),
+    #                        resultDict=resultDict)
 
 if __name__ == '__main__':
     # ic_get_watchlist(mode='C')
@@ -379,4 +433,4 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0')
     # ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     # ssl_context.load_cert_chain('cert.pem', 'key.pem')
-    # app.run(host='0.0.0.0',ssl_context=ssl_context)
+    app.run(host='0.0.0.0',ssl_context=ssl_context)

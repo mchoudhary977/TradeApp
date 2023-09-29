@@ -63,18 +63,20 @@ def dh_get_order_id(order_id):
 # dhan.get_order_by_id('6523081610313')
 # order_id = '6523081610313'
 # dh_modify_order('6523081610313',price=32,quantity=100)
-def dh_modify_order(order_id,price,quantity):  
+def dh_modify_order(order_id,price,quantity,leg_name='ENTRY_LEG', ord_type = 'lmt', trigger_px = 0.0):  
     dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
     # Modify order given order id
-    dhan.modify_order(order_id=order_id,
-                      order_type=dhan.LIMIT,
-                      leg_name='ENTRY_LEG',
+    order_type = dhan.LIMIT if ord_type == 'lmt' else dhan.SLM
+    st = dhan.modify_order(order_id=order_id,
+                      order_type=order_type,
+                      leg_name=leg_name,
                       quantity=quantity,
                       price=round(price,1),
                       disclosed_quantity=0,
-                      trigger_price=round(price,1),
+                      trigger_price=round(trigger_px,1),
                       validity=dhan.DAY
                       )
+    return st
 
 # s=dh_cancel_order(order_id = '6523081610313')
 def dh_cancel_orders(order_id=None):

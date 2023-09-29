@@ -32,6 +32,14 @@ def main():
                 break            
             if os.path.exists(trade_file) == True:
                 trade_df = pd.read_csv(trade_file)
+                
+                condition = (trade_df['Active'] == 'N')   # TEST LINE, UNCOMMENT BELOW IN PROD
+                # condition = (trade_df['Active'] == 'Y') & (trade_df['Status'] == 'TRADED')
+                
+                for index, row in trade_df[condition].iterrows():
+                    
+                    print(row['Symbol'])
+                    
                 trade_df = trade_df[trade_df['Date']==now.strftime('%Y-%m-%d')]
                 
                 traded_orders_df = trade_df[trade_df['Active']=='Y'][trade_df['EntrySt'] == 'TRADED']

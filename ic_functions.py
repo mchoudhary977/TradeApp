@@ -277,6 +277,8 @@ def ic_option_chain(ticker, underlying_price, duration = 0, num = 11, option_typ
     else:
         df_opt_contracts.sort_values(by=["STRIKE"],ascending=[False],inplace=True, ignore_index=True)
     atm_idx = np.array(abs(df_opt_contracts["STRIKE"] - underlying_price)).argmin()
+    df_opt_contracts['ATM'] = 'N'
+    df_opt_contracts.loc[atm_idx,'ATM'] = 'Y'
     up = int(num/2)
     dn = num - up
     return df_opt_contracts.iloc[atm_idx-up:atm_idx+dn]
