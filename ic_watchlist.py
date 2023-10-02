@@ -451,6 +451,7 @@ def check_ema_signal(symbol, last_px, tick_time):
                           'Entry': ema_signal['entry'],
                           'SymSL': round(ema_signal['low'],2) if ema_signal['signal'] == 'green' else round(ema_signal['high'],2),
                           'Qty': (qty * lot_size),
+                          'RemQty': (qty * lot_size),
                           'DervName': sec_name,
                           'DervID': sec_id,
                           'DervPx': 0.0,
@@ -517,6 +518,7 @@ def place_strategy_order(strategy='default', symbol='NIFTY 50', last_px=19700,
                       'Entry': last_px,
                       'SymSL': 0.0,
                       'Qty': qty*lot_size,
+                      'RemQty': (qty * lot_size),
                       'DervName': sec_name,
                       'DervID': sec_id,
                       'DervPx': 0.0,
@@ -798,6 +800,8 @@ def strat_round_entries(symbol,last_px,signal_time):
                                     put_thread.start()
                 else:
                     break
+            else:
+                tm.sleep(10)
     except Exception as e:
         err = str(e)
         printLog('e',f"{funct_name} - {err}")
@@ -1108,3 +1112,4 @@ if __name__ == '__main__':
 #     main()
 
 # strat_trades_df = pd.read_csv(trade_file)
+# icici.user_id
