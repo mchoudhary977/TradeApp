@@ -19,6 +19,7 @@ strat_trades_df = pd.DataFrame()
 token_list = []
 ema_signal = {}
 round_strat_flag = 'Y'
+strategies = {}
 
 # ------------------------- TradeApp Files --------------------------------
 icici_scrips = 'icici.csv'
@@ -610,49 +611,100 @@ def place_strategy_order(strategy='default', symbol='NIFTY 50', last_px=19700,
         pass
 
 
-# ticks = {'ltt':'Sat Sep 25 09:17:00 2023','symbol':'4.1!NIFTY 50', 'last': 19825.35}
-# symbol = 'NIFTY 50' last_px = 19699.25 signal_time = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
+# ticks = {'ltt':'Mon Oct 03 09:16:20 2023','symbol':'4.1!NIFTY 50','last':19537.25}
+# symbol = ticks['symbol'][4:] last_px = ticks['last'] 
+# signal_time = datetime.strptime(ticks['ltt'][4:25], "%b %d %H:%M:%S %Y")
 def strat_straddle_buy(symbol,last_px,signal_time):
-    global livePrices, options_df, orders_df, strat_trades_df, token_list, icici_scrips, watchlist_file, options_file, oi_pcr_file, trade_file, ema_signal
+    global livePrices, options_df, orders_df, strat_trades_df, token_list, icici_scrips, watchlist_file, options_file, oi_pcr_file, trade_file, ema_signal, strategies
     now = datetime.now()
     funct_name = 'strat_straddle_buy'.upper()
     strategy = 'Straddle'
     msg = {'status':'failure', 'remarks':'', 'data':''}
-    exit_strategy = 'N'
+    # exit_strategy = 'N'
     try:
         ticker = 'NIFTY' if symbol == 'NIFTY 50' else symbol
-        straddle = {'price':0.0, 'entry':0.0, 'signal':'green', 'ordcnt': 0,
-                    'call':'N', 'put':'N'}
-        straddle['price'] = last_px
-
-        while True:
+        if strategy not in strategies:
+            strategies[strategy] = {}
+            
+        if symbol not in strategies[strategy]:
+            strategies[strategy][symbol] = {'price':0.0, 'entry':0.0, 
+                                            'signal':'green', 'ordcnt': 0, 
+                                            'call':'N', 'put':'N', 'exit':'N'}
+        
+        if strategies[strategy][symbol]['exit'] == 'Y':
+            return 
+        
+        if strategies[strategy][symbol]['price'] == 0:
+            strategies[strategy][symbol]['price'] = last_px
+            
+        if signal_time.time() == time(9,16,20):
             live_order = json.load(open('config.json', 'r'))['LIVE_ORDER']
-            now = datetime.now()
-            last_px = livePrices[livePrices['SymbolName'] == symbol]['Close'].values[0]
-            if now.time() >= time(9,16,20) and now.time() <= time(15,30):
-                # Enter straddle trade when time is matched
-                if straddle['ordcnt'] == 0 and now.time() == time(9,16,20):
-                    printLog('i', f"{funct_name} - Initiating {strategy} Strategy...")
-                    send_whatsapp_msg(f"{strategy} Strategy", f"{now.strftime('%Y-%m-%d %H:%M:%S')} - Initiating {strategy} for {symbol}")
-                    # Place first leg of trade
-                    if last_px > straddle['price']:
-                        call_opt = get_entry_option(ticker, last_px, option_type='CE')
-                        call_sec_id = call_opt['TK'].values[0]
-                        call_sec_name = call_opt['CD'].values[0]
-                        lot_size = call_opt['LS'].values[0]
-                        ord_type = json.load(open('config.json', 'r'))['ORDER_TYPE']
-                        amo = False
-                        call_thread = Thread(target=place_strategy_order,args=(strategy, symbol, last_px,
-                                                 now, ord_type, call_sec_id, call_sec_name, lot_size,
-                                                 amo))
-                        call_thread.start()
-                        straddle['signal'] = 'green'
-                        straddle['call'] = 'Y'
-                        straddle['entry'] = last_px
-                        straddle['ordcnt'] = 1
-                        printLog('i',f"{straddle['ordcnt']} - {last_px} - {call_sec_id} - {call_sec_name} - {straddle}")
+            if strategies[strategy][symbol]['ordcnt'] == 0:
+                printLog('i', f"{funct_name} - Initiating {strategy} Strategy...")
+                send_whatsapp_msg(f"{strategy} Strategy", f"{now.strftime('%Y-%m-%d %H:%M:%S')} - Initiating {strategy} for {symbol}")
+                
+                if last_px > strategies[strategy][symbol]['price']:
+                    call_opt = get_entry_option(ticker, last_px, option_type='CE')
+                    call_sec_id = call_opt['TK'].values[0]
+                    call_sec_name = call_opt['CD'].values[0]
+                    lot_size = call_opt['LS'].values[0]
+                    ord_type = json.load(open('config.json', 'r'))['ORDER_TYPE']
+                    amo = False
+                    call_thread = Thread(target=place_strategy_order,args=(strategy, symbol, last_px,
+                                             now, ord_type, call_sec_id, call_sec_name, lot_size,
+                                             amo))
+                    call_thread.start()
+                    strategies[strategy][symbol]['signal'] = 'green'
+                    strategies[strategy][symbol]['call'] = 'Y'
+                    strategies[strategy][symbol]['entry'] = last_px
+                    strategies[strategy][symbol]['ordcnt'] = 1
+                    printLog('i',f"{strategies[strategy][symbol]['ordcnt']} - {last_px} - {call_sec_id} - {call_sec_name} - {straddle}")
+                
+                elif last_px < strategies[strategy][symbol]['price']:
+                    put_opt = get_entry_option(ticker, last_px, option_type='PE')
+                    put_sec_id = put_opt['TK'].values[0]
+                    put_sec_name = put_opt['CD'].values[0]
+                    lot_size = put_opt['LS'].values[0]
+                    ord_type = json.load(open('config.json', 'r'))['ORDER_TYPE']
+                    amo = False
+                    put_thread = Thread(target=place_strategy_order,args=(strategy, symbol, last_px,
+                                             now, ord_type, put_sec_id, put_sec_name, lot_size,
+                                             amo))
+                    put_thread.start()
+                    strategies[strategy][symbol]['signal'] = 'red'
+                    strategies[strategy][symbol]['put'] = 'Y'
+                    strategies[strategy][symbol]['entry'] = last_px
+                    strategies[strategy][symbol]['ordcnt'] = 1
+                    strategies[strategy][symbol]('i',f"{strategies[strategy][symbol]['ordcnt']} - {last_px} - {put_sec_id} - {put_sec_name} - {straddle}")
+            
+            # Exit trade when expected profit is reached
+            if strategies[strategy][symbol]['exit'] == 'N' and strategies[strategy][symbol]['ordcnt'] >= 1:
+                if strat_trades_df is not None and len(strat_trades_df) > 0:
+                    check_df = strat_trades_df
+                    check_df = check_df.to_frame().T if type(check_df) == pd.core.series.Series else check_df
+                    check_df = check_df[(check_df['Strategy'] == strategy) & (check_df['Active'] == 'Y')]
+                    check_df = check_df.to_frame().T if type(check_df) == pd.core.series.Series else check_df
 
-                    elif last_px < straddle['price']:
+                    if len(check_df) > 0:
+                        checkqty = check_df['Qty'].values[0]
+                        running_profit = (check_df['DervPx'].sum() - check_df['EntryPx'].sum()) * checkqty
+                        expected_profit = (7 * checkqty)
+                        if expected_profit > 0 and running_profit > expected_profit:
+                            strategies[strategy][symbol]['exit'] = 'Y'
+                            for index, row in check_df.iterrows():
+                                order_id = row['ExitID']
+                                price = row['DervPx']
+                                trigger_px = price + 0.05
+                                quantity = row['Qty']
+                                if price > 0.0:
+                                    printLog('i', f"{funct_name} - StopLoss Order Modified as Req Profit Reached")
+                                    mod_st = dh_modify_order(order_id, price, quantity, ord_type = 'sl', trigger_px = trigger_px)
+                                    strat_trades_df.loc[(strat_trades_df['Strategy'] == 'Straddle') & (strat_trades_df['Active'] == 'Y'), 'Active'] = 'N'
+
+            # Place second leg of trade if price changes direction
+            if strategies[strategy][symbol]['exit'] == 'N' and strategies[strategy][symbol]['ordcnt'] == 1:
+                if strategies[strategy][symbol]['call'] == 'Y':
+                    if last_px < (strategies[strategy][symbol]['entry'] - 5):
                         put_opt = get_entry_option(ticker, last_px, option_type='PE')
                         put_sec_id = put_opt['TK'].values[0]
                         put_sec_name = put_opt['CD'].values[0]
@@ -663,78 +715,28 @@ def strat_straddle_buy(symbol,last_px,signal_time):
                                                  now, ord_type, put_sec_id, put_sec_name, lot_size,
                                                  amo))
                         put_thread.start()
-                        straddle['signal'] = 'red'
-                        straddle['put'] = 'Y'
-                        straddle['entry'] = last_px
-                        straddle['ordcnt'] = 1
-                        printLog('i',f"{straddle['ordcnt']} - {last_px} - {put_sec_id} - {put_sec_name} - {straddle}")
+                        strategies[strategy][symbol]['ordcnt'] = 2
+                        strategies[strategy][symbol]['put'] = 'Y'
+                        printLog('i',f"{strategies[strategy][symbol]['ordcnt']} - {last_px} - {put_sec_id} - {put_sec_name} - {strategies[strategy][symbol]}")
 
-                # Exit trade when expected profit is reached
-                if exit_strategy == 'N' and straddle['ordcnt'] >= 1:
-                    if strat_trades_df is not None and len(strat_trades_df) > 0:
-                        check_df = strat_trades_df
-                        check_df = check_df.to_frame().T if type(check_df) == pd.core.series.Series else check_df
-                        check_df = check_df[(check_df['Strategy'] == strategy) & (check_df['Active'] == 'Y')]
-                        check_df = check_df.to_frame().T if type(check_df) == pd.core.series.Series else check_df
-
-                        if len(check_df) > 0:
-                            checkqty = check_df['Qty'].values[0]
-                            running_profit = (check_df['DervPx'].sum() - check_df['EntryPx'].sum()) * checkqty
-                            expected_profit = (7 * checkqty)
-                            if expected_profit > 0 and running_profit > expected_profit:
-                                exit_strategy = 'Y'
-                                for index, row in check_df.iterrows():
-                                    order_id = row['ExitID']
-                                    price = row['DervPx']
-                                    trigger_px = price + 0.05
-                                    quantity = row['Qty']
-                                    if price > 0.0:
-                                        printLog('i', f"{funct_name} - StopLoss Order Modified as Req Profit Reached")
-                                        mod_st = dh_modify_order(order_id, price, quantity, ord_type = 'sl', trigger_px = trigger_px)
-                                        strat_trades_df.loc[(strat_trades_df['Strategy'] == 'Straddle') & (strat_trades_df['Active'] == 'Y'), 'Active'] = 'N'
-
-                # Place second leg of trade if price changes direction
-                if exit_strategy == 'N' and straddle['ordcnt'] == 1:
-                    if straddle['call'] == 'Y':
-                        if last_px < (straddle['entry'] - 5):
-                            put_opt = get_entry_option(ticker, last_px, option_type='PE')
-                            put_sec_id = put_opt['TK'].values[0]
-                            put_sec_name = put_opt['CD'].values[0]
-                            lot_size = put_opt['LS'].values[0]
-                            ord_type = json.load(open('config.json', 'r'))['ORDER_TYPE']
-                            amo = False
-                            put_thread = Thread(target=place_strategy_order,args=(strategy, symbol, last_px,
-                                                     now, ord_type, put_sec_id, put_sec_name, lot_size,
-                                                     amo))
-                            put_thread.start()
-                            straddle['ordcnt'] = 2
-                            straddle['put'] = 'Y'
-                            printLog('i',f"{straddle['ordcnt']} - {last_px} - {put_sec_id} - {put_sec_name} - {straddle}")
-
-                    if straddle['put'] == 'Y':
-                        if last_px > (straddle['entry'] + 5):
-                            call_opt = get_entry_option(ticker, last_px, option_type='CE')
-                            call_sec_id = call_opt['TK'].values[0]
-                            call_sec_name = call_opt['CD'].values[0]
-                            lot_size = call_opt['LS'].values[0]
-                            ord_type = json.load(open('config.json', 'r'))['ORDER_TYPE']
-                            amo = False
-                            call_thread = Thread(target=place_strategy_order,args=(strategy, symbol, last_px,
-                                                     now, ord_type, call_sec_id, call_sec_name, lot_size,
-                                                     amo))
-                            call_thread.start()
-                            straddle['ordcnt'] = 2
-                            straddle['call'] = 'Y'
-                            printLog('i',f"{straddle['ordcnt']} - {last_px} - {call_sec_id} - {call_sec_name} - {straddle}")
-
-            straddle['price'] = last_px
-
-            if now.time() >= time(15,30,00) or exit_strategy == 'Y':
-                printLog('i', f"{funct_name} - Straddle Strategy Complete, Exiting!!!")
-                break
-
-            tm.sleep(1)
-
+                if strategies[strategy][symbol]['put'] == 'Y':
+                    if last_px > (strategies[strategy][symbol]['entry'] + 5):
+                        call_opt = get_entry_option(ticker, last_px, option_type='CE')
+                        call_sec_id = call_opt['TK'].values[0]
+                        call_sec_name = call_opt['CD'].values[0]
+                        lot_size = call_opt['LS'].values[0]
+                        ord_type = json.load(open('config.json', 'r'))['ORDER_TYPE']
+                        amo = False
+                        call_thread = Thread(target=place_strategy_order,args=(strategy, symbol, last_px,
+                                                 now, ord_type, call_sec_id, call_sec_name, lot_size,
+                                                 amo))
+                        call_thread.start()
+                        strategies[strategy][symbol]['ordcnt'] = 2
+                        strategies[strategy][symbol]['call'] = 'Y'
+                        printLog('i',f"{strategies[strategy][symbol]['ordcnt']} - {last_px} - {call_sec_id} - {call_sec_name} - {strategies[strategy][symbol]}")
+           
+        strategies[strategy][symbol]['price'] = last_px
+    
     except Exception as e:
         err = str(e)
         printLog('e',f"{funct_name} - {err}")
@@ -892,7 +894,7 @@ def ic_unsubscribeFeed(tokens):
         print(st)
 
 # icici.on_ticks = on_ticks
-# ticks = {'ltt':'Mon Sep 26 09:16:20 2023','symbol':'4.1!NIFTY 50','last':19702.25}
+# ticks = {'ltt':'Mon Oct 03 09:16:20 2023','symbol':'4.1!NIFTY 50','last':19544.25}
 # On Ticks function
 def on_ticks(ticks):
     global livePrices
@@ -930,10 +932,10 @@ def on_ticks(ticks):
         if tick_symbol == 'NIFTY 50':
             # Straddle buy strategy for Nifty to initiate at 9:15:10 AM
             # if tick_time.hour == 13 and tick_time.minute == 34 and tick_time.second == 50:
-            if tick_time.hour == 9 and tick_time.minute == 15 and tick_time.second == 10:
+            if tick_time.time() >= time(9,15,10):
                 printLog('i','Straddle Initiating')
                 straddle_thread = Thread(target=strat_straddle_buy,args=(tick_symbol,tick_px,tick_time))
-                straddle_thread.start()
+                straddle_thread.start()                 
 
             # if tick_time.time() > time(9,16) and tick_time.time() < time(15,1):
             if tick_time.hour == 9 and tick_time.minute == 15 and tick_time.second == 10:
