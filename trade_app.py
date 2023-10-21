@@ -10,7 +10,7 @@ from threading import Thread
 import subprocess
 import json
 import ssl
-from trade_modules import *
+# from trade_modules import *
 from dh_functions import *
 from wa_notifications import *
 from log_function import *
@@ -28,14 +28,20 @@ options_file = 'Options.csv'
 oi_pcr_file = 'OIPCR.csv'
 coi_pcr_file = 'COIPCR.csv'
 trade_file = 'Trades.csv'
+pos_file = 'Positions.csv'
 
 # sslify = SSLify(app, permanent=True, keyfile='key.pem', certfile='cert.pem')
 @app.route('/get_watchlist')
 def get_watchlist():
     resultDict = {}
-    resultDict['WatchList']=pd.read_csv('WatchList.csv')
-    resultDict['WatchList'] = resultDict['WatchList'].to_dict(orient='records')
-    return resultDict
+    try:
+        if os.path.exists(trade_file) == True:
+            resultDict['WatchList'] = pd.read_csv(watchlist_file)
+            resultDict['WatchList'] = resultDict['WatchList'].to_dict(orient='records')
+            return resultDict
+    # except pd.errors.EmptyDataError:
+    except Exception as e:
+        printLog('e',f"Error while fetching data from file - {watchlist_file} - {str(e)}")
 
 @app.route('/')
 def home():
@@ -91,7 +97,7 @@ def get_data():
     for i in unique_symbols:
         spot_px = wl.loc[wl['Code']==i].sort_values(by=['CandleTime'], ascending=[False]).head(1)['Close'].item()
         # spot_px = wl.loc[wl['Code']==i].sort_values(by=['Date'], ascending=[False]).head(1)['Close'].item()
-        printLog('i',spot_px)
+        # printLog('i',spot_px)
         strike_step = 100 if i == 'CNXBAN' else 50
         atm_strike = int(round(spot_px/50,0)*50) if i != 'CNXBAN' else int(round(spot_px/100,0)*100)
         strike_begin = atm_strike - (2*strike_step)
@@ -100,8 +106,7 @@ def get_data():
 
     resultDict['OIPCR'] = oipcr_dict
     resultDict['COIPCR'] = coipcr_dict
-    resultDict['ICICI_SESSION_URL'] = getConfig('ICICI_SESSION_URL')
-
+    resultDict['ICICI_SESSION_URL'] = json.load(open('config.json', 'r'))['UC']['ICICI_SESSION_URL']
     return resultDict
 
 @app.route('/restart')
@@ -135,45 +140,45 @@ def submit_form():
 
         if len(live_order_flag) > 0:
             if live_order_flag =='Y' or live_order_flag =='N':
-                json_data["LIVE_ORDER"] = live_order_flag
+                json_data['TC']["LIVE_ORDER"] = live_order_flag
                 msg_body = msg_body + f"Live Order Status Change = {live_order_flag}. "
                 # msg = f"Live Order Status Change = {live_order_flag}"
                 # send_whatsapp_msg(f"LIVE ORDER - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", msg)
 
         if len(daily_order_count) > 0:
-            json_data["DAILY_ORDER_COUNT"] = int(daily_order_count)
+            json_data['TC']["DAILY_ORDER_COUNT"] = int(daily_order_count)
             msg_body = msg_body + f"Daily Order Limit = {daily_order_count}. "
 
         if len(nifty_opt_select) > 0:
             if nifty_opt_select.upper().find("SELECT") != -1:
                 print('select present')
             else:
-                json_data["NIFTY"]["OPT#"] = int(nifty_opt_select)
+                json_data['SC']["NIFTY"]["OPT#"] = int(nifty_opt_select)
                 msg_body = msg_body + f"Nifty Option Selected = {nifty_opt_select}. "
 
         if len(nifty_call_select) > 0:
-            json_data["NIFTY"]["CALL_STRIKE"] = int(nifty_call_select)
+            json_data['SC']["NIFTY"]["CALL_STRIKE"] = int(nifty_call_select)
             msg_body = msg_body + f"NIFTY CALL STRIKE Selected = {nifty_call_select}. "
 
         if len(nifty_put_select) > 0:
-            json_data["NIFTY"]["PUT_STRIKE"] = int(nifty_put_select)
+            json_data['SC']["NIFTY"]["PUT_STRIKE"] = int(nifty_put_select)
             msg_body = msg_body + f"NIFTY PUT STRIKE Selected = {nifty_put_select}. "
 
         if len(expiry_week_selection) > 0:
             if expiry_week_selection.upper().find("SELECT") != -1:
                 print('select present')
             else:
-                json_data["EXP_WEEK"] = int(expiry_week_selection)
+                json_data['TC']["EXP_WEEK"] = int(expiry_week_selection)
                 msg_body = msg_body + f"Expiry Week Selected = {expiry_week_selection}. "
 
         if len(dhan_token) > 0:
             print(f'token dhan - {dhan_token}')
-            json_data["DHAN_ACCESS_TK"] = dhan_token
+            json_data['UC']["DHAN_ACCESS_TK"] = dhan_token
             msg_body = msg_body + f"Dhan Token Updated. "
 
         if len(wa_token) > 0:
             print(f'token WA - {wa_token}')
-            json_data["WA_TKN"] = wa_token
+            json_data['UC']["WA_TKN"] = wa_token
             msg_body = msg_body + f"WhatsApp Token Updated. "
 
         if len(icici_session_id) > 0:
@@ -199,10 +204,10 @@ def config_data():
     with open("config.json","r") as f:
         json_data = json.load(f)
 
-    selected_keys = ['LIVE_ORDER','DAILY_ORDER_COUNT','EXP_WEEK','NIFTY',
-                     'CNXBAN','NIFFIN','STOCK_CODES']
-    json_data = {key: json_data[key] for key in selected_keys}
-    return json_data
+    html_code = '<h2>Trade Configurations</h2>'
+    html_code += pd.DataFrame(json_data['TC']).T.to_html()
+
+    return html_code
 
 
 # Route to handle form submission
@@ -224,28 +229,28 @@ def submit_form_1():
 
     if len(live_order) > 0:
         if live_order =='Y' or live_order =='N':
-            json_data["LIVE_ORDER"] = live_order
+            json_data['TC']["LIVE_ORDER"] = live_order
             msg_body = f"Live Order Status Change = {live_order}. "
             # send_whatsapp_msg(f"LIVE ORDER - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", msg)
 
     if len(nifty_opt_select) > 0:
-        json_data["NIFTY"]["OPT#"] = int(nifty_opt_select)
+        json_data['SC']["NIFTY"]["OPT#"] = int(nifty_opt_select)
         msg_body = f"Nifty Option Selected = {nifty_opt_select}. "
 
 
 
     if len(expiry_week_selection) > 0:
-        json_data["EXP_WEEK"] = int(expiry_week_selection)
+        json_data['TC']["EXP_WEEK"] = int(expiry_week_selection)
         msg_body = f"Expiry Week Selected = {expiry_week_selection}. "
 
     if len(dhan_token) > 0:
         print(f'token dhan - {dhan_token}')
-        json_data["DHAN_ACCESS_TK"] = dhan_token
+        json_data['UC']["DHAN_ACCESS_TK"] = dhan_token
         msg_body = f"Dhan Token Updated. "
 
     if len(wa_token) > 0:
         print(f'token WA - {wa_token}')
-        json_data["WA_TKN"] = wa_token
+        json_data['UC']["WA_TKN"] = wa_token
 
     if len(icici_session_id) > 0:
         print("Updating ICICI Session Token Details")
@@ -385,33 +390,58 @@ def get_order_details():
 @app.route('/positions')
 def get_position_details():
     resultDict = {}
-    positions = dh_get_positions()
-    if positions['status'].lower() == 'success':
-        if positions['data'] is not None:
-            positions = positions['data']
-            selected_cols = ['tradingSymbol','securityId','positionType',
-                       'productType','realizedProfit','buyQty','sellQty',
-                       'buyAvg','sellAvg','dayBuyValue','daySellValue',
-                       'costPrice'
-                       ]
-            positions = positions[selected_cols]
-            positions['realizedProfit'] = round(positions['daySellValue'] - positions['dayBuyValue'],2)
-            positions = positions.sort_values(by=['positionType', 'productType'], ascending=[False, True])
-            positions['#'] = positions.reset_index(drop=True).index + 1
-            positions['#'] = positions['#'].astype(int)
-            # Reorder columns
-            last_column = positions.columns[-1]
-            new_order = [last_column] + [col for col in positions.columns if col != last_column]
-            positions = positions[new_order]
-            total_value = positions['realizedProfit'].sum()
-            total_row = pd.DataFrame({'tradingSymbol':'Total','realizedProfit': [total_value]}, index=['Total'])
-            positions = pd.concat([positions,total_row])
-            positions.iloc[-1] = positions.iloc[-1].fillna('')
-        else:
-            no_positions = f'No Positions for the day - {datetime.now().strftime("%B %d, %Y")}'
-            positions = pd.DataFrame(columns=[no_positions])
+    trades = pd.DataFrame()
+    positions = pd.DataFrame(columns=['Position Information Not Returned...'])
+    fetch_pos = 'Y'
+    # try:
+    #     if os.path.exists(trade_file) == True:
+    #         trades = pd.read_csv(trade_file)
+    # except pd.errors.EmptyDataError:
+    #     pass
+
+    # try:
+    #     if os.path.exists(pos_file) == True:
+    #         positions = pd.read_csv(pos_file)
+    # except pd.errors.EmptyDataError:
+    #     pass
+
+    # if len(trades) > 0 and len(positions) > 0:
+    #     tr_agg = trades.groupby('DervID')['Qty'].sum().reset_index()
+    #     pos_agg = positions.groupby('securityId')['buyQty'].sum().reset_index()
+    #     pos_agg = pos_agg.rename(columns = {'securityId':'DervID','buyQty':'Qty'})
+    #     pos_agg['DervID'] = pd.to_numeric(pos_agg['DervID'], errors='coerce').astype(type(tr_agg['DervID'].values[0]))
+
+    #     if tr_agg.equals(pos_agg):
+    #         fetch_pos = 'N'
+    # elif len(trades) == 0:
+    #     fetch_pos = 'N'
+
+    if fetch_pos == 'Y':
+        pos = dh_get_positions()
+        if pos['status'].lower() == 'success':
+            if pos['data'] is not None:
+                positions = pos['data']
+
+    if len(positions) > 0:
+        selected_cols = ['tradingSymbol','securityId','positionType',
+                   'productType','realizedProfit','buyQty','sellQty',
+                   'buyAvg','sellAvg','dayBuyValue','daySellValue',
+                   'costPrice']
+        positions = positions[selected_cols]
+        positions['realizedProfit'] = round(positions['daySellValue'] - positions['dayBuyValue'],2)
+        positions = positions.sort_values(by=['positionType', 'productType'], ascending=[False, True])
+        positions['#'] = positions.reset_index(drop=True).index + 1
+        positions['#'] = positions['#'].astype(int)
+        # Reorder columns
+        last_column = positions.columns[-1]
+        new_order = [last_column] + [col for col in positions.columns if col != last_column]
+        positions = positions[new_order]
+        total_value = positions['realizedProfit'].sum()
+        total_row = pd.DataFrame({'tradingSymbol':'Total','realizedProfit': [total_value]}, index=['Total'])
+        positions = pd.concat([positions,total_row])
+        positions.iloc[-1] = positions.iloc[-1].fillna('')
     else:
-        no_positions = 'Position Information Not Returned...'
+        no_positions = f'No Positions for the day - {datetime.now().strftime("%B %d, %Y")}'
         positions = pd.DataFrame(columns=[no_positions])
 
     positions = positions.to_html(index=False)
@@ -430,7 +460,9 @@ def get_position_details():
 if __name__ == '__main__':
     # ic_get_watchlist(mode='C')
     # app.run(ssl_context=('cert.pem', 'key.pem'))
+    now = datetime.now()
+    send_whatsapp_msg("TradeApp START", f"Web Application Started @ {now.strftime('%Y-%m-%d %H:%M:%S')}")
     app.run(host='0.0.0.0')
     # ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
     # ssl_context.load_cert_chain('cert.pem', 'key.pem')
-    app.run(host='0.0.0.0',ssl_context=ssl_context)
+    # app.run(host='0.0.0.0',ssl_context=ssl_context)

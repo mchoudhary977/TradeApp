@@ -4,7 +4,7 @@ import http.client
 
 # WhatsApp Meesage Module
 def send_whatsapp_msg(mtitle='TRADE-APP', mtext='Welcome to TradeApp!'):
-    tkn = 'Bearer ' + json.load(open('config.json', 'r'))['WA_TKN']
+    tkn = 'Bearer ' + json.load(open('config.json', 'r'))['UC']['WA_TKN']
     url = 'https://graph.facebook.com/v16.0/108228668943284/messages'
     headers = {
         'Authorization': tkn,

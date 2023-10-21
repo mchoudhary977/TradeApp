@@ -31,14 +31,14 @@ def getConfig(parameter):
         retValue = configparam[parameter]
         return retValue
 
-icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
+icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['UC']['ICICI_API_KEY'])
 # icici = BreezeConnect(api_key = getConfig('ICICI_API_KEY'))
 livePrices = pd.DataFrame()
 
 # ICICI Auto Logon
 def icici_autologon():
     # icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
-    icici_session_url = json.load(open('config.json', 'r'))['ICICI_SESSION_URL']
+    icici_session_url = json.load(open('config.json', 'r'))['UC']['ICICI_SESSION_URL']
 
     service = webdriver.chrome.service.Service('./chromedriver.exe' if platform.system()=='Windows' else './chromedriver')
     service.start()
@@ -52,8 +52,8 @@ def icici_autologon():
     username = driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[1]/input')
     password = driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[3]/div/input')
 
-    icici_uname = json.load(open('config.json', 'r'))['ICICI_USER_NAME']
-    icici_pwd = json.load(open('config.json', 'r'))['ICICI_PWD']
+    icici_uname = json.load(open('config.json', 'r'))['UC']['ICICI_USER_NAME']
+    icici_pwd = json.load(open('config.json', 'r'))['UC']['ICICI_PWD']
     username.send_keys(icici_uname)
     password.send_keys(icici_pwd)
 
@@ -61,7 +61,7 @@ def icici_autologon():
     driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[5]/input').click()
 
     tm.sleep(10)
-    totp = TOTP(json.load(open('config.json', 'r'))['ICICI_GOOGLE_AUTHENTICATOR'])
+    totp = TOTP(json.load(open('config.json', 'r'))['UC']['ICICI_GOOGLE_AUTHENTICATOR'])
     token = totp.now()
 
     t1 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[1]/input')
@@ -84,7 +84,7 @@ def icici_autologon():
 
     session_id = driver.current_url.split('apisession=')[1]
     json_data = json.load(open('config.json', 'r'))
-    json_data['ICICI_API_SESSION'] = session_id
+    json_data['UC']['ICICI_API_SESSION'] = session_id
     with open('config.json', 'w') as the_file:
         json.dump(json_data, the_file, indent=4)
     driver.quit()
@@ -94,8 +94,8 @@ def icici_autologon():
 # Create ICICI Session Function
 def createICICISession(icici):
     try:
-        icici_session = json.load(open('config.json', 'r'))['ICICI_API_SESSION']
-        icici.generate_session(api_secret=json.load(open('config.json', 'r'))['ICICI_API_SECRET_KEY'], session_token=icici_session)
+        icici_session = json.load(open('config.json', 'r'))['UC']['ICICI_API_SESSION']
+        icici.generate_session(api_secret=json.load(open('config.json', 'r'))['UC']['ICICI_API_SECRET_KEY'], session_token=icici_session)
         # icici.generate_session(api_secret=getConfig('ICICI_API_SECRET_KEY'), session_token=getConfig('ICICI_API_SESSION'))
         msg=f'ICICI Session Created for UserID - {icici.user_id}'
         send_whatsapp_msg(mtitle='ICICI ALERT',mtext=msg)
@@ -139,8 +139,8 @@ def iciciUpdSessToken(icici_session_id):
         json_data = json.load(f)
     if data['Status'] == 200:
         print('updating token through function - iciciUpdSessToken')
-        json_data["ICICI_SESSION_TOKEN"] = data['Success']['session_token']
-        json_data["ICICI_API_SESSION"] = icici_session_id
+        json_data['UC']["ICICI_SESSION_TOKEN"] = data['Success']['session_token']
+        json_data['UC']["ICICI_API_SESSION"] = icici_session_id
 
         with open("config.json", "w") as file:
             json.dump(json_data, file, indent=4)
@@ -153,7 +153,7 @@ def iciciUpdSessToken(icici_session_id):
 def icici_upd_sess_config(icici_session_id):
     with open("config.json","r") as f:
         json_data = json.load(f)
-    json_data["ICICI_API_SESSION"] = icici_session_id
+    json_data['UC']["ICICI_API_SESSION"] = icici_session_id
     with open("config.json", "w") as file:
         json.dump(json_data, file, indent=4)
     return {"status":"SUCCESS", "data":"Session Updated"}
@@ -313,7 +313,7 @@ def getPCR(symCode='NIFTY', spot_px = 19169):
 # send_whatsapp_msg()
 # WhatsApp Meesage Module
 def send_whatsapp_msg(mtitle='TRADE-APP', mtext='Welcome to TradeApp!'):
-    tkn = 'Bearer ' + json.load(open('config.json', 'r'))['WA_TKN']
+    tkn = 'Bearer ' + json.load(open('config.json', 'r'))['UC']['WA_TKN']
     url = 'https://graph.facebook.com/v16.0/108228668943284/messages'
     headers = {
         'Authorization': tkn,
@@ -436,7 +436,7 @@ def ic_get_sym_price(symbol,exchange_code='NSE',interval = "1minute",product_typ
 
 def ic_get_watchlist(mode='R'):
     resultDict = {}
-    symbol_list = json.load(open('config.json', 'r'))['STOCK_CODES']
+    symbol_list = json.load(open('config.json', 'r'))['TC']['STOCK_CODES']
     wl_df = pd.DataFrame(columns=['SymbolName','ExchangeCode','Segment','Token','Code','LotSize',
                                   'Open','High','Low','Close','PrevClose','Difference','CandleTime'])
     if mode == 'C':  # Create

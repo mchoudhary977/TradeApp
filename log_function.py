@@ -11,6 +11,10 @@ def printLog(log_type, log_msg):
     now = dt.datetime.now()
     log = 'INFO' if log_type == 'i' else ('ERROR' if log_type == 'e' else 'DEBUG')
     print(f"{now.strftime('%Y-%m-%d %H:%M:%S')} - {log} - {log_msg}")
+
+    with open(log_file,'a') as file:
+         print(f"{now.strftime('%Y-%m-%d %H:%M:%S')} - {log} - {log_msg}",file=file)
+
     message = f"{log_msg}"
     if log_type == 'd':
         logging.debug(message)

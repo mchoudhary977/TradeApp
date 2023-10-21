@@ -10,7 +10,7 @@ import time as tm
 # dh_place_mkt_order('NFO',52337,'buy',50,0)
 
 def dh_get_positions():
-    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+    dhan = dhanhq(json.load(open('config.json', 'r'))['UC']['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['UC']['DHAN_ACCESS_TK'])
     st = dhan.get_positions()
     if st['status']=='success':
         if len(st['data']) > 0:
@@ -24,7 +24,7 @@ def dh_get_positions():
 
 
 def dh_get_orders():
-    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+    dhan = dhanhq(json.load(open('config.json', 'r'))['UC']['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['UC']['DHAN_ACCESS_TK'])
     st = dhan.get_order_list()
     if st['status']=='success':
         if len(st['data']) > 0:
@@ -37,7 +37,7 @@ def dh_get_orders():
     return {'status':'failure', 'data':None}
 
 def dh_get_trades():
-    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+    dhan = dhanhq(json.load(open('config.json', 'r'))['UC']['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['UC']['DHAN_ACCESS_TK'])
     st = dhan.get_trade_book()
     if st['status']=='success':
         if len(st['data']) > 0:
@@ -51,7 +51,7 @@ def dh_get_trades():
 
 # dh_get_order_id(order_id='152309017915')
 def dh_get_order_id(order_id):
-    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+    dhan = dhanhq(json.load(open('config.json', 'r'))['UC']['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['UC']['DHAN_ACCESS_TK'])
     st = dhan.get_order_by_id(order_id)
     if st['status']=='success':
         if len(st['data']) > 0:
@@ -64,7 +64,7 @@ def dh_get_order_id(order_id):
 # order_id = '6523081610313'
 # dh_modify_order('6523081610313',price=32,quantity=100)
 def dh_modify_order(order_id,price,quantity,leg_name='ENTRY_LEG', ord_type = 'lmt', trigger_px = 0.0):
-    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+    dhan = dhanhq(json.load(open('config.json', 'r'))['UC']['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['UC']['DHAN_ACCESS_TK'])
     # Modify order given order id
     order_type = dhan.LIMIT if ord_type == 'lmt' else dhan.SLM
     st = dhan.modify_order(order_id=order_id,
@@ -80,7 +80,7 @@ def dh_modify_order(order_id,price,quantity,leg_name='ENTRY_LEG', ord_type = 'lm
 
 # s=dh_cancel_order(order_id = '6523081610313')
 def dh_cancel_orders(order_id=None):
-    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+    dhan = dhanhq(json.load(open('config.json', 'r'))['UC']['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['UC']['DHAN_ACCESS_TK'])
     cancelled_orders = []
     msg = {'status':'failure', 'remarks':'', 'data':''}
 
@@ -177,7 +177,7 @@ def dh_post_exchange_order(ord_type='mkt', exchange='FNO', security_id=1234, sid
     try:
         msg = {'status':'failure', 'remarks':'', 'data':''}
 
-        dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+        dhan = dhanhq(json.load(open('config.json', 'r'))['UC']['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['UC']['DHAN_ACCESS_TK'])
         exchange_segment = dhan.FNO if exchange == 'FNO' else dhan.NSE
 
         security_id = int(security_id)
@@ -225,7 +225,7 @@ def dh_post_exchange_order(ord_type='mkt', exchange='FNO', security_id=1234, sid
 
 # Below functions are not used for now
 def dh_post_exchange_order_1(order_type='sl',exchange='FNO',security_id=1234,buy_sell='buy',quantity=50,sl_price=0,tg_point=10,sl_point=20,allow_amo=False):
-    dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+    dhan = dhanhq(json.load(open('config.json', 'r'))['UC']['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['UC']['DHAN_ACCESS_TK'])
     msg = {'status':'failure','data':{}}
     try:
         if order_type == 'mkt':
@@ -335,7 +335,7 @@ def dh_place_order(dhan,order_type,exchange,security_id,buy_sell,quantity,sl_pri
 
 def dh_place_mkt_order(dhan,exchange,security_id,buy_sell,quantity,sl_price=0,tg_point=0,sl_point=0):
     try:
-        # dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+        # dhan = dhanhq(json.load(open('config.json', 'r'))['UC']['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['UC']['DHAN_ACCESS_TK'])
         drv_expiry_date=None
         drv_options_type=None
         drv_strike_price=None
@@ -389,7 +389,7 @@ def dh_place_mkt_order(dhan,exchange,security_id,buy_sell,quantity,sl_price=0,tg
 # dh_place_bo_order(exchange='NFO',security_id=61756,buy_sell='buy',quantity=50,sl_point=5,tg_point=20,sl_price=0)
 def dh_place_bo_order(dhan,exchange,security_id,buy_sell,quantity,sl_point=10,tg_point=20,sl_price=0):
     try:
-        # dhan = dhanhq(json.load(open('config.json', 'r'))['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['DHAN_ACCESS_TK'])
+        # dhan = dhanhq(json.load(open('config.json', 'r'))['UC']['DHAN_CLIENT_ID'],json.load(open('config.json', 'r'))['UC']['DHAN_ACCESS_TK'])
         drv_expiry_date=None
         drv_options_type=None
         drv_strike_price=None

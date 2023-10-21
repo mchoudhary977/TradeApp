@@ -15,26 +15,39 @@
               <div class="accordion-item">
                 <!-- <h4 class="accordion-header"> -->
                   <!-- <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne"> -->
+
+                  <!--
                   {% if result1['Close'][i] > result1['PrevClose'][i] %}
                   <button class="accordion-button collapsed" id="button{{i}}" style="background: #bcf5d9;" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{i|int+1}}" aria-expanded="false" aria-controls="flush-collapse{{i|int+1}}">
                   {% else %}
                   <button class="accordion-button collapsed" id="button{{i}}" style="background: #FADCD9;" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{i|int+1}}" aria-expanded="false" aria-controls="flush-collapse{{i|int+1}}">
                   {% endif %}
+                  -->
+
+                  {% if result1['Close'][i] > result1['PrevClose'][i] %}
+                  <button class="accordion-button" id="button{{i}}" style="background: #bcf5d9;" aria-expanded="false" aria-controls="flush-collapse{{i|int+1}}">
+                  {% else %}
+                  <button class="accordion-button collapsed" id="button{{i}}" style="background: #FADCD9;" aria-expanded="false" aria-controls="flush-collapse{{i|int+1}}">
+                  {% endif %}
+
                       <div class="container">
                         <div class="row">
                           <div class="col" id="symbol{{i}}">
                             <b>{{ result1['SymbolName'][i] }}</b>
                           </div>
+                          <div class="col" id="close{{i}}">
+                            <b>{{ result1['Close'][i] }}</b>
+                            <!--
+                            <b style="font-size: 10px;" id="difference{{i}}">( {{ (result1['Close'][i] - result1['PrevClose'][i]) | round(2) }} )</b>
+                            -->
+                          </div>
                           <div class="col" id="difference{{i}}">
-                            <b style="font-size: 10px;">{{ (result1['Close'][i] - result1['PrevClose'][i]) | round(2) }}</b>
+                            <b style="font-size: 10px;">( {{ (result1['Close'][i] - result1['PrevClose'][i]) | round(2) }} )</b>
                           </div>
                         </div>
                         <hr>
                         <div class="row row-cols-2 row-cols-lg-4 g-2 g-lg-3">
                           {% if result1['Close'][i] > result1['PrevClose'][i] %}
-                          <div class="col" id="close{{i}}">
-                            <b style="color: #007500;">C-{{ result1['Close'][i] }}</b>
-                          </div>
                           <div class="col" id="open{{i}}">
                             <b style="color: #007500;">O-{{ result1['Open'][i] }}</b>
                           </div>
@@ -44,10 +57,11 @@
                           <div class="col" id="low{{i}}">
                             <b style="color: #007500;">L-{{ result1['Low'][i] }}</b>
                           </div>
-                          {% else %}
-                          <div class="col" id="close{{i}}">
-                            <b style="color: #FF0000;">C-{{ result1['Close'][i] }}</b>
+                          <div class="col" id="prevclose{{i}}">
+                            <b style="color: #007500;">PC-{{ result1['PrevClose'][i] }}</b>
                           </div>
+
+                          {% else %}
                           <div class="col" id="open{{i}}">
                             <b style="color: #FF0000;">O-{{ result1['Open'][i] }}</b>
                           </div>
@@ -56,6 +70,9 @@
                           </div>
                           <div class="col" id="low{{i}}">
                             <b style="color: #FF0000;">L-{{ result1['Low'][i] }}</b>
+                          </div>
+                          <div class="col" id="prevclose{{i}}">
+                            <b style="color: #FF0000;">PC-{{ result1['PrevClose'][i] }}</b>
                           </div>
                           {% endif %}
                       </div>
@@ -71,6 +88,27 @@
         </div>
       </div>
     </section>
+
   <hr/>
+    <section id="positions">
+    <br>
+    <br>
+    <h1 class="text-center">Position Details</h1>
+    <br>
+      <div class="container text-center">
+        {{ resultDict['Positions'] | safe }}
+      </div>
+    </section>
+  <hr/>
+    <section id="trades">
+    <br>
+    <br>
+    <h1 class="text-center">Trade Details</h1>
+    <br>
+      <div class="container text-center">
+        {{ resultDict['Trades'] | safe }}
+      </div>
+    </section>
+
   <!-- </div> -->
 {% endblock %}

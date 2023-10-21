@@ -18,13 +18,12 @@ import pandas as pd
 import numpy as np
 import os
 
-icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
+icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['UC']['ICICI_API_KEY'])
 
 
 # ICICI Auto Logon
 def ic_autologon():
-    # icici = BreezeConnect(api_key=json.load(open('config.json', 'r'))['ICICI_API_KEY'])
-    icici_session_url = json.load(open('config.json', 'r'))['ICICI_SESSION_URL']
+    icici_session_url = json.load(open('config.json', 'r'))['UC']['ICICI_SESSION_URL']
 
     service = webdriver.chrome.service.Service('./chromedriver.exe' if platform.system()=='Windows' else './chromedriver')
     service.start()
@@ -38,8 +37,8 @@ def ic_autologon():
     username = driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[1]/input')
     password = driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[3]/div/input')
 
-    icici_uname = json.load(open('config.json', 'r'))['ICICI_USER_NAME']
-    icici_pwd = json.load(open('config.json', 'r'))['ICICI_PWD']
+    icici_uname = json.load(open('config.json', 'r'))['UC']['ICICI_USER_NAME']
+    icici_pwd = json.load(open('config.json', 'r'))['UC']['ICICI_PWD']
     username.send_keys(icici_uname)
     password.send_keys(icici_pwd)
 
@@ -47,7 +46,7 @@ def ic_autologon():
     driver.find_element(By.XPATH,'/html/body/form/div[2]/div/div/div/div[2]/div/div[5]/input').click()
 
     tm.sleep(10)
-    totp = TOTP(json.load(open('config.json', 'r'))['ICICI_GOOGLE_AUTHENTICATOR'])
+    totp = TOTP(json.load(open('config.json', 'r'))['UC']['ICICI_GOOGLE_AUTHENTICATOR'])
     token = totp.now()
 
     t1 = driver.find_element(By.XPATH, '/html/body/form/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/div/div[1]/input')
@@ -70,7 +69,7 @@ def ic_autologon():
 
     session_id = driver.current_url.split('apisession=')[1]
     json_data = json.load(open('config.json', 'r'))
-    json_data['ICICI_API_SESSION'] = session_id
+    json_data['UC']['ICICI_API_SESSION'] = session_id
     with open('config.json', 'w') as the_file:
         json.dump(json_data, the_file, indent=4)
     driver.quit()
@@ -81,8 +80,8 @@ def ic_autologon():
 # Create ICICI Session Function
 def ic_create_session(icici):
     try:
-        icici_session = json.load(open('config.json', 'r'))['ICICI_API_SESSION']
-        icici.generate_session(api_secret=json.load(open('config.json', 'r'))['ICICI_API_SECRET_KEY'], session_token=icici_session)
+        icici_session = json.load(open('config.json', 'r'))['UC']['ICICI_API_SESSION']
+        icici.generate_session(api_secret=json.load(open('config.json', 'r'))['UC']['ICICI_API_SECRET_KEY'], session_token=icici_session)
         msg=f'ICICI Session Created for UserID - {icici.user_id}'
         # send_whatsapp_msg(mtitle='ICICI ALERT',mtext=msg)
         return{'status':'SUCCESS','data':msg}
@@ -94,7 +93,7 @@ def ic_create_session(icici):
                 st=ic_create_session(icici)
                 return st
             else:
-                return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {err} - Update ICICI Session Token - {json.load(open("config.json", "r"))["ICICI_SESSION_URL"]}'}
+                return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {err} - Update ICICI Session Token - {json.load(open("config.json", "r"))["UC"]["ICICI_SESSION_URL"]}'}
             # send_whatsapp_msg(mtitle='ERROR',mtext=f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - Update ICICI Session Token - {readConfig("ICICI_SESSION_URL")}')
             # send_whatsapp_msg(msg=f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - Update ICICI Session Token - {readConfig("ICICI_SESSION_URL")}')
         return{'status':'FAILURE','data':f'{datetime.now().strftime("%B %d, %Y %H:%M:%S")} - {err}'}
@@ -157,7 +156,7 @@ def ic_get_sym_detail(exch_code='NSE',symbol='NIFTY',prod_type='Cash',interval='
 
 # Update Watchlist data
 def ic_update_watchlist(mode='R',num=-1):
-    symbol_list = json.load(open('config.json', 'r'))['STOCK_CODES']
+    symbol_list = json.load(open('config.json', 'r'))['TC']['STOCK_CODES']
     wl_file = 'WatchList.csv'
     ic_instruments = pd.read_csv('icici.csv')
     wl_cols= ['SymbolName','ExchangeCode','Segment','Token','Code','LotSize',
@@ -268,7 +267,7 @@ def ic_option_contracts_atm(ticker, underlying_price, duration = 0, option_type=
 # atm_contract = ic_option_contracts_atm("CNXBAN",underlying_price=43946, duration=1)
 
 #function to extract n closest options to the underlying price
-def ic_option_chain(ticker, underlying_price, duration = 0, num = 11, option_type="CE", exchange="NFO"):
+def ic_option_chain(ticker, underlying_price, duration = 0, num = 7, option_type="CE", exchange="NFO"):
     #duration = 0 means the closest expiry, 1 means the next closest and so on
     #num =5 means return 5 option contracts closest to the market
     df_opt_contracts = ic_option_contracts_closest(ticker,duration,option_type)

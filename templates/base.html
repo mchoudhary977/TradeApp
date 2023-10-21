@@ -105,6 +105,11 @@
                                   font-size: small;
                                   width:100%;
                               }
+
+                            /* Remove the arrows in the Bootstrap accordion button */
+                            .accordion-button::after {
+                                display: none; /* Hide the arrow */
+                            }
         </style>
         <script>
                         // Function to open the pop-up form
@@ -170,14 +175,16 @@
                                         $("#symbol"+key).html("<b>"+value['SymbolName']+"</b>");
                                         $("#candle_time").html(value['CandleTime']);
                                         var diff = (value['Close'] - value['PrevClose']).toFixed(2);
-                                        $("#difference"+key).html('<b style="font-size: 10px;">'+diff+'</b>');
+                                        $("#difference"+key).html("<b style='font-size: 10px;'>"+"( "+diff+" )</b>");
                                         if (value['Close'] > value['PrevClose']){
+                                          $("#prevclose"+key).html("<b style='color: #007500;'>"+"PC-"+value['PrevClose']+"</b>");
                                           $("#close"+key).html("<b style='color: #007500;'>"+"C-"+value['Close']+"</b>");
                                           $("#open"+key).html("<b style='color: #007500;'>"+"O-"+value['Open']+"</b>");
                                           $("#high"+key).html("<b style='color: #007500;'>"+"H-"+value['High']+"</b>");
                                           $("#low"+key).html("<b style='color: #007500;'>"+"L-"+value['Low']+"</b>");
                                           $("#button"+key).css("background-color", "#bcf5d9");
                                         } else {
+                                          $("#prevclose"+key).html("<b style='color: #FF0000;'>"+"PC-"+value['PrevClose']+"</b>");
                                           $("#close"+key).html("<b style='color: #FF0000;'>"+"C-"+value['Close']+"</b>");
                                           $("#open"+key).html("<b style='color: #FF0000;'>"+"O-"+value['Open']+"</b>");
                                           $("#high"+key).html("<b style='color: #FF0000;'>"+"H-"+value['High']+"</b>");
@@ -225,9 +232,9 @@
                                         id="navbarSupportedContent">
                                         <ul class="navbar-nav m-auto">
                                         <li class="nav-item"><a style="color:white;" href="{{ url_for('home') }}">WatchList</a></li>
-                                        <li class="nav-item"><a style="color:white;" href="/positions">Positions</a></li>
+                                        <li class="nav-item"><a style="color:white;" href="#positions">Positions</a></li>
                                         <li class="nav-item"><a style="color:white;" href="/orders">Orders</a></li>
-                                        <li class="nav-item"><a style="color:white;" href="#strategies">Strategy</a></li>
+                                        <li class="nav-item"><a style="color:white;" href="#trades">Trades</a></li>
                                         <li class="nav-item"><a style="color:white;" href="#holdings">Holdings</a></li>
                                         <li class="nav-item"><a style="color:white;" href="#funds">Funds</a></li>
                                         <!-- <li class="nav-item"><a style="color:white;" href="#social">Contact Us</a></li> -->
@@ -278,12 +285,12 @@
                    <label for="floatingInput">Nifty Option Selection</label>
                    <p>Default Option : <b>4 - Immediate OTM</b></p>
                  </div>
-                 
+
                 <div class="form-floating mb-4">
                   <input type="text" class="form-control" id="floatingInput" name="nifty_call_select" placeholder="Call Strike">
                   <label for="floatingInput">NIFTY CALL STRIKE</label>
                 </div>
-                
+
                 <div class="form-floating mb-4">
                   <input type="text" class="form-control" id="floatingInput" name="nifty_put_select" placeholder="Put Strike">
                   <label for="floatingInput">NIFTY PUT STRIKE</label>
