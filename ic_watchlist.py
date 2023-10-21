@@ -1037,15 +1037,19 @@ def on_ticks(ticks):
 
     if len(strat_trades_df) > 0:
         if tick_symbol.isdigit():
-            strat_trades_df.loc[strat_trades_df['DervID'] == str(tick_symbol), 'DervPx'] = tick_px
-            if strat_trades_df.loc[strat_trades_df['DervID'] == str(tick_symbol), 'ExitPx'] > 0.0:
-                strat_trades_df.loc[strat_trades_df['DervID'] == str(tick_symbol), 'PnL'] = (strat_trades_df.loc[strat_trades_df['DervID'] == str(tick_symbol), 'ExitPx'] - strat_trades_df.loc[strat_trades_df['DervID'] == str(tick_symbol), 'EntryPx']) * strat_trades_df.loc[strat_trades_df['DervID'] == str(tick_symbol), 'Qty']
+            id_type = type(strat_trades_df['DervID'].values[0])
+            tick_check = (strat_trades_df['DervID'] == id_type(tick_symbol))
+            test_ord_check = (strat_trades_df['EntryID'] == 'test')
+            strat_trades_df.loc[tick_check, 'DervPx'] = tick_px
+            
+            if strat_trades_df.loc[tick_check, 'ExitPx'] > 0.0:
+                strat_trades_df.loc[tick_check, 'PnL'] = (strat_trades_df.loc[tick_check, 'ExitPx'] - strat_trades_df.loc[tick_check, 'EntryPx']) * strat_trades_df.loc[tick_check, 'Qty']
             else:
-                strat_trades_df.loc[strat_trades_df['DervID'] == str(tick_symbol), 'PnL'] = (tick_px - strat_trades_df.loc[strat_trades_df['DervID'] == str(tick_symbol), 'EntryPx']) * strat_trades_df.loc[strat_trades_df['DervID'] == str(tick_symbol), 'Qty']
-            if len(strat_trades_df[(strat_trades_df['DervID'] == str(tick_symbol)) & (strat_trades_df['EntryID'] == 'test') & (strat_trades_df['EntryPx'] <= 0)]['EntryPx']) > 0:
-                strat_trades_df.loc[(strat_trades_df['DervID'] == str(tick_symbol)) & (strat_trades_df['EntryID'] == 'test'), 'EntryPx'] = tick_px
-                strat_trades_df.loc[(strat_trades_df['DervID'] == str(tick_symbol)) & (strat_trades_df['EntryID'] == 'test'), 'StopLoss'] = tick_px - strat_trades_df.loc[(strat_trades_df['DervID'] == str(tick_symbol)) & (strat_trades_df['EntryID'] == 'test'), 'SLPts']
-                strat_trades_df.loc[(strat_trades_df['DervID'] == str(tick_symbol)) & (strat_trades_df['EntryID'] == 'test'), 'Target'] = tick_px + strat_trades_df.loc[(strat_trades_df['DervID'] == str(tick_symbol)) & (strat_trades_df['EntryID'] == 'test'), 'TrailPts']
+                strat_trades_df.loc[tick_check, 'PnL'] = (tick_px - strat_trades_df.loc[tick_check, 'EntryPx']) * strat_trades_df.loc[tick_check, 'Qty']
+            if len(strat_trades_df[tick_check & test_ord_check & (strat_trades_df['EntryPx'] <= 0)]['EntryPx']) > 0:
+                strat_trades_df.loc[tick_check & test_ord_check, 'EntryPx'] = tick_px
+                strat_trades_df.loc[tick_check & test_ord_check, 'StopLoss'] = tick_px - strat_trades_df.loc[tick_check & test_ord_check, 'SLPts']
+                strat_trades_df.loc[tick_check & test_ord_check, 'Target'] = tick_px + strat_trades_df.loc[tick_check & test_ord_check, 'TrailPts']
 
     if tick_symbol in ['NIFTY 50','NIFTY BANK','NIFTY FIN SERVICE']:
         if tick_symbol == 'NIFTY 50':
