@@ -948,9 +948,10 @@ def monitor_trades(symbol,last_px,signal_time):
                                 printLog('i',f"Order Cancelled - {row['StopLossID']}")
                             else:
                                 printLog('i',f"Order Modified - {row['StopLossID']}")
-                        strat_trades_df.loc[strat_trades_df['StopLossID']==row['StopLossID'],'Status'] = 'N2L'
-                        strat_trades_df.loc[strat_trades_df['StopLossID']==row['StopLossID'],'Active'] = 'N'
-                        strat_trades_df.loc[strat_trades_df['StopLossID']==row['StopLossID'],'ExitPx'] = row['DervPx']
+                        sl_check = (strat_trades_df['StopLossID']==row['StopLossID'])
+                        strat_trades_df.loc[sl_check,'Status'] = 'N2L'
+                        strat_trades_df.loc[sl_check,'Active'] = 'N'
+                        strat_trades_df.loc[sl_check,'ExitPx'] = row['DervPx']
 
             # Normal Trade Monitoring
             # for index, row in strat_trades_df[strat_trades_df['Active']=='Y'].iterrows():
